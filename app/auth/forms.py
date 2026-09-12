@@ -242,3 +242,73 @@ class ResendVerificationForm(FlaskForm):
     submit = SubmitField(
         "Resend Code"
     )
+
+class ForgotPasswordForm(FlaskForm):
+
+    email = StringField(
+        "Email",
+        validators=[
+            DataRequired(),
+            Email(),
+            Length(max=255),
+        ],
+    )
+
+    submit = SubmitField(
+        "Continue"
+    )
+
+
+class PasswordResetVerificationForm(FlaskForm):
+
+    code = StringField(
+        "Verification Code",
+        validators=[
+            DataRequired(),
+            Regexp(
+                r"^\d{6}$",
+                message=(
+                    "Please enter the "
+                    "6-digit verification code."
+                ),
+            ),
+        ],
+    )
+
+    submit = SubmitField(
+        "Verify Code"
+    )
+
+
+class ResetPasswordForm(FlaskForm):
+
+    password = PasswordField(
+        "New Password",
+        validators=[
+            DataRequired(),
+            Length(
+                min=12,
+                message=(
+                    "Password must be at least "
+                    "12 characters long."
+                ),
+            ),
+        ],
+    )
+
+    confirm_password = PasswordField(
+        "Confirm New Password",
+        validators=[
+            DataRequired(),
+            EqualTo(
+                "password",
+                message=(
+                    "Passwords must match."
+                ),
+            ),
+        ],
+    )
+
+    submit = SubmitField(
+        "Reset Password"
+    )

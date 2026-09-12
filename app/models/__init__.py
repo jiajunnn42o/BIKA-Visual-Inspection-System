@@ -8,10 +8,12 @@ from app.models.email_verification import (
     EmailVerification,
 )
 
+from app.models.password_reset import PasswordResetCode
 
 __all__ = [
     "User",
     "UserRole",
     "UserStatus",
     "EmailVerification",
+    "PasswordResetCode",
 ]

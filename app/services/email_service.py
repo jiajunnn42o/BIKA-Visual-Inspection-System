@@ -358,3 +358,69 @@ BIKA Visual Inspection System
         ],
         body=body,
     )
+
+def send_password_reset_code_email(
+    user,
+    code,
+):
+    """
+    Send the 6-digit password reset
+    verification code to the user.
+
+    No reset URL is included.
+    """
+
+    body = f"""Hello {user.first_name},
+
+We received a request to reset the password for your BIKA Visual Inspection System account.
+
+Your password reset verification code is:
+
+{code}
+
+This code will expire in 5 minutes.
+
+Please enter this 6-digit code on the BIKA password reset page.
+
+Do not share this verification code with anyone.
+
+If you did not request a password reset, you can ignore this email.
+
+BIKA Visual Inspection System
+"""
+
+    return _send_email(
+        subject="BIKA Password Reset Verification Code",
+        recipients=[
+            user.email
+        ],
+        body=body,
+    )
+
+
+def send_password_changed_email(
+    user,
+):
+    """
+    Send a security notification after
+    the user's password has been changed.
+    """
+
+    body = f"""Hello {user.first_name},
+
+The password for your BIKA Visual Inspection System account was successfully changed.
+
+If you made this change, no further action is required.
+
+If you did not change your password, please contact your system administrator immediately.
+
+BIKA Visual Inspection System
+"""
+
+    return _send_email(
+        subject="Your BIKA Password Was Changed",
+        recipients=[
+            user.email
+        ],
+        body=body,
+    )

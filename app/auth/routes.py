@@ -5,7 +5,6 @@ from flask import (
     flash,
     redirect,
     render_template,
-    request,
     url_for,
 )
 
@@ -22,6 +21,7 @@ from itsdangerous import (
 )
 
 from sqlalchemy import or_
+
 from sqlalchemy.exc import (
     IntegrityError,
     SQLAlchemyError,
@@ -31,14 +31,18 @@ from app.auth import auth_bp
 
 from app.auth.forms import (
     EmailVerificationForm,
+    ForgotPasswordForm,
     LoginForm,
+    PasswordResetVerificationForm,
     RegistrationForm,
     ResendVerificationForm,
+    ResetPasswordForm,
 )
 
 from app.extensions import db
 
 from app.models import (
+    PasswordResetCode,
     User,
     UserRole,
     UserStatus,
@@ -47,6 +51,8 @@ from app.models import (
 from app.services.email_service import (
     send_email_verification_code_email,
     send_new_registration_to_superadmins,
+    send_password_changed_email,
+    send_password_reset_code_email,
 )
 
 from app.services.email_verification_service import (
@@ -55,23 +61,44 @@ from app.services.email_verification_service import (
     verify_email_code,
 )
 
+from app.services.password_reset_service import (
+    PasswordResetRateLimitError,
+    get_valid_verified_reset,
+    issue_password_reset_code,
+    verify_password_reset_code,
+)
+
 from app.utils.phone import (
+    InvalidPhoneNumberError,
     normalize_malaysian_mobile,
 )
 
+
 # =========================================================
-# EMAIL VERIFICATION TOKEN SETTINGS
+# TOKEN SETTINGS
 # =========================================================
 
+# Email verification browser token:
+# valid for 7 days.
 EMAIL_VERIFICATION_TOKEN_MAX_AGE = (
     7 * 24 * 60 * 60
 )
 
+# Password reset browser token:
+# valid for 30 minutes.
+PASSWORD_RESET_TOKEN_MAX_AGE = (
+    30 * 60
+)
+
+
+# =========================================================
+# EMAIL VERIFICATION TOKEN HELPERS
+# =========================================================
 
 def _verification_serializer():
     """
-    Create a signed serializer used for email
-    verification URLs.
+    Create a signed serializer for the
+    email verification browser flow.
     """
 
     return URLSafeTimedSerializer(
@@ -82,14 +109,14 @@ def _verification_serializer():
 
 def _create_verification_token(user):
     """
-    Create a signed verification token.
+    Create a signed browser token for
+    email verification.
 
-    The token contains:
-    - User ID
-    - Current email address
+    The token is not sent by email.
 
-    If the user's email changes, the old token
-    automatically becomes invalid.
+    The email is included so that an old token
+    automatically becomes invalid when the
+    user's email address changes.
     """
 
     return (
@@ -105,11 +132,12 @@ def _create_verification_token(user):
 
 def _get_verification_user(token):
     """
-    Read and validate a verification token.
+    Read and validate an email verification
+    browser token.
 
     Returns:
-        User object
-        or None if invalid / expired.
+        User object if valid.
+        None if invalid or expired.
     """
 
     try:
@@ -135,7 +163,7 @@ def _get_verification_user(token):
         "user_id"
     )
 
-    email = data.get(
+    token_email = data.get(
         "email"
     )
 
@@ -150,12 +178,136 @@ def _get_verification_user(token):
     if user is None:
         return None
 
-    # If the account email was changed after
-    # this token was generated, invalidate it.
-    if user.email != email:
+    # If the user's email changed after the
+    # token was created, reject the old token.
+    if (
+        user.email
+        != token_email
+    ):
         return None
 
     return user
+
+
+# =========================================================
+# PASSWORD RESET TOKEN HELPERS
+# =========================================================
+
+def _password_reset_serializer():
+    """
+    Create a signed serializer for the
+    password reset browser flow.
+    """
+
+    return URLSafeTimedSerializer(
+        current_app.config["SECRET_KEY"],
+        salt="bika-password-reset",
+    )
+
+
+def _create_password_reset_token(email):
+    """
+    Create a signed password reset browser token.
+
+    The token is never sent by email.
+
+    Only the email address and token purpose
+    are stored inside the signed token.
+    """
+
+    return (
+        _password_reset_serializer()
+        .dumps(
+            {
+                "email": email,
+                "purpose": "password-reset",
+            }
+        )
+    )
+
+
+def _get_password_reset_email(token):
+    """
+    Read a password reset browser token.
+
+    Returns:
+        Email address if valid.
+        None if invalid or expired.
+    """
+
+    try:
+
+        data = (
+            _password_reset_serializer()
+            .loads(
+                token,
+                max_age=(
+                    PASSWORD_RESET_TOKEN_MAX_AGE
+                ),
+            )
+        )
+
+    except (
+        SignatureExpired,
+        BadSignature,
+    ):
+
+        return None
+
+    if (
+        data.get("purpose")
+        != "password-reset"
+    ):
+        return None
+
+    return data.get(
+        "email"
+    )
+
+
+# =========================================================
+# PASSWORD RESET ACCOUNT RULES
+# =========================================================
+
+def _password_reset_allowed(user):
+    """
+    Decide whether an account is allowed
+    to request a password reset.
+
+    Allowed:
+    - active
+    - locked
+    - disabled
+    - pending with verified email
+
+    Not allowed:
+    - pending with unverified email
+    - rejected
+    """
+
+    if user is None:
+        return False
+
+    if (
+        user.status
+        in {
+            UserStatus.ACTIVE.value,
+            UserStatus.LOCKED.value,
+            UserStatus.DISABLED.value,
+        }
+    ):
+        return True
+
+    if (
+        user.status
+        == UserStatus.PENDING.value
+        and
+        user.email_verified_at
+        is not None
+    ):
+        return True
+
+    return False
 
 
 # =========================================================
@@ -168,13 +320,14 @@ def _get_verification_user(token):
 )
 def register():
     """
-    Public registration.
+    Public account registration.
 
-    New users:
-    - Always receive role = user
-    - Always receive status = pending
-    - Must verify their email
-    - Cannot log in until SuperAdmin approval
+    Public registration always starts as:
+        role = user
+        status = pending
+
+    Email verification must be completed
+    before SuperAdmin receives the application.
     """
 
     if current_user.is_authenticated:
@@ -190,7 +343,31 @@ def register():
     if form.validate_on_submit():
 
         # -------------------------------------------------
-        # CREATE USER OBJECT
+        # NORMALIZE MALAYSIAN PHONE NUMBER
+        # -------------------------------------------------
+
+        try:
+
+            phone_number = (
+                normalize_malaysian_mobile(
+                    form.phone_number.data
+                )
+            )
+
+        except InvalidPhoneNumberError as exc:
+
+            flash(
+                str(exc),
+                "error",
+            )
+
+            return render_template(
+                "auth/register.html",
+                form=form,
+            )
+
+        # -------------------------------------------------
+        # CREATE USER
         # -------------------------------------------------
 
         user = User(
@@ -217,9 +394,7 @@ def register():
             ),
 
             phone_number=(
-                normalize_malaysian_mobile(
-                    form.phone_number.data
-                )
+                phone_number
             ),
 
             job_title=(
@@ -243,21 +418,20 @@ def register():
                 .upper()
             ),
 
-            # Public users cannot select their role.
+            # Public registration never
+            # allows role selection.
             role=UserRole.USER.value,
 
-            # Registration requires SuperAdmin approval.
+            # SuperAdmin approval is required.
             status=UserStatus.PENDING.value,
         )
 
-        # Password is hashed before being stored.
         user.set_password(
             form.password.data
         )
 
         # -------------------------------------------------
-        # CREATE USER + VERIFICATION CODE
-        # IN ONE DATABASE TRANSACTION
+        # CREATE USER + EMAIL OTP
         # -------------------------------------------------
 
         try:
@@ -266,7 +440,7 @@ def register():
                 user
             )
 
-            # Assign an ID without committing yet.
+            # Generate the user ID before commit.
             db.session.flush()
 
             verification_code = (
@@ -284,9 +458,9 @@ def register():
 
             flash(
                 (
-                    "An account with the same email, "
-                    "username, phone number, or "
-                    "employee ID already exists."
+                    "An account with the same "
+                    "email, username, phone number, "
+                    "or employee ID already exists."
                 ),
                 "error",
             )
@@ -303,7 +477,7 @@ def register():
             current_app.logger.exception(
                 (
                     "Database error while creating "
-                    "registration."
+                    "a new registration."
                 )
             )
 
@@ -321,7 +495,7 @@ def register():
             )
 
         # -------------------------------------------------
-        # CREATE VERIFICATION URL
+        # CREATE BROWSER VERIFICATION TOKEN
         # -------------------------------------------------
 
         verification_token = (
@@ -331,7 +505,7 @@ def register():
         )
 
         # -------------------------------------------------
-        # SEND VERIFICATION EMAIL
+        # SEND 6-DIGIT EMAIL OTP
         # -------------------------------------------------
 
         try:
@@ -343,8 +517,6 @@ def register():
 
         except Exception:
 
-            # Account remains created.
-            # User may request another verification code.
             current_app.logger.exception(
                 (
                     "Unable to send registration "
@@ -376,7 +548,7 @@ def register():
 
 
 # =========================================================
-# VERIFY EMAIL
+# VERIFY REGISTRATION EMAIL
 # =========================================================
 
 @auth_bp.route(
@@ -385,8 +557,8 @@ def register():
 )
 def verify_email(token):
     """
-    Verify ownership of the registered email
-    using a 6-digit verification code.
+    Verify a newly registered email address
+    using a 6-digit OTP.
     """
 
     user = (
@@ -399,7 +571,7 @@ def verify_email(token):
 
         flash(
             (
-                "This email verification link "
+                "This email verification session "
                 "is invalid or has expired."
             ),
             "error",
@@ -411,10 +583,7 @@ def verify_email(token):
             )
         )
 
-    # -----------------------------------------------------
-    # ALREADY VERIFIED
-    # -----------------------------------------------------
-
+    # Already verified.
     if (
         user.email_verified_at
         is not None
@@ -434,10 +603,6 @@ def verify_email(token):
         ResendVerificationForm()
     )
 
-    # -----------------------------------------------------
-    # VERIFY SUBMITTED CODE
-    # -----------------------------------------------------
-
     if form.validate_on_submit():
 
         success, message = (
@@ -451,6 +616,8 @@ def verify_email(token):
 
         try:
 
+            # Save both failed attempt counters
+            # and successful verification.
             db.session.commit()
 
         except SQLAlchemyError:
@@ -519,7 +686,7 @@ def verify_email(token):
 
         try:
 
-            notification_result = (
+            result = (
                 send_new_registration_to_superadmins(
                     applicant=user,
                     superadmins=superadmins,
@@ -528,18 +695,17 @@ def verify_email(token):
 
             current_app.logger.info(
                 (
-                    "Registration email verified. "
-                    f"User ID {user.id}. "
+                    f"User {user.id} verified email. "
                     f"SuperAdmin notifications: "
-                    f"{notification_result['sent']} sent, "
-                    f"{notification_result['failed']} failed."
+                    f"{result['sent']} sent, "
+                    f"{result['failed']} failed."
                 )
             )
 
         except Exception:
 
-            # Email verification remains successful
-            # even if SuperAdmin notification fails.
+            # User verification must remain successful
+            # even if notification email fails.
             current_app.logger.exception(
                 (
                     "Unable to notify SuperAdmins "
@@ -573,7 +739,7 @@ def verify_email(token):
 
 
 # =========================================================
-# RESEND EMAIL VERIFICATION CODE
+# RESEND REGISTRATION EMAIL OTP
 # =========================================================
 
 @auth_bp.route(
@@ -582,10 +748,8 @@ def verify_email(token):
 )
 def resend_verification_code(token):
     """
-    Send a new 6-digit verification code.
-
-    Security limits are handled by
-    email_verification_service.py.
+    Send a new registration email
+    verification code.
     """
 
     user = (
@@ -598,7 +762,7 @@ def resend_verification_code(token):
 
         flash(
             (
-                "This email verification link "
+                "This email verification session "
                 "is invalid or has expired."
             ),
             "error",
@@ -642,10 +806,6 @@ def resend_verification_code(token):
             )
         )
 
-    # -----------------------------------------------------
-    # CREATE NEW VERIFICATION CODE
-    # -----------------------------------------------------
-
     try:
 
         verification_code = (
@@ -679,8 +839,8 @@ def resend_verification_code(token):
 
         current_app.logger.exception(
             (
-                "Unable to create new "
-                "verification code."
+                "Unable to create a new "
+                "email verification code."
             )
         )
 
@@ -698,10 +858,6 @@ def resend_verification_code(token):
                 token=token,
             )
         )
-
-    # -----------------------------------------------------
-    # SEND NEW CODE
-    # -----------------------------------------------------
 
     try:
 
@@ -754,12 +910,712 @@ def resend_verification_code(token):
 )
 def registration_submitted():
     """
-    Displayed after the user's email
-    has been verified.
+    Registration has passed email verification
+    and is now waiting for SuperAdmin approval.
     """
 
     return render_template(
         "auth/registration_submitted.html"
+    )
+
+
+# =========================================================
+# FORGOT PASSWORD
+# =========================================================
+
+@auth_bp.route(
+    "/forgot-password",
+    methods=["GET", "POST"],
+)
+def forgot_password():
+    """
+    Start the password reset process.
+
+    Security:
+    The response must not reveal whether
+    an email address exists in the system.
+    """
+
+    if current_user.is_authenticated:
+
+        return redirect(
+            url_for(
+                "main.index"
+            )
+        )
+
+    form = ForgotPasswordForm()
+
+    if form.validate_on_submit():
+
+        email = (
+            form.email.data
+            .strip()
+            .lower()
+        )
+
+        # -------------------------------------------------
+        # LOOK UP ACCOUNT
+        # -------------------------------------------------
+
+        user = db.session.scalar(
+            db.select(User)
+            .where(
+                User.email == email
+            )
+        )
+
+        # The browser token is created even when
+        # the account does not exist.
+        #
+        # This helps prevent account enumeration.
+        token = (
+            _create_password_reset_token(
+                email
+            )
+        )
+
+        # -------------------------------------------------
+        # ONLY SEND OTP FOR ELIGIBLE ACCOUNTS
+        # -------------------------------------------------
+
+        if (
+            user is not None
+            and
+            _password_reset_allowed(user)
+        ):
+
+            try:
+
+                # Check whether a reset record
+                # already exists.
+                existing_reset = (
+                    db.session.scalar(
+                        db.select(
+                            PasswordResetCode
+                        ).where(
+                            PasswordResetCode.user_id
+                            == user.id
+                        )
+                    )
+                )
+
+                # Repeated Forgot Password requests
+                # should also respect resend limits.
+                reset_code = (
+                    issue_password_reset_code(
+                        user=user,
+                        is_resend=(
+                            existing_reset
+                            is not None
+                        ),
+                    )
+                )
+
+                db.session.commit()
+
+            except PasswordResetRateLimitError:
+
+                db.session.rollback()
+
+                # Do not reveal whether this email exists.
+                current_app.logger.info(
+                    (
+                        "Password reset rate limit "
+                        f"reached for account {user.id}."
+                    )
+                )
+
+            except SQLAlchemyError:
+
+                db.session.rollback()
+
+                current_app.logger.exception(
+                    (
+                        "Database error while creating "
+                        "password reset code."
+                    )
+                )
+
+            else:
+
+                try:
+
+                    send_password_reset_code_email(
+                        user=user,
+                        code=reset_code,
+                    )
+
+                except Exception:
+
+                    current_app.logger.exception(
+                        (
+                            "Unable to send password "
+                            "reset verification email."
+                        )
+                    )
+
+        # -------------------------------------------------
+        # GENERIC RESPONSE
+        # -------------------------------------------------
+
+        flash(
+            (
+                "If an account exists for this email, "
+                "a 6-digit password reset code "
+                "has been sent."
+            ),
+            "info",
+        )
+
+        return redirect(
+            url_for(
+                "auth.verify_password_reset",
+                token=token,
+            )
+        )
+
+    return render_template(
+        "auth/forgot_password.html",
+        form=form,
+    )
+
+
+# =========================================================
+# VERIFY PASSWORD RESET OTP
+# =========================================================
+
+@auth_bp.route(
+    "/password-reset/verify/<token>",
+    methods=["GET", "POST"],
+)
+def verify_password_reset(token):
+    """
+    Verify the 6-digit password reset code.
+    """
+
+    email = (
+        _get_password_reset_email(
+            token
+        )
+    )
+
+    if email is None:
+
+        flash(
+            (
+                "This password reset session "
+                "is invalid or has expired."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "auth.forgot_password"
+            )
+        )
+
+    form = (
+        PasswordResetVerificationForm()
+    )
+
+    resend_form = (
+        ResendVerificationForm()
+    )
+
+    user = db.session.scalar(
+        db.select(User)
+        .where(
+            User.email == email
+        )
+    )
+
+    if form.validate_on_submit():
+
+        # -------------------------------------------------
+        # GENERIC FAILURE FOR INVALID / INELIGIBLE ACCOUNT
+        # -------------------------------------------------
+
+        if (
+            user is None
+            or
+            not _password_reset_allowed(user)
+        ):
+
+            flash(
+                (
+                    "The verification code is "
+                    "invalid or has expired."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "auth/verify_password_reset.html",
+                form=form,
+                resend_form=resend_form,
+                token=token,
+            )
+
+        # -------------------------------------------------
+        # VERIFY OTP
+        # -------------------------------------------------
+
+        success, message = (
+            verify_password_reset_code(
+                user=user,
+                submitted_code=(
+                    form.code.data
+                ),
+            )
+        )
+
+        try:
+
+            db.session.commit()
+
+        except SQLAlchemyError:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "Unable to save password "
+                    "reset verification result."
+                )
+            )
+
+            flash(
+                (
+                    "The verification could not "
+                    "be completed. Please try again."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "auth/verify_password_reset.html",
+                form=form,
+                resend_form=resend_form,
+                token=token,
+            )
+
+        if not success:
+
+            flash(
+                message,
+                "error",
+            )
+
+            return render_template(
+                "auth/verify_password_reset.html",
+                form=form,
+                resend_form=resend_form,
+                token=token,
+            )
+
+        flash(
+            (
+                "Verification successful. "
+                "You can now create a new password."
+            ),
+            "success",
+        )
+
+        return redirect(
+            url_for(
+                "auth.reset_password",
+                token=token,
+            )
+        )
+
+    return render_template(
+        "auth/verify_password_reset.html",
+        form=form,
+        resend_form=resend_form,
+        token=token,
+    )
+
+
+# =========================================================
+# RESEND PASSWORD RESET OTP
+# =========================================================
+
+@auth_bp.route(
+    "/password-reset/verify/<token>/resend",
+    methods=["POST"],
+)
+def resend_password_reset_code(token):
+    """
+    Send another password reset OTP.
+
+    The response avoids exposing whether
+    the submitted email exists.
+    """
+
+    email = (
+        _get_password_reset_email(
+            token
+        )
+    )
+
+    if email is None:
+
+        flash(
+            (
+                "This password reset session "
+                "is invalid or has expired."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "auth.forgot_password"
+            )
+        )
+
+    form = (
+        ResendVerificationForm()
+    )
+
+    if not form.validate_on_submit():
+
+        flash(
+            (
+                "Unable to resend the "
+                "verification code."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "auth.verify_password_reset",
+                token=token,
+            )
+        )
+
+    user = db.session.scalar(
+        db.select(User)
+        .where(
+            User.email == email
+        )
+    )
+
+    # -----------------------------------------------------
+    # REAL ELIGIBLE ACCOUNT
+    # -----------------------------------------------------
+
+    if (
+        user is not None
+        and
+        _password_reset_allowed(user)
+    ):
+
+        try:
+
+            reset_code = (
+                issue_password_reset_code(
+                    user=user,
+                    is_resend=True,
+                )
+            )
+
+            db.session.commit()
+
+        except PasswordResetRateLimitError as exc:
+
+            db.session.rollback()
+
+            flash(
+                str(exc),
+                "warning",
+            )
+
+            return redirect(
+                url_for(
+                    "auth.verify_password_reset",
+                    token=token,
+                )
+            )
+
+        except SQLAlchemyError:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "Database error while resending "
+                    "password reset code."
+                )
+            )
+
+        else:
+
+            try:
+
+                send_password_reset_code_email(
+                    user=user,
+                    code=reset_code,
+                )
+
+            except Exception:
+
+                current_app.logger.exception(
+                    (
+                        "Unable to resend password "
+                        "reset verification code."
+                    )
+                )
+
+            else:
+
+                flash(
+                    (
+                        "A new password reset code "
+                        "has been sent to your email."
+                    ),
+                    "success",
+                )
+
+                return redirect(
+                    url_for(
+                        "auth.verify_password_reset",
+                        token=token,
+                    )
+                )
+
+    # -----------------------------------------------------
+    # GENERIC RESPONSE FOR UNKNOWN / INELIGIBLE ACCOUNT
+    # -----------------------------------------------------
+
+    flash(
+        (
+            "If an eligible account exists for "
+            "this email, a new verification code "
+            "has been sent."
+        ),
+        "info",
+    )
+
+    return redirect(
+        url_for(
+            "auth.verify_password_reset",
+            token=token,
+        )
+    )
+
+
+# =========================================================
+# RESET PASSWORD
+# =========================================================
+
+@auth_bp.route(
+    "/password-reset/new/<token>",
+    methods=["GET", "POST"],
+)
+def reset_password(token):
+    """
+    Set a new password after successful
+    password reset OTP verification.
+    """
+
+    email = (
+        _get_password_reset_email(
+            token
+        )
+    )
+
+    if email is None:
+
+        flash(
+            (
+                "This password reset session "
+                "is invalid or has expired."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "auth.forgot_password"
+            )
+        )
+
+    user = db.session.scalar(
+        db.select(User)
+        .where(
+            User.email == email
+        )
+    )
+
+    if (
+        user is None
+        or
+        not _password_reset_allowed(user)
+    ):
+
+        flash(
+            (
+                "This password reset session "
+                "is invalid or has expired."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "auth.forgot_password"
+            )
+        )
+
+    # -----------------------------------------------------
+    # RESET MUST HAVE PASSED OTP VERIFICATION
+    # -----------------------------------------------------
+
+    reset = (
+        get_valid_verified_reset(
+            user
+        )
+    )
+
+    if reset is None:
+
+        flash(
+            (
+                "Your password reset verification "
+                "has expired. Please start again."
+            ),
+            "warning",
+        )
+
+        return redirect(
+            url_for(
+                "auth.forgot_password"
+            )
+        )
+
+    form = ResetPasswordForm()
+
+    if form.validate_on_submit():
+
+        now = datetime.now(
+            timezone.utc
+        )
+
+        # -------------------------------------------------
+        # SET NEW PASSWORD
+        # -------------------------------------------------
+
+        user.set_password(
+            form.password.data
+        )
+
+        user.password_changed_at = (
+            now
+        )
+
+        # -------------------------------------------------
+        # CLEAR FAILED LOGIN SECURITY STATE
+        # -------------------------------------------------
+
+        user.failed_login_attempts = 0
+        user.locked_at = None
+
+        # A password reset unlocks accounts locked
+        # specifically by failed login attempts.
+        if (
+            user.status
+            == UserStatus.LOCKED.value
+        ):
+
+            user.status = (
+                UserStatus.ACTIVE.value
+            )
+
+        # Disabled accounts remain disabled.
+        # Pending accounts remain pending.
+
+        # -------------------------------------------------
+        # INVALIDATE RESET REQUEST
+        # -------------------------------------------------
+
+        reset.used_at = now
+
+        # -------------------------------------------------
+        # SAVE
+        # -------------------------------------------------
+
+        try:
+
+            db.session.commit()
+
+        except SQLAlchemyError:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "Database error while resetting "
+                    "account password."
+                )
+            )
+
+            flash(
+                (
+                    "Your password could not "
+                    "be changed. Please try again."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "auth/reset_password.html",
+                form=form,
+                token=token,
+            )
+
+        # -------------------------------------------------
+        # SECURITY NOTIFICATION EMAIL
+        # -------------------------------------------------
+
+        try:
+
+            send_password_changed_email(
+                user=user
+            )
+
+        except Exception:
+
+            current_app.logger.exception(
+                (
+                    "Password changed successfully, "
+                    "but security notification email "
+                    "could not be sent."
+                )
+            )
+
+        flash(
+            (
+                "Your password has been changed "
+                "successfully. You can now sign in "
+                "with your new password."
+            ),
+            "success",
+        )
+
+        return redirect(
+            url_for(
+                "auth.login"
+            )
+        )
+
+    return render_template(
+        "auth/reset_password.html",
+        form=form,
+        token=token,
     )
 
 
@@ -774,9 +1630,12 @@ def registration_submitted():
 def login():
     """
     Authenticate using:
+
     - Email
     - Username
-    - Phone Number
+
+    Phone number is profile/contact information
+    only and is not a login identifier.
     """
 
     if current_user.is_authenticated:
@@ -791,13 +1650,10 @@ def login():
 
     if form.validate_on_submit():
 
-        raw_identifier = (
+        identifier = (
             form.identifier.data
             .strip()
-        )
-
-        normalized_identifier = (
-            raw_identifier.lower()
+            .lower()
         )
 
         user = db.session.scalar(
@@ -805,37 +1661,44 @@ def login():
             .where(
                 or_(
                     User.email
-                    == normalized_identifier,
+                    == identifier,
 
                     User.username
-                    == normalized_identifier,
+                    == identifier,
                 )
             )
         )
 
         # -------------------------------------------------
-        # INVALID CREDENTIALS
+        # INVALID LOGIN
         # -------------------------------------------------
 
         if (
             user is None
-            or not user.check_password(
+            or
+            not user.check_password(
                 form.password.data
             )
         ):
 
+            # Only update failed attempts when
+            # the account actually exists.
             if user is not None:
 
                 user.failed_login_attempts += 1
+
+                max_attempts = (
+                    current_app.config[
+                        "MAX_FAILED_LOGIN_ATTEMPTS"
+                    ]
+                )
 
                 if (
                     user.status
                     == UserStatus.ACTIVE.value
                     and
                     user.failed_login_attempts
-                    >= current_app.config[
-                        "MAX_FAILED_LOGIN_ATTEMPTS"
-                    ]
+                    >= max_attempts
                 ):
 
                     user.status = (
@@ -848,10 +1711,23 @@ def login():
                         )
                     )
 
-                db.session.commit()
+                try:
 
-            # Do not reveal whether the
-            # account exists.
+                    db.session.commit()
+
+                except SQLAlchemyError:
+
+                    db.session.rollback()
+
+                    current_app.logger.exception(
+                        (
+                            "Unable to update failed "
+                            "login attempt counter."
+                        )
+                    )
+
+            # Generic response prevents account
+            # enumeration.
             flash(
                 "Invalid login credentials.",
                 "error",
@@ -863,7 +1739,7 @@ def login():
             )
 
         # -------------------------------------------------
-        # PENDING
+        # PENDING ACCOUNT
         # -------------------------------------------------
 
         if (
@@ -871,7 +1747,7 @@ def login():
             == UserStatus.PENDING.value
         ):
 
-            # Email has not been verified yet.
+            # Email is not verified yet.
             if (
                 user.email_verified_at
                 is None
@@ -913,7 +1789,7 @@ def login():
             )
 
         # -------------------------------------------------
-        # REJECTED
+        # REJECTED ACCOUNT
         # -------------------------------------------------
 
         if (
@@ -935,7 +1811,7 @@ def login():
             )
 
         # -------------------------------------------------
-        # DISABLED
+        # DISABLED ACCOUNT
         # -------------------------------------------------
 
         if (
@@ -957,7 +1833,7 @@ def login():
             )
 
         # -------------------------------------------------
-        # LOCKED
+        # LOCKED ACCOUNT
         # -------------------------------------------------
 
         if (
@@ -967,8 +1843,10 @@ def login():
 
             flash(
                 (
-                    "Your account is locked due "
-                    "to multiple failed login attempts."
+                    "Your account is locked due to "
+                    "multiple failed login attempts. "
+                    "You may reset your password "
+                    "to recover your account."
                 ),
                 "error",
             )
@@ -979,7 +1857,7 @@ def login():
             )
 
         # -------------------------------------------------
-        # UNKNOWN ACCOUNT STATUS
+        # UNKNOWN STATUS
         # -------------------------------------------------
 
         if (
@@ -1001,20 +1879,46 @@ def login():
             )
 
         # -------------------------------------------------
-        # SUCCESS
+        # SUCCESSFUL LOGIN
         # -------------------------------------------------
-
-        user.failed_login_attempts = 0
-        user.locked_at = None
 
         now = datetime.now(
             timezone.utc
         )
 
+        user.failed_login_attempts = 0
+        user.locked_at = None
+
         user.last_login_at = now
         user.last_active_at = now
 
-        db.session.commit()
+        try:
+
+            db.session.commit()
+
+        except SQLAlchemyError:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "Unable to save successful "
+                    "login information."
+                )
+            )
+
+            flash(
+                (
+                    "The system could not complete "
+                    "your login. Please try again."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "auth/login.html",
+                form=form,
+            )
 
         login_user(
             user,
@@ -1044,6 +1948,9 @@ def login():
     methods=["POST"],
 )
 def logout():
+    """
+    Sign out the current user.
+    """
 
     if current_user.is_authenticated:
 

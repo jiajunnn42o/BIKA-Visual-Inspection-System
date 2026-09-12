@@ -131,6 +131,11 @@ class User(UserMixin, db.Model):
         nullable=True
     )
 
+    password_changed_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=True,
+    )
+
     # Registration approval information
     approved_at = db.Column(
         db.DateTime(timezone=True),
