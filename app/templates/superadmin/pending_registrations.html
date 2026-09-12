@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}
+Pending Registrations | BIKA
+{% endblock %}
+
+{% block content %}
+
+<h1>Pending Registrations</h1>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <p class="flash-{{ category }}">
+                {{ message }}
+            </p>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+
+{% if users %}
+
+    <table border="1" cellpadding="10">
+
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Employee ID</th>
+                <th>Department</th>
+                <th>Job Title</th>
+                <th>Shift</th>
+                <th>Submitted</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            {% for user in users %}
+
+                <tr>
+
+                    <td>
+                        {{ user.full_name }}
+                    </td>
+
+                    <td>
+                        {{ user.username }}
+                    </td>
+
+                    <td>
+                        {{ user.email }}
+                    </td>
+
+                    <td>
+                        {{ user.employee_id }}
+                    </td>
+
+                    <td>
+                        {{ user.department }}
+                    </td>
+
+                    <td>
+                        {{ user.job_title }}
+                    </td>
+
+                    <td>
+                        {{ user.shift }}
+                    </td>
+
+                    <td>
+                        {{ user.created_at }}
+                    </td>
+
+                    <td>
+                        <a
+                            href="{{ url_for(
+                                'superadmin.review_registration',
+                                user_id=user.id
+                            ) }}"
+                        >
+                            Review
+                        </a>
+                    </td>
+
+                </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+{% else %}
+
+    <p>
+        There are currently no pending registrations.
+    </p>
+
+{% endif %}
+
+{% endblock %}

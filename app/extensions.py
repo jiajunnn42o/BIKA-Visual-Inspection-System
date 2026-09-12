@@ -2,20 +2,21 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
+from flask_mail import Mail
 
 
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
 csrf = CSRFProtect()
+mail = Mail()
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    """
-    Temporary user loader.
+    from app.models import User
 
-    The real database-backed user loader will replace this
-    after the User model is created.
-    """
-    return None
+    try:
+        return db.session.get(User, int(user_id))
+    except (TypeError, ValueError):
+        return None

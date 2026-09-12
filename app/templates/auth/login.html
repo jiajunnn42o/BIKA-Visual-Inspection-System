@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}
+Login | BIKA Visual Inspection
+{% endblock %}
+
+{% block content %}
+
+<h1>Login</h1>
+
+<!-- Flash messages from backend -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endwith %}
+
+
+<!-- Temporary form validation debug -->
+{% if form.errors %}
+    <div class="form-errors">
+        <strong>Form Errors:</strong>
+
+        {% for field, errors in form.errors.items() %}
+            {% for error in errors %}
+                <p>
+                    {{ field }}: {{ error }}
+                </p>
+            {% endfor %}
+        {% endfor %}
+    </div>
+{% endif %}
+
+
+<form method="POST">
+
+    <!-- CSRF Token -->
+    {{ form.hidden_tag() }}
+
+    <div>
+        {{ form.identifier.label }}
+
+        {{ form.identifier(
+            autocomplete="username"
+        ) }}
+
+        {% for error in form.identifier.errors %}
+            <p>
+                {{ error }}
+            </p>
+        {% endfor %}
+    </div>
+
+
+    <div>
+        {{ form.password.label }}
+
+        {{ form.password(
+            autocomplete="current-password"
+        ) }}
+
+        {% for error in form.password.errors %}
+            <p>
+                {{ error }}
+            </p>
+        {% endfor %}
+    </div>
+
+
+    <div>
+        {{ form.remember_me() }}
+        {{ form.remember_me.label }}
+    </div>
+
+
+    <div>
+        {{ form.submit() }}
+    </div>
+
+</form>
+
+
+<p>
+    Don't have an account?
+
+    <a href="{{ url_for('auth.register') }}">
+        Register
+    </a>
+</p>
+
+{% endblock %}

@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}
+Review Registration | BIKA
+{% endblock %}
+
+{% block content %}
+
+<h1>Review Registration</h1>
+
+<p>
+    Applicant:
+    <strong>
+        {{ user.full_name }}
+    </strong>
+</p>
+
+<p>
+    Submitted:
+    {{ user.created_at }}
+</p>
+
+<p>
+    Current Status:
+    {{ user.status }}
+</p>
+
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <p class="flash-{{ category }}">
+                {{ message }}
+            </p>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+
+<form method="POST">
+
+    {{ form.hidden_tag() }}
+
+
+    <div>
+        {{ form.first_name.label }}
+        {{ form.first_name() }}
+
+        {% for error in form.first_name.errors %}
+            <p>{{ error }}</p>
+        {% endfor %}
+    </div>
+
+
+    <div>
+        {{ form.last_name.label }}
+        {{ form.last_name() }}
+
+        {% for error in form.last_name.errors %}
+            <p>{{ error }}</p>
+        {% endfor %}
+    </div>
+
+
+    <div>
+        {{ form.username.label }}
+        {{ form.username() }}
+
+        {% for error in form.username.errors %}
+            <p>{{ error }}</p>
+        {% endfor %}
+    </div>
+
+
+    <div>
+        {{ form.email.label }}
+        {{ form.email() }}
+
+        {% for error in form.email.errors %}
+            <p>{{ error }}</p>
+        {% endfor %}
+    </div>
+
+
+    <div>
+        {{ form.phone_number.label }}
+        {{ form.phone_number() }}
+    </div>
+
+
+    <div>
+        {{ form.job_title.label }}
+        {{ form.job_title() }}
+    </div>
+
+
+    <div>
+        {{ form.department.label }}
+        {{ form.department() }}
+    </div>
+
+
+    <div>
+        {{ form.shift.label }}
+        {{ form.shift() }}
+    </div>
+
+
+    <div>
+        {{ form.employee_id.label }}
+        {{ form.employee_id() }}
+    </div>
+
+
+    <div>
+        {{ form.role.label }}
+        {{ form.role() }}
+
+        <p>
+            Only a SuperAdmin can assign or change
+            the account role.
+        </p>
+    </div>
+
+
+    <hr>
+
+
+    <div>
+        {{ form.save_changes() }}
+    </div>
+
+
+    <div>
+        {{ form.approve() }}
+    </div>
+
+
+    <hr>
+
+
+    <div>
+        {{ form.rejection_reason.label }}
+
+        {{ form.rejection_reason(
+            rows="5"
+        ) }}
+
+        <p>
+            A reason is required when rejecting
+            a registration.
+        </p>
+    </div>
+
+
+    <div>
+        {{ form.reject() }}
+    </div>
+
+</form>
+
+
+<p>
+    <a
+        href="{{ url_for(
+            'superadmin.pending_registrations'
+        ) }}"
+    >
+        Back to Pending Registrations
+    </a>
+</p>
+
+{% endblock %}

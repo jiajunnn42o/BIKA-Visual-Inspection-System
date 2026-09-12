@@ -8,6 +8,34 @@ BIKA Visual Inspection System
 
 <h1>BIKA Visual Inspection System</h1>
 
-<p>System environment is running successfully.</p>
+<p>
+    Logged in as:
+    {{ current_user.full_name }}
+</p>
+
+<p>
+    Role:
+    {{ current_user.role }}
+</p>
+
+<p>
+    Status:
+    {{ current_user.status }}
+</p>
+
+<form
+    method="POST"
+    action="{{ url_for('auth.logout') }}"
+>
+    <input
+        type="hidden"
+        name="csrf_token"
+        value="{{ csrf_token() }}"
+    >
+
+    <button type="submit">
+        Logout
+    </button>
+</form>
 
 {% endblock %}
