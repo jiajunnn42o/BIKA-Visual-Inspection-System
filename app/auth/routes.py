@@ -15,14 +15,25 @@ from flask_login import (
     logout_user,
 )
 
+from itsdangerous import (
+    BadSignature,
+    SignatureExpired,
+    URLSafeTimedSerializer,
+)
+
 from sqlalchemy import or_
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import (
+    IntegrityError,
+    SQLAlchemyError,
+)
 
 from app.auth import auth_bp
 
 from app.auth.forms import (
+    EmailVerificationForm,
     LoginForm,
     RegistrationForm,
+    ResendVerificationForm,
 )
 
 from app.extensions import db
@@ -34,8 +45,117 @@ from app.models import (
 )
 
 from app.services.email_service import (
+    send_email_verification_code_email,
     send_new_registration_to_superadmins,
 )
+
+from app.services.email_verification_service import (
+    VerificationRateLimitError,
+    issue_verification_code,
+    verify_email_code,
+)
+
+from app.utils.phone import (
+    normalize_malaysian_mobile,
+)
+
+# =========================================================
+# EMAIL VERIFICATION TOKEN SETTINGS
+# =========================================================
+
+EMAIL_VERIFICATION_TOKEN_MAX_AGE = (
+    7 * 24 * 60 * 60
+)
+
+
+def _verification_serializer():
+    """
+    Create a signed serializer used for email
+    verification URLs.
+    """
+
+    return URLSafeTimedSerializer(
+        current_app.config["SECRET_KEY"],
+        salt="bika-email-verification",
+    )
+
+
+def _create_verification_token(user):
+    """
+    Create a signed verification token.
+
+    The token contains:
+    - User ID
+    - Current email address
+
+    If the user's email changes, the old token
+    automatically becomes invalid.
+    """
+
+    return (
+        _verification_serializer()
+        .dumps(
+            {
+                "user_id": user.id,
+                "email": user.email,
+            }
+        )
+    )
+
+
+def _get_verification_user(token):
+    """
+    Read and validate a verification token.
+
+    Returns:
+        User object
+        or None if invalid / expired.
+    """
+
+    try:
+
+        data = (
+            _verification_serializer()
+            .loads(
+                token,
+                max_age=(
+                    EMAIL_VERIFICATION_TOKEN_MAX_AGE
+                ),
+            )
+        )
+
+    except (
+        SignatureExpired,
+        BadSignature,
+    ):
+
+        return None
+
+    user_id = data.get(
+        "user_id"
+    )
+
+    email = data.get(
+        "email"
+    )
+
+    if user_id is None:
+        return None
+
+    user = db.session.get(
+        User,
+        user_id,
+    )
+
+    if user is None:
+        return None
+
+    # If the account email was changed after
+    # this token was generated, invalidate it.
+    if user.email != email:
+        return None
+
+    return user
 
 
 # =========================================================
@@ -47,12 +167,22 @@ from app.services.email_service import (
     methods=["GET", "POST"],
 )
 def register():
+    """
+    Public registration.
 
-    # A logged-in user does not need to register again.
+    New users:
+    - Always receive role = user
+    - Always receive status = pending
+    - Must verify their email
+    - Cannot log in until SuperAdmin approval
+    """
+
     if current_user.is_authenticated:
 
         return redirect(
-            url_for("main.index")
+            url_for(
+                "main.index"
+            )
         )
 
     form = RegistrationForm()
@@ -60,7 +190,7 @@ def register():
     if form.validate_on_submit():
 
         # -------------------------------------------------
-        # CREATE NEW USER
+        # CREATE USER OBJECT
         # -------------------------------------------------
 
         user = User(
@@ -74,21 +204,22 @@ def register():
                 .strip()
             ),
 
-            email=(
-                form.email.data
-                .strip()
-                .lower()
-            ),
-
             username=(
                 form.username.data
                 .strip()
                 .lower()
             ),
 
-            phone_number=(
-                form.phone_number.data
+            email=(
+                form.email.data
                 .strip()
+                .lower()
+            ),
+
+            phone_number=(
+                normalize_malaysian_mobile(
+                    form.phone_number.data
+                )
             ),
 
             job_title=(
@@ -112,26 +243,39 @@ def register():
                 .upper()
             ),
 
-            # Public registration is always User.
+            # Public users cannot select their role.
             role=UserRole.USER.value,
 
-            # Every public registration requires
-            # SuperAdmin approval.
+            # Registration requires SuperAdmin approval.
             status=UserStatus.PENDING.value,
         )
 
-        # Password is hashed before storing.
+        # Password is hashed before being stored.
         user.set_password(
             form.password.data
         )
 
         # -------------------------------------------------
-        # SAVE REGISTRATION
+        # CREATE USER + VERIFICATION CODE
+        # IN ONE DATABASE TRANSACTION
         # -------------------------------------------------
 
         try:
 
-            db.session.add(user)
+            db.session.add(
+                user
+            )
+
+            # Assign an ID without committing yet.
+            db.session.flush()
+
+            verification_code = (
+                issue_verification_code(
+                    user=user,
+                    is_resend=False,
+                )
+            )
+
             db.session.commit()
 
         except IntegrityError:
@@ -141,8 +285,32 @@ def register():
             flash(
                 (
                     "An account with the same email, "
-                    "username, phone number, or employee ID "
-                    "already exists."
+                    "username, phone number, or "
+                    "employee ID already exists."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "auth/register.html",
+                form=form,
+            )
+
+        except SQLAlchemyError:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "Database error while creating "
+                    "registration."
+                )
+            )
+
+            flash(
+                (
+                    "Your registration could not "
+                    "be completed. Please try again."
                 ),
                 "error",
             )
@@ -153,26 +321,201 @@ def register():
             )
 
         # -------------------------------------------------
-        # FIND ACTIVE SUPERADMINS
+        # CREATE VERIFICATION URL
         # -------------------------------------------------
 
-        superadmins = db.session.scalars(
-            db.select(User)
-            .where(
-                User.role
-                == UserRole.SUPERADMIN.value,
-
-                User.status
-                == UserStatus.ACTIVE.value,
+        verification_token = (
+            _create_verification_token(
+                user
             )
-            .order_by(
-                User.id.asc()
-            )
-        ).all()
+        )
 
         # -------------------------------------------------
-        # NOTIFY SUPERADMINS
+        # SEND VERIFICATION EMAIL
         # -------------------------------------------------
+
+        try:
+
+            send_email_verification_code_email(
+                user=user,
+                code=verification_code,
+            )
+
+        except Exception:
+
+            # Account remains created.
+            # User may request another verification code.
+            current_app.logger.exception(
+                (
+                    "Unable to send registration "
+                    "email verification code."
+                )
+            )
+
+            flash(
+                (
+                    "Your account was created, "
+                    "but the verification email "
+                    "could not be sent. "
+                    "Please request another code."
+                ),
+                "warning",
+            )
+
+        return redirect(
+            url_for(
+                "auth.verify_email",
+                token=verification_token,
+            )
+        )
+
+    return render_template(
+        "auth/register.html",
+        form=form,
+    )
+
+
+# =========================================================
+# VERIFY EMAIL
+# =========================================================
+
+@auth_bp.route(
+    "/verify-email/<token>",
+    methods=["GET", "POST"],
+)
+def verify_email(token):
+    """
+    Verify ownership of the registered email
+    using a 6-digit verification code.
+    """
+
+    user = (
+        _get_verification_user(
+            token
+        )
+    )
+
+    if user is None:
+
+        flash(
+            (
+                "This email verification link "
+                "is invalid or has expired."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "auth.register"
+            )
+        )
+
+    # -----------------------------------------------------
+    # ALREADY VERIFIED
+    # -----------------------------------------------------
+
+    if (
+        user.email_verified_at
+        is not None
+    ):
+
+        return redirect(
+            url_for(
+                "auth.registration_submitted"
+            )
+        )
+
+    form = (
+        EmailVerificationForm()
+    )
+
+    resend_form = (
+        ResendVerificationForm()
+    )
+
+    # -----------------------------------------------------
+    # VERIFY SUBMITTED CODE
+    # -----------------------------------------------------
+
+    if form.validate_on_submit():
+
+        success, message = (
+            verify_email_code(
+                user=user,
+                submitted_code=(
+                    form.code.data
+                ),
+            )
+        )
+
+        try:
+
+            db.session.commit()
+
+        except SQLAlchemyError:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "Unable to save email "
+                    "verification result."
+                )
+            )
+
+            flash(
+                (
+                    "The verification could not "
+                    "be completed. Please try again."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "auth/verify_email.html",
+                user=user,
+                form=form,
+                resend_form=resend_form,
+                token=token,
+            )
+
+        if not success:
+
+            flash(
+                message,
+                "error",
+            )
+
+            return render_template(
+                "auth/verify_email.html",
+                user=user,
+                form=form,
+                resend_form=resend_form,
+                token=token,
+            )
+
+        # -------------------------------------------------
+        # EMAIL VERIFIED
+        # NOW NOTIFY ACTIVE SUPERADMINS
+        # -------------------------------------------------
+
+        superadmins = (
+            db.session.scalars(
+                db.select(User)
+                .where(
+                    User.role
+                    == UserRole.SUPERADMIN.value,
+
+                    User.status
+                    == UserStatus.ACTIVE.value,
+                )
+                .order_by(
+                    User.id.asc()
+                )
+            )
+            .all()
+        )
 
         try:
 
@@ -185,8 +528,9 @@ def register():
 
             current_app.logger.info(
                 (
-                    "New registration notification result "
-                    f"for user {user.id}: "
+                    "Registration email verified. "
+                    f"User ID {user.id}. "
+                    f"SuperAdmin notifications: "
                     f"{notification_result['sent']} sent, "
                     f"{notification_result['failed']} failed."
                 )
@@ -194,18 +538,24 @@ def register():
 
         except Exception:
 
-            # Registration remains valid even if
-            # notification sending unexpectedly fails.
+            # Email verification remains successful
+            # even if SuperAdmin notification fails.
             current_app.logger.exception(
                 (
-                    "Unexpected error while sending "
-                    "new registration notifications."
+                    "Unable to notify SuperAdmins "
+                    "after email verification."
                 )
             )
 
-        # -------------------------------------------------
-        # REGISTRATION COMPLETE
-        # -------------------------------------------------
+        flash(
+            (
+                "Your email has been verified "
+                "successfully. Your registration "
+                "is now waiting for SuperAdmin "
+                "approval."
+            ),
+            "success",
+        )
 
         return redirect(
             url_for(
@@ -214,8 +564,184 @@ def register():
         )
 
     return render_template(
-        "auth/register.html",
+        "auth/verify_email.html",
+        user=user,
         form=form,
+        resend_form=resend_form,
+        token=token,
+    )
+
+
+# =========================================================
+# RESEND EMAIL VERIFICATION CODE
+# =========================================================
+
+@auth_bp.route(
+    "/verify-email/<token>/resend",
+    methods=["POST"],
+)
+def resend_verification_code(token):
+    """
+    Send a new 6-digit verification code.
+
+    Security limits are handled by
+    email_verification_service.py.
+    """
+
+    user = (
+        _get_verification_user(
+            token
+        )
+    )
+
+    if user is None:
+
+        flash(
+            (
+                "This email verification link "
+                "is invalid or has expired."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "auth.register"
+            )
+        )
+
+    if (
+        user.email_verified_at
+        is not None
+    ):
+
+        return redirect(
+            url_for(
+                "auth.registration_submitted"
+            )
+        )
+
+    form = (
+        ResendVerificationForm()
+    )
+
+    if not form.validate_on_submit():
+
+        flash(
+            (
+                "Unable to resend the "
+                "verification code."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "auth.verify_email",
+                token=token,
+            )
+        )
+
+    # -----------------------------------------------------
+    # CREATE NEW VERIFICATION CODE
+    # -----------------------------------------------------
+
+    try:
+
+        verification_code = (
+            issue_verification_code(
+                user=user,
+                is_resend=True,
+            )
+        )
+
+        db.session.commit()
+
+    except VerificationRateLimitError as exc:
+
+        db.session.rollback()
+
+        flash(
+            str(exc),
+            "warning",
+        )
+
+        return redirect(
+            url_for(
+                "auth.verify_email",
+                token=token,
+            )
+        )
+
+    except SQLAlchemyError:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "Unable to create new "
+                "verification code."
+            )
+        )
+
+        flash(
+            (
+                "The verification code could "
+                "not be regenerated."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "auth.verify_email",
+                token=token,
+            )
+        )
+
+    # -----------------------------------------------------
+    # SEND NEW CODE
+    # -----------------------------------------------------
+
+    try:
+
+        send_email_verification_code_email(
+            user=user,
+            code=verification_code,
+        )
+
+    except Exception:
+
+        current_app.logger.exception(
+            (
+                "Unable to resend email "
+                "verification code."
+            )
+        )
+
+        flash(
+            (
+                "The verification email "
+                "could not be sent."
+            ),
+            "error",
+        )
+
+    else:
+
+        flash(
+            (
+                "A new verification code "
+                "has been sent to your email."
+            ),
+            "success",
+        )
+
+    return redirect(
+        url_for(
+            "auth.verify_email",
+            token=token,
+        )
     )
 
 
@@ -227,6 +753,10 @@ def register():
     "/registration-submitted"
 )
 def registration_submitted():
+    """
+    Displayed after the user's email
+    has been verified.
+    """
 
     return render_template(
         "auth/registration_submitted.html"
@@ -242,11 +772,19 @@ def registration_submitted():
     methods=["GET", "POST"],
 )
 def login():
+    """
+    Authenticate using:
+    - Email
+    - Username
+    - Phone Number
+    """
 
     if current_user.is_authenticated:
 
         return redirect(
-            url_for("main.index")
+            url_for(
+                "main.index"
+            )
         )
 
     form = LoginForm()
@@ -262,10 +800,6 @@ def login():
             raw_identifier.lower()
         )
 
-        # Login supports:
-        # - Email
-        # - Username
-        # - Phone Number
         user = db.session.scalar(
             db.select(User)
             .where(
@@ -275,15 +809,12 @@ def login():
 
                     User.username
                     == normalized_identifier,
-
-                    User.phone_number
-                    == raw_identifier,
                 )
             )
         )
 
         # -------------------------------------------------
-        # INVALID ACCOUNT / PASSWORD
+        # INVALID CREDENTIALS
         # -------------------------------------------------
 
         if (
@@ -293,14 +824,10 @@ def login():
             )
         ):
 
-            # Only increment the counter if
-            # the account actually exists.
             if user is not None:
 
                 user.failed_login_attempts += 1
 
-                # Automatically lock an active account
-                # after too many failed login attempts.
                 if (
                     user.status
                     == UserStatus.ACTIVE.value
@@ -323,7 +850,8 @@ def login():
 
                 db.session.commit()
 
-            # Do not reveal whether the account exists.
+            # Do not reveal whether the
+            # account exists.
             flash(
                 "Invalid login credentials.",
                 "error",
@@ -335,7 +863,7 @@ def login():
             )
 
         # -------------------------------------------------
-        # PENDING ACCOUNT
+        # PENDING
         # -------------------------------------------------
 
         if (
@@ -343,6 +871,34 @@ def login():
             == UserStatus.PENDING.value
         ):
 
+            # Email has not been verified yet.
+            if (
+                user.email_verified_at
+                is None
+            ):
+
+                verification_token = (
+                    _create_verification_token(
+                        user
+                    )
+                )
+
+                flash(
+                    (
+                        "Please verify your email "
+                        "address before continuing."
+                    ),
+                    "warning",
+                )
+
+                return redirect(
+                    url_for(
+                        "auth.verify_email",
+                        token=verification_token,
+                    )
+                )
+
+            # Email already verified.
             flash(
                 (
                     "Your account is awaiting "
@@ -357,7 +913,7 @@ def login():
             )
 
         # -------------------------------------------------
-        # REJECTED ACCOUNT
+        # REJECTED
         # -------------------------------------------------
 
         if (
@@ -379,7 +935,7 @@ def login():
             )
 
         # -------------------------------------------------
-        # DISABLED ACCOUNT
+        # DISABLED
         # -------------------------------------------------
 
         if (
@@ -401,7 +957,7 @@ def login():
             )
 
         # -------------------------------------------------
-        # LOCKED ACCOUNT
+        # LOCKED
         # -------------------------------------------------
 
         if (
@@ -411,8 +967,8 @@ def login():
 
             flash(
                 (
-                    "Your account is locked due to "
-                    "multiple failed login attempts."
+                    "Your account is locked due "
+                    "to multiple failed login attempts."
                 ),
                 "error",
             )
@@ -423,7 +979,7 @@ def login():
             )
 
         # -------------------------------------------------
-        # UNKNOWN STATUS
+        # UNKNOWN ACCOUNT STATUS
         # -------------------------------------------------
 
         if (
@@ -445,7 +1001,7 @@ def login():
             )
 
         # -------------------------------------------------
-        # SUCCESSFUL LOGIN
+        # SUCCESS
         # -------------------------------------------------
 
         user.failed_login_attempts = 0
@@ -462,11 +1018,15 @@ def login():
 
         login_user(
             user,
-            remember=form.remember_me.data,
+            remember=(
+                form.remember_me.data
+            ),
         )
 
         return redirect(
-            url_for("main.index")
+            url_for(
+                "main.index"
+            )
         )
 
     return render_template(
@@ -495,5 +1055,7 @@ def logout():
     )
 
     return redirect(
-        url_for("auth.login")
+        url_for(
+            "auth.login"
+        )
     )

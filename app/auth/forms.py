@@ -9,12 +9,17 @@ from wtforms.validators import (
     Email,
     EqualTo,
     Length,
+    Regexp,
     ValidationError,
 )
 
 from app.extensions import db
 from app.models import User
 
+from app.utils.phone import (
+    InvalidPhoneNumberError,
+    normalize_malaysian_mobile,
+)
 
 class RegistrationForm(FlaskForm):
     first_name = StringField(
@@ -142,12 +147,26 @@ class RegistrationForm(FlaskForm):
                 "This username is already in use."
             )
 
-    def validate_phone_number(self, field):
-        phone = field.data.strip()
+    def validate_phone_number(
+        self,
+        field,
+    ):
+        try:
+            normalized_phone = (
+                normalize_malaysian_mobile(
+                    field.data
+                )
+            )
+
+        except InvalidPhoneNumberError as exc:
+            raise ValidationError(
+                str(exc)
+            )
 
         user = db.session.scalar(
             db.select(User).where(
-                User.phone_number == phone
+                User.phone_number
+                == normalized_phone
             )
         )
 
@@ -175,7 +194,7 @@ from wtforms import BooleanField
 
 class LoginForm(FlaskForm):
     identifier = StringField(
-        "Email, Phone Number or Username",
+        "Email or Username",
         validators=[
             DataRequired(),
             Length(max=255),
@@ -195,4 +214,31 @@ class LoginForm(FlaskForm):
 
     submit = SubmitField(
         "Login"
+    )
+
+class EmailVerificationForm(FlaskForm):
+
+    code = StringField(
+        "Verification Code",
+        validators=[
+            DataRequired(),
+            Regexp(
+                r"^\d{6}$",
+                message=(
+                    "Please enter the "
+                    "6-digit verification code."
+                ),
+            ),
+        ],
+    )
+
+    submit = SubmitField(
+        "Verify Email"
+    )
+
+
+class ResendVerificationForm(FlaskForm):
+
+    submit = SubmitField(
+        "Resend Code"
     )

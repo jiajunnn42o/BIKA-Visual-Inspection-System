@@ -319,3 +319,42 @@ BIKA Visual Inspection System
             result["sent"] += 1
 
     return result
+
+def send_email_verification_code_email(
+    user,
+    code,
+):
+    """
+    Send a 6-digit verification code.
+
+    No verification URL is included.
+    The user enters the code directly
+    on the BIKA verification page.
+    """
+
+    body = f"""Hello {user.first_name},
+
+Thank you for registering for the BIKA Visual Inspection System.
+
+Your email verification code is:
+
+{code}
+
+This code will expire in 5 minutes.
+
+Please enter this 6-digit code on the BIKA email verification page.
+
+Do not share this verification code with anyone.
+
+After your email has been verified, your registration will be submitted to a SuperAdmin for approval.
+
+BIKA Visual Inspection System
+"""
+
+    return _send_email(
+        subject="Verify Your BIKA Email Address",
+        recipients=[
+            user.email
+        ],
+        body=body,
+    )

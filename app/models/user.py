@@ -53,6 +53,11 @@ class User(UserMixin, db.Model):
         index=True
     )
 
+    email_verified_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=True
+    )
+
     phone_number = db.Column(
         db.String(30),
         nullable=False,
@@ -234,6 +239,10 @@ class User(UserMixin, db.Model):
             UserRole.ADMIN.value,
             UserRole.SUPERADMIN.value,
         }
+
+    @property
+    def is_email_verified(self):
+        return self.email_verified_at is not None
 
     def __repr__(self):
         return f"<User {self.username}>"
