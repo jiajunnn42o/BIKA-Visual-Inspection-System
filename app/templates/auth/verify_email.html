@@ -1,79 +1,197 @@
-{% extends "base.html" %}
+{% extends "auth/auth_base.html" %}
+
+{% from "auth/_otp_input.html" import otp_input %}
+
 
 {% block title %}
-Verify Email | BIKA Visual Inspection
+Verify Email | BIKA Visual Inspection System
 {% endblock %}
 
-{% block content %}
 
-<h1>Verify your email</h1>
+{% block auth_content %}
 
-<p>
-    We sent a 6-digit verification code to:
-</p>
+<!-- =====================================================
+     BRAND
+     ===================================================== -->
 
-<p>
-    <strong>
+<div class="auth-brand">
+
+    <h1 class="auth-brand-name">
+        BIKA
+    </h1>
+
+    <p class="auth-brand-subtitle">
+        Visual Inspection System
+    </p>
+
+</div>
+
+
+<!-- =====================================================
+     HEADING
+     ===================================================== -->
+
+<header class="auth-heading verification-heading">
+
+    <h2 class="auth-title">
+        Verify your email
+    </h2>
+
+    <p class="auth-page-description">
+        We sent a 6-digit verification code to
+    </p>
+
+    <p class="auth-verification-address">
         {{ user.email }}
-    </strong>
-</p>
+    </p>
 
-<p>
-    The code expires in 5 minutes.
-</p>
+</header>
 
+
+<!-- =====================================================
+     FLASH MESSAGES
+     ===================================================== -->
 
 {% with messages = get_flashed_messages(with_categories=true) %}
+
     {% if messages %}
-        {% for category, message in messages %}
-            <p class="flash-{{ category }}">
-                {{ message }}
-            </p>
-        {% endfor %}
+
+        <div class="auth-flashes">
+
+            {% for category, message in messages %}
+
+                <div
+                    class="auth-flash {{ category }}"
+                    role="alert"
+                >
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        </div>
+
     {% endif %}
+
 {% endwith %}
 
 
-<form method="POST">
-
-    {{ form.hidden_tag() }}
-
-    <div>
-        {{ form.code.label }}
-
-        {{ form.code(
-            inputmode="numeric",
-            maxlength="6",
-            autocomplete="one-time-code"
-        ) }}
-
-        {% for error in form.code.errors %}
-            <p>
-                {{ error }}
-            </p>
-        {% endfor %}
-    </div>
-
-    {{ form.submit() }}
-
-</form>
-
-
-<hr>
-
+<!-- =====================================================
+     VERIFY FORM
+     ===================================================== -->
 
 <form
     method="POST"
     action="{{ url_for(
-        'auth.resend_verification_code',
+        'auth.verify_email',
         token=token
     ) }}"
+    class="auth-form otp-form"
+    novalidate
 >
 
-    {{ resend_form.hidden_tag() }}
+    {{ form.hidden_tag() }}
 
-    {{ resend_form.submit() }}
+
+    <!-- Shared OTP Component -->
+
+    {{ otp_input(form.code) }}
+
+
+    <!-- Expiry -->
+
+    <p class="otp-expiry">
+        Code expires in 5 minutes.
+    </p>
+
+
+    <!-- Verify Button -->
+
+    <div class="auth-submit-row otp-submit-row">
+
+        {{ form.submit(
+            class="auth-submit auth-submit-wide",
+            value="Verify Email"
+        ) }}
+
+    </div>
 
 </form>
+
+
+<!-- =====================================================
+     RESEND
+     ===================================================== -->
+
+<div class="otp-resend-area">
+
+    <span class="otp-resend-label">
+        Didn’t receive the code?
+    </span>
+
+
+    <form
+        method="POST"
+        action="{{ url_for(
+            'auth.resend_verification_code',
+            token=token
+        ) }}"
+        class="otp-resend-form"
+        data-resend-form
+        data-resend-cooldown="60"
+    >
+
+        {{ resend_form.hidden_tag() }}
+
+
+        {{ resend_form.submit(
+            class="otp-resend-button",
+            value="Resend Code"
+        ) }}
+
+    </form>
+
+</div>
+
+
+<!-- =====================================================
+     BACK TO LOGIN
+     ===================================================== -->
+
+<div class="auth-bottom-link">
+
+    <a
+        href="{{ url_for('auth.login') }}"
+        class="auth-back-link"
+    >
+
+        <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+        >
+            <path
+                class="icon-secondary"
+                d="M9.5 7L4.5 12L9.5 17"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+
+            <path
+                class="icon-primary"
+                d="M5 12H19"
+                stroke-width="1.5"
+                stroke-linecap="round"
+            />
+        </svg>
+
+        <span>
+            Back to Login
+        </span>
+
+    </a>
+
+</div>
 
 {% endblock %}

@@ -1,7 +1,9 @@
 from flask_wtf import FlaskForm
 from wtforms import (
-    StringField,
+    BooleanField,
     PasswordField,
+    SelectField,
+    StringField,
     SubmitField,
 )
 from wtforms.validators import (
@@ -71,19 +73,37 @@ class RegistrationForm(FlaskForm):
         ],
     )
 
-    department = StringField(
+    department = SelectField(
         "Department",
+        choices=[
+            ("", "Select Department"),
+            ("Production", "Production"),
+            ("Quality Assurance", "Quality Assurance"),
+            ("Quality Control", "Quality Control"),
+            ("Engineering", "Engineering"),
+            ("Maintenance", "Maintenance"),
+            ("Warehouse & Logistics", "Warehouse & Logistics"),
+            ("Administration", "Administration"),
+            ("Management", "Management"),
+        ],
         validators=[
             DataRequired(),
-            Length(max=120),
         ],
     )
 
-    shift = StringField(
+
+    shift = SelectField(
         "Shift",
+        choices=[
+            ("", "Select Shift"),
+            ("Day Shift", "Day Shift"),
+            ("Evening Shift", "Evening Shift"),
+            ("Night Shift", "Night Shift"),
+            ("Rotating Shift", "Rotating Shift"),
+            ("Office Hours", "Office Hours"),
+        ],
         validators=[
             DataRequired(),
-            Length(max=80),
         ],
     )
 

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        {% block title %}
+        BIKA Visual Inspection System
+        {% endblock %}
+    </title>
+
+    <!-- Inter -->
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/auth.css') }}"
+    >
+
+    {% block head %}{% endblock %}
+</head>
+
+
+<body>
+
+    <main class="auth-shell">
+
+        <!-- =================================================
+             SHARED LEFT VISUAL
+             ================================================= -->
+
+        <section class="auth-visual-panel">
+
+            <img
+                class="auth-visual-image"
+                src="{{ url_for(
+                    'static',
+                    filename='images/auth/auth-visual.png'
+                ) }}"
+                alt="BIKA Visual Inspection System"
+            >
+
+        </section>
+
+
+        <!-- =================================================
+             RIGHT AUTHENTICATION AREA
+             ================================================= -->
+
+        <section class="auth-content-panel">
+
+            <div class="auth-content">
+
+                {% block auth_content %}
+                {% endblock %}
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script
+        src="{{ url_for('static', filename='js/auth.js') }}"
+        defer
+    ></script>
+
+    {% block scripts %}{% endblock %}
+
+</body>
+
+</html>

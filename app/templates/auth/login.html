@@ -1,103 +1,367 @@
-{% extends "base.html" %}
+{% extends "auth/auth_base.html" %}
+
 
 {% block title %}
-Login | BIKA Visual Inspection
+Login | BIKA Visual Inspection System
 {% endblock %}
 
-{% block content %}
 
-<h1>Login</h1>
+{% block auth_content %}
 
-<!-- Flash messages from backend -->
+
+<!-- =====================================================
+     BRAND
+     ===================================================== -->
+
+<div class="auth-brand">
+
+    <h1 class="auth-brand-name">
+        BIKA
+    </h1>
+
+    <p class="auth-brand-subtitle">
+        Visual Inspection System
+    </p>
+
+</div>
+
+
+<!-- =====================================================
+     HEADING
+     ===================================================== -->
+
+<header class="auth-heading">
+
+    <h2 class="auth-title">
+        Login
+    </h2>
+
+    <p class="auth-switch-text">
+
+        Don’t have an account?
+
+        <a
+            href="{{ url_for('auth.register') }}"
+            class="auth-switch-link"
+        >
+            Register
+        </a>
+
+    </p>
+
+</header>
+
+
+<!-- =====================================================
+     FLASH MESSAGES
+     ===================================================== -->
+
 {% with messages = get_flashed_messages(with_categories=true) %}
+
     {% if messages %}
-        <div class="flash-messages">
+
+        <div class="auth-flashes">
+
             {% for category, message in messages %}
-                <div class="flash-message flash-{{ category }}">
+
+                <div
+                    class="auth-flash {{ category }}"
+                    role="alert"
+                >
                     {{ message }}
                 </div>
+
             {% endfor %}
+
         </div>
+
     {% endif %}
+
 {% endwith %}
 
 
-<!-- Temporary form validation debug -->
-{% if form.errors %}
-    <div class="form-errors">
-        <strong>Form Errors:</strong>
+<!-- =====================================================
+     LOGIN FORM
+     ===================================================== -->
 
-        {% for field, errors in form.errors.items() %}
-            {% for error in errors %}
-                <p>
-                    {{ field }}: {{ error }}
-                </p>
-            {% endfor %}
-        {% endfor %}
-    </div>
-{% endif %}
+<form
+    method="POST"
+    action="{{ url_for('auth.login') }}"
+    class="auth-form"
+    novalidate
+>
 
-
-<form method="POST">
-
-    <!-- CSRF Token -->
     {{ form.hidden_tag() }}
 
-    <div>
-        {{ form.identifier.label }}
 
-        {{ form.identifier(
-            autocomplete="username"
-        ) }}
+    <div class="auth-form-grid">
 
-        {% for error in form.identifier.errors %}
-            <p>
-                {{ error }}
-            </p>
-        {% endfor %}
+
+        <!-- =================================================
+             EMAIL / USERNAME
+             ================================================= -->
+
+        <div class="auth-field">
+
+            <div
+                class="
+                    auth-input-wrap
+                    has-leading-icon
+                "
+            >
+
+                <!-- TWOTONE MAIL -->
+
+                <svg
+                    class="auth-input-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                >
+
+                    <!-- Secondary first -->
+
+                    <path
+                        class="icon-secondary"
+                        d="M6.5 8.5L10.7 11.7C11.46 12.28 12.54 12.28 13.3 11.7L17.5 8.5"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+
+                    <!-- Primary after -->
+
+                    <path
+                        class="icon-primary"
+                        d="M17 4H7C4.2 4 2.5 5.6 2.5 8.5V15.5C2.5 18.4 4.2 20 7 20H17C19.8 20 21.5 18.4 21.5 15.5V8.5C21.5 5.6 19.8 4 17 4Z"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+
+                </svg>
+
+
+                {{ form.identifier(
+                    class="auth-input",
+                    placeholder="Email or Username",
+                    autocomplete="username"
+                ) }}
+
+            </div>
+
+
+            {% for error in form.identifier.errors %}
+
+                <p class="auth-field-error">
+                    {{ error }}
+                </p>
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- =================================================
+             PASSWORD
+             ================================================= -->
+
+        <div class="auth-field">
+
+            <div
+                class="
+                    auth-input-wrap
+                    has-leading-icon
+                    has-trailing-icon
+                "
+            >
+
+                <!-- TWOTONE LOCK -->
+
+                <svg
+                    class="auth-input-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    aria-hidden="true"
+                >
+
+                    <!-- Secondary -->
+                    <path
+                        class="icon-secondary"
+                        d="M7 10V8C7 4.7 8.5 2.5 12 2.5C15.5 2.5 17 4.7 17 8V10"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+
+                    <circle
+                        class="icon-secondary"
+                        cx="12"
+                        cy="16"
+                        r="1.2"
+                        stroke-width="1.6"
+                    />
+
+                    <!-- Primary -->
+                    <path
+                        class="icon-primary"
+                        d="M17 21.5H7C4 21.5 2.5 20 2.5 17V15C2.5 12 4 10.5 7 10.5H17C20 10.5 21.5 12 21.5 15V17C21.5 20 20 21.5 17 21.5Z"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    />
+
+                </svg>
+
+
+                {{ form.password(
+                    class="auth-input",
+                    placeholder="Password",
+                    autocomplete="current-password"
+                ) }}
+
+
+                <!-- PASSWORD EYE -->
+
+                <button
+                    type="button"
+                    class="auth-input-action password-toggle"
+                    data-password-toggle="{{ form.password.id }}"
+                    aria-label="Show password"
+                    aria-pressed="false"
+                >
+
+                    <!-- =================================
+                         HIDDEN PASSWORD
+                         EYE SLASH
+                         ================================= -->
+
+                    <svg
+                        class="password-eye-icon eye-hidden-icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                    >
+
+                        <!-- Secondary iris -->
+                        <circle
+                            class="icon-secondary"
+                            cx="12"
+                            cy="12"
+                            r="3"
+                            stroke-width="1.8"
+                        />
+
+                        <!-- Primary eye -->
+                        <path
+                            class="icon-primary"
+                            d="M3 12C5.1 8.4 8.2 6.3 12 6.3C15.8 6.3 18.9 8.4 21 12C18.9 15.6 15.8 17.7 12 17.7C8.2 17.7 5.1 15.6 3 12Z"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+
+                        <!-- Primary slash -->
+                        <path
+                            class="icon-primary"
+                            d="M4 20L20 4"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                        />
+
+                    </svg>
+
+
+                    <!-- =================================
+                         VISIBLE PASSWORD
+                         NORMAL EYE
+                         ================================= -->
+
+                    <svg
+                        class="password-eye-icon eye-visible-icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                    >
+
+                        <!-- Secondary iris -->
+                        <circle
+                            class="icon-secondary"
+                            cx="12"
+                            cy="12"
+                            r="3"
+                            stroke-width="1.8"
+                        />
+
+                        <!-- Primary eye -->
+                        <path
+                            class="icon-primary"
+                            d="M3 12C5.1 8.4 8.2 6.3 12 6.3C15.8 6.3 18.9 8.4 21 12C18.9 15.6 15.8 17.7 12 17.7C8.2 17.7 5.1 15.6 3 12Z"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+
+                    </svg>
+
+                </button>
+
+            </div>
+
+
+            {% for error in form.password.errors %}
+
+                <p class="auth-field-error">
+                    {{ error }}
+                </p>
+
+            {% endfor %}
+
+        </div>
+
     </div>
 
 
-    <div>
-        {{ form.password.label }}
+    <!-- =================================================
+         OPTIONS
+         ================================================= -->
 
-        {{ form.password(
-            autocomplete="current-password"
-        ) }}
+    <div class="auth-options-row">
 
-        {% for error in form.password.errors %}
-            <p>
-                {{ error }}
-            </p>
-        {% endfor %}
-    </div>
+        <label class="auth-remember">
 
-    <p>
-        <a href="{{ url_for('auth.forgot_password') }}">
-            Forgot password?
+            {{ form.remember_me() }}
+
+            <span>
+                Remember me
+            </span>
+
+        </label>
+
+
+        <a
+            href="{{ url_for('auth.forgot_password') }}"
+            class="auth-forgot-link"
+        >
+            Forgot Password?
         </a>
-    </p>
 
-
-    <div>
-        {{ form.remember_me() }}
-        {{ form.remember_me.label }}
     </div>
 
 
-    <div>
-        {{ form.submit() }}
+    <!-- =================================================
+         LOGIN BUTTON
+         ================================================= -->
+
+    <div class="auth-submit-row">
+
+        {{ form.submit(
+            class="auth-submit",
+            value="Login"
+        ) }}
+
     </div>
 
 </form>
-
-
-<p>
-    Don't have an account?
-
-    <a href="{{ url_for('auth.register') }}">
-        Register
-    </a>
-</p>
 
 {% endblock %}

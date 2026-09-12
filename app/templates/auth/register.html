@@ -1,104 +1,447 @@
-{% extends "base.html" %}
+{% extends "auth/auth_base.html" %}
+
 
 {% block title %}
-Register | BIKA Visual Inspection
+Create Account | BIKA Visual Inspection System
 {% endblock %}
 
-{% block content %}
 
-<h1>Create an account</h1>
+{% macro password_toggle(field_id) %}
 
-<form method="POST">
-    {{ form.hidden_tag() }}
+<button
+    type="button"
+    class="auth-input-action password-toggle"
+    data-password-toggle="{{ field_id }}"
+    aria-label="Show password"
+    aria-pressed="false"
+>
 
-    <div>
-        {{ form.first_name.label }}
-        {{ form.first_name() }}
+    <!-- HIDDEN PASSWORD -->
 
-        {% for error in form.first_name.errors %}
-            <p>{{ error }}</p>
-        {% endfor %}
-    </div>
+    <svg
+        class="password-eye-icon eye-hidden-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+    >
+        <!-- Secondary iris -->
+        <circle
+            class="icon-secondary"
+            cx="12"
+            cy="12"
+            r="3"
+            stroke-width="1.8"
+        />
 
-    <div>
-        {{ form.last_name.label }}
-        {{ form.last_name() }}
+        <!-- Primary eye -->
+        <path
+            class="icon-primary"
+            d="M3 12C5.1 8.4 8.2 6.3 12 6.3C15.8 6.3 18.9 8.4 21 12C18.9 15.6 15.8 17.7 12 17.7C8.2 17.7 5.1 15.6 3 12Z"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        />
 
-        {% for error in form.last_name.errors %}
-            <p>{{ error }}</p>
-        {% endfor %}
-    </div>
+        <!-- Slash -->
+        <path
+            class="icon-primary"
+            d="M4 20L20 4"
+            stroke-width="1.5"
+            stroke-linecap="round"
+        />
+    </svg>
 
-    <div>
-        {{ form.email.label }}
-        {{ form.email() }}
 
-        {% for error in form.email.errors %}
-            <p>{{ error }}</p>
-        {% endfor %}
-    </div>
+    <!-- VISIBLE PASSWORD -->
 
-    <div>
-        {{ form.username.label }}
-        {{ form.username() }}
+    <svg
+        class="password-eye-icon eye-visible-icon"
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+    >
+        <!-- Secondary iris -->
+        <circle
+            class="icon-secondary"
+            cx="12"
+            cy="12"
+            r="3"
+            stroke-width="1.8"
+        />
 
-        {% for error in form.username.errors %}
-            <p>{{ error }}</p>
-        {% endfor %}
-    </div>
+        <!-- Primary eye -->
+        <path
+            class="icon-primary"
+            d="M3 12C5.1 8.4 8.2 6.3 12 6.3C15.8 6.3 18.9 8.4 21 12C18.9 15.6 15.8 17.7 12 17.7C8.2 17.7 5.1 15.6 3 12Z"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        />
+    </svg>
 
-    <div>
-        {{ form.phone_number.label }}
-        {{ form.phone_number() }}
+</button>
 
-        {% for error in form.phone_number.errors %}
-            <p>{{ error }}</p>
-        {% endfor %}
-    </div>
+{% endmacro %}
 
-    <div>
-        {{ form.job_title.label }}
-        {{ form.job_title() }}
-    </div>
 
-    <div>
-        {{ form.department.label }}
-        {{ form.department() }}
-    </div>
+{% macro select_chevron() %}
 
-    <div>
-        {{ form.shift.label }}
-        {{ form.shift() }}
-    </div>
+<svg
+    class="auth-select-chevron"
+    viewBox="0 0 24 24"
+    fill="none"
+    aria-hidden="true"
+>
+    <!-- Secondary -->
+    <path
+        class="icon-secondary"
+        d="M7.5 10L12 14.5L16.5 10"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+    />
 
-    <div>
-        {{ form.employee_id.label }}
-        {{ form.employee_id() }}
+    <!-- Primary -->
+    <path
+        class="icon-primary"
+        d="M8.5 10L12 13.5L15.5 10"
+        stroke-width="1.4"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+    />
+</svg>
 
-        {% for error in form.employee_id.errors %}
-            <p>{{ error }}</p>
-        {% endfor %}
-    </div>
+{% endmacro %}
 
-    <div>
-        {{ form.password.label }}
-        {{ form.password() }}
 
-        {% for error in form.password.errors %}
-            <p>{{ error }}</p>
-        {% endfor %}
-    </div>
+{% block auth_content %}
 
-    <div>
-        {{ form.confirm_password.label }}
-        {{ form.confirm_password() }}
+<div class="register-content">
 
-        {% for error in form.confirm_password.errors %}
-            <p>{{ error }}</p>
-        {% endfor %}
-    </div>
 
-    {{ form.submit() }}
-</form>
+    <!-- =================================================
+         HEADER
+         ================================================= -->
+
+    <header class="auth-heading register-heading">
+
+        <h1 class="auth-title">
+            Create an account
+        </h1>
+
+        <p class="auth-switch-text">
+
+            Have an account?
+
+            <a
+                href="{{ url_for('auth.login') }}"
+                class="auth-switch-link"
+            >
+                Login
+            </a>
+
+        </p>
+
+    </header>
+
+
+    <!-- =================================================
+         FLASH MESSAGES
+         ================================================= -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            <div class="auth-flashes">
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="auth-flash {{ category }}"
+                        role="alert"
+                    >
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+    <!-- =================================================
+         REGISTER FORM
+         ================================================= -->
+
+    <form
+        method="POST"
+        action="{{ url_for('auth.register') }}"
+        class="auth-form"
+        novalidate
+    >
+
+        {{ form.hidden_tag() }}
+
+
+        <div class="register-form-grid">
+
+
+            <!-- FIRST / LAST NAME -->
+
+            <div class="auth-field">
+
+                {{ form.first_name(
+                    class="auth-input",
+                    placeholder="First Name",
+                    autocomplete="given-name"
+                ) }}
+
+                {% for error in form.first_name.errors %}
+                    <p class="auth-field-error">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+            </div>
+
+
+            <div class="auth-field">
+
+                {{ form.last_name(
+                    class="auth-input",
+                    placeholder="Last Name",
+                    autocomplete="family-name"
+                ) }}
+
+                {% for error in form.last_name.errors %}
+                    <p class="auth-field-error">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+            </div>
+
+
+            <!-- EMAIL -->
+
+            <div class="auth-field auth-field-full">
+
+                {{ form.email(
+                    class="auth-input",
+                    placeholder="E-mail",
+                    autocomplete="email"
+                ) }}
+
+                {% for error in form.email.errors %}
+                    <p class="auth-field-error">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+            </div>
+
+
+            <!-- USERNAME -->
+
+            <div class="auth-field auth-field-full">
+
+                {{ form.username(
+                    class="auth-input",
+                    placeholder="Username",
+                    autocomplete="username"
+                ) }}
+
+                {% for error in form.username.errors %}
+                    <p class="auth-field-error">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+            </div>
+
+
+            <!-- PHONE / EMPLOYEE ID -->
+
+            <div class="auth-field">
+
+                {{ form.phone_number(
+                    class="auth-input",
+                    placeholder="Phone Number",
+                    autocomplete="tel",
+                    inputmode="tel"
+                ) }}
+
+                {% for error in form.phone_number.errors %}
+                    <p class="auth-field-error">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+            </div>
+
+
+            <div class="auth-field">
+
+                {{ form.employee_id(
+                    class="auth-input",
+                    placeholder="Employee ID"
+                ) }}
+
+                {% for error in form.employee_id.errors %}
+                    <p class="auth-field-error">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+            </div>
+
+
+            <!-- JOB TITLE / DEPARTMENT -->
+
+            <div class="auth-field">
+
+                {{ form.job_title(
+                    class="auth-input",
+                    placeholder="Job Title",
+                    autocomplete="organization-title"
+                ) }}
+
+                {% for error in form.job_title.errors %}
+                    <p class="auth-field-error">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+            </div>
+
+
+            <div class="auth-field">
+
+                <div class="auth-select-wrap">
+
+                    {{ form.department(
+                        class="auth-input auth-select"
+                    ) }}
+
+                    {{ select_chevron() }}
+
+                </div>
+
+                {% for error in form.department.errors %}
+                    <p class="auth-field-error">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+            </div>
+
+
+            <!-- SHIFT -->
+
+            <div class="auth-field auth-field-full">
+
+                <div class="auth-select-wrap">
+
+                    {{ form.shift(
+                        class="auth-input auth-select"
+                    ) }}
+
+                    {{ select_chevron() }}
+
+                </div>
+
+                {% for error in form.shift.errors %}
+                    <p class="auth-field-error">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+            </div>
+
+
+            <!-- PASSWORD -->
+
+            <div class="auth-field auth-field-full">
+
+                <div
+                    class="
+                        auth-input-wrap
+                        has-trailing-icon
+                    "
+                >
+
+                    {{ form.password(
+                        class="auth-input",
+                        placeholder="Password (Minimum 12 characters)",
+                        autocomplete="new-password"
+                    ) }}
+
+                    {{ password_toggle(
+                        form.password.id
+                    ) }}
+
+                </div>
+
+                {% for error in form.password.errors %}
+                    <p class="auth-field-error">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+            </div>
+
+
+            <!-- CONFIRM PASSWORD -->
+
+            <div class="auth-field auth-field-full">
+
+                <div
+                    class="
+                        auth-input-wrap
+                        has-trailing-icon
+                    "
+                >
+
+                    {{ form.confirm_password(
+                        class="auth-input",
+                        placeholder="Confirm Password",
+                        autocomplete="new-password"
+                    ) }}
+
+                    {{ password_toggle(
+                        form.confirm_password.id
+                    ) }}
+
+                </div>
+
+                {% for error in form.confirm_password.errors %}
+                    <p class="auth-field-error">
+                        {{ error }}
+                    </p>
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+
+        <!-- CREATE ACCOUNT -->
+
+        <div class="register-submit-row">
+
+            {{ form.submit(
+                class="auth-submit register-submit",
+                value="Create Account"
+            ) }}
+
+        </div>
+
+    </form>
+
+</div>
 
 {% endblock %}

@@ -1,0 +1,67 @@
+{% macro otp_input(field) %}
+
+<div
+    class="otp-component"
+    data-otp-group
+>
+
+    <!--
+        Real WTForms value.
+
+        The six visible boxes are only UI.
+        This hidden input is what Flask-WTF receives.
+    -->
+    <input
+        type="hidden"
+        name="{{ field.name }}"
+        id="{{ field.id }}"
+        value="{{ field.data or '' }}"
+        class="otp-hidden-input"
+        data-otp-hidden
+    >
+
+
+    <div
+        class="otp-box-row"
+        role="group"
+        aria-label="6-digit verification code"
+    >
+
+        {% for index in range(6) %}
+
+            <input
+                type="text"
+                class="otp-box"
+                inputmode="numeric"
+                pattern="[0-9]*"
+                maxlength="1"
+                autocomplete="{% if index == 0 %}one-time-code{% else %}off{% endif %}"
+                data-otp-box
+                data-otp-index="{{ index }}"
+                aria-label="Digit {{ index + 1 }}"
+            >
+
+        {% endfor %}
+
+    </div>
+
+
+    {% if field.errors %}
+
+        <div class="otp-errors">
+
+            {% for error in field.errors %}
+
+                <p class="auth-field-error">
+                    {{ error }}
+                </p>
+
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endmacro %}

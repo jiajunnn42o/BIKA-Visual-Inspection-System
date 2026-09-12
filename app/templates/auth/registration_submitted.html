@@ -1,23 +1,128 @@
-{% extends "base.html" %}
+{% extends "auth/auth_base.html" %}
+
 
 {% block title %}
-Registration Submitted | BIKA Visual Inspection
+Registration Submitted | BIKA Visual Inspection System
 {% endblock %}
 
-{% block content %}
 
-<h1>Registration submitted</h1>
+{% block auth_content %}
 
-<p>
-    Your email address has been verified successfully.
-</p>
 
-<p>
-    Your registration is now waiting for approval by a SuperAdmin.
-</p>
+<!-- =====================================================
+     BRAND
+     ===================================================== -->
 
-<p>
-    You will receive an email notification after your registration has been reviewed.
-</p>
+<div class="auth-brand">
+
+    <h1 class="auth-brand-name">
+        BIKA
+    </h1>
+
+    <p class="auth-brand-subtitle">
+        Visual Inspection System
+    </p>
+
+</div>
+
+
+<!-- =====================================================
+     STATUS
+     ===================================================== -->
+
+<section class="registration-status">
+
+    <!-- Main heading -->
+
+    <h2 class="auth-title registration-status-title">
+        Registration submitted
+    </h2>
+
+
+    <!-- Description -->
+
+    <p class="registration-status-description">
+
+        Your account has been submitted successfully
+        and is now waiting for SuperAdmin approval.
+
+    </p>
+
+
+    <p class="registration-status-description">
+
+        You will receive an email when your
+        registration has been reviewed.
+
+    </p>
+
+
+    <!-- =================================================
+         REVIEW STATUS
+         ================================================= -->
+
+    <div class="registration-review-status">
+
+        <!-- Transparent clock icon -->
+
+        <svg
+            class="registration-review-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+        >
+
+            <!-- Secondary clock hands -->
+            <path
+                class="icon-secondary"
+                d="M12 7V12L15 14"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+
+            <!-- Primary outer clock -->
+            <circle
+                class="icon-primary"
+                cx="12"
+                cy="12"
+                r="9"
+                stroke-width="1.5"
+            />
+
+        </svg>
+
+
+        <div class="registration-review-copy">
+
+            <span class="registration-review-label">
+                Current Status
+            </span>
+
+            <strong class="registration-review-value">
+                Pending Review
+            </strong>
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         LOGIN BUTTON
+         ================================================= -->
+
+    <div class="registration-status-action">
+
+        <a
+            href="{{ url_for('auth.login') }}"
+            class="auth-submit registration-login-button"
+        >
+            Back to Login
+        </a>
+
+    </div>
+
+</section>
 
 {% endblock %}
