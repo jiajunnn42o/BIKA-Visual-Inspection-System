@@ -1,3 +1,5 @@
+import re
+
 import phonenumbers
 
 from phonenumbers import (
@@ -6,7 +8,9 @@ from phonenumbers import (
 )
 
 
-class InvalidPhoneNumberError(ValueError):
+class InvalidPhoneNumberError(
+    ValueError
+):
     pass
 
 
@@ -14,77 +18,190 @@ def normalize_malaysian_mobile(
     raw_phone,
 ):
     """
-    Validate a Malaysian mobile number and
-    return it in E.164 format.
+    Validate and normalize a Malaysian
+    mobile phone number.
 
-    Examples:
-        0123456789
+    Accepted examples:
+
+        12 345 6789
+        012 345 6789
         012-345 6789
+        60123456789
         +60123456789
 
-    Stored result:
+    Stored format:
+
         +60123456789
     """
 
     if not raw_phone:
+
         raise InvalidPhoneNumberError(
             "Phone number is required."
         )
 
-    raw_phone = raw_phone.strip()
+
+    raw_phone = (
+        raw_phone
+        .strip()
+    )
+
+
+    # Remove spaces, hyphens, brackets, etc.
+    digits = re.sub(
+        r"\D",
+        "",
+        raw_phone,
+    )
+
+
+    if not digits:
+
+        raise InvalidPhoneNumberError(
+            (
+                "Please enter a valid "
+                "Malaysian mobile number."
+            )
+        )
+
+
+    # =====================================================
+    # CONVERT TO INTERNATIONAL MALAYSIA FORMAT
+    # =====================================================
+
+    if raw_phone.startswith("+60"):
+
+        candidate = (
+            "+"
+            + digits
+        )
+
+    elif digits.startswith("60"):
+
+        candidate = (
+            "+"
+            + digits
+        )
+
+    elif digits.startswith("0"):
+
+        candidate = (
+            "+60"
+            + digits[1:]
+        )
+
+    else:
+
+        # Register UI uses a fixed +60 prefix,
+        # so users normally enter:
+        #
+        # 12 345 6789
+        #
+        candidate = (
+            "+60"
+            + digits
+        )
+
+
+    # =====================================================
+    # PARSE NUMBER
+    # =====================================================
 
     try:
-        number = phonenumbers.parse(
-            raw_phone,
-            "MY",
+
+        parsed = (
+            phonenumbers.parse(
+                candidate,
+                None,
+            )
         )
 
     except phonenumbers.NumberParseException:
+
         raise InvalidPhoneNumberError(
-            "Please enter a valid Malaysian mobile number."
+            (
+                "Please enter a valid "
+                "Malaysian mobile number."
+            )
         )
 
-    # Must actually belong to Malaysia.
-    region = (
-        phonenumbers.region_code_for_number(
-            number
-        )
-    )
 
-    if region != "MY":
-        raise InvalidPhoneNumberError(
-            "Only Malaysian mobile numbers are supported."
-        )
+    # =====================================================
+    # COUNTRY CHECK
+    # =====================================================
 
-    if not phonenumbers.is_possible_number(
-        number
+    if (
+        parsed.country_code
+        != 60
     ):
+
         raise InvalidPhoneNumberError(
-            "This Malaysian mobile number is not possible."
+            (
+                "Only Malaysian phone "
+                "numbers are supported."
+            )
         )
 
-    if not phonenumbers.is_valid_number(
-        number
-    ):
-        raise InvalidPhoneNumberError(
-            "Please enter a valid Malaysian mobile number."
+
+    # =====================================================
+    # VALIDITY CHECK
+    # =====================================================
+
+    if (
+        not phonenumbers.is_possible_number(
+            parsed
         )
+        or
+        not phonenumbers.is_valid_number(
+            parsed
+        )
+    ):
+
+        raise InvalidPhoneNumberError(
+            (
+                "Please enter a valid "
+                "Malaysian mobile number."
+            )
+        )
+
+
+    # =====================================================
+    # MOBILE NUMBER CHECK
+    # =====================================================
 
     number_type = (
         phonenumbers.number_type(
-            number
+            parsed
         )
     )
 
-    if number_type not in {
+
+    allowed_types = {
         PhoneNumberType.MOBILE,
         PhoneNumberType.FIXED_LINE_OR_MOBILE,
-    }:
+    }
+
+
+    if (
+        number_type
+        not in allowed_types
+    ):
+
         raise InvalidPhoneNumberError(
-            "Please enter a Malaysian mobile number."
+            (
+                "Please enter a valid "
+                "Malaysian mobile number."
+            )
         )
 
-    return phonenumbers.format_number(
-        number,
-        PhoneNumberFormat.E164,
+
+    # =====================================================
+    # NORMALIZE TO E.164
+    # =====================================================
+
+    return (
+        phonenumbers.format_number(
+            parsed,
+            PhoneNumberFormat.E164,
+        )
     )

@@ -1,0 +1,212 @@
+{% extends "auth/auth_base.html" %}
+
+{% from "auth/_otp_input.html" import otp_input %}
+
+
+{% block title %}
+Verify Phone Number | BIKA Visual Inspection System
+{% endblock %}
+
+
+{% block auth_content %}
+
+
+<!-- =====================================================
+     BRAND
+     ===================================================== -->
+
+<div class="auth-brand">
+
+    <h1 class="auth-brand-name">
+        BIKA
+    </h1>
+
+    <p class="auth-brand-subtitle">
+        Visual Inspection System
+    </p>
+
+</div>
+
+
+<!-- =====================================================
+     HEADING
+     ===================================================== -->
+
+<header class="auth-heading verification-heading">
+
+    <h2 class="auth-title">
+        Verify your phone
+    </h2>
+
+    <p class="auth-page-description">
+        We sent a 6-digit verification code by SMS to
+    </p>
+
+    <p class="auth-verification-address">
+        {{ masked_phone }}
+    </p>
+
+</header>
+
+
+<!-- =====================================================
+     FLASH MESSAGES
+     ===================================================== -->
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+
+    {% if messages %}
+
+        <div class="auth-flashes">
+
+            {% for category, message in messages %}
+
+                <div
+                    class="auth-flash {{ category }}"
+                    role="alert"
+                >
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+{% endwith %}
+
+
+<!-- =====================================================
+     PHONE OTP FORM
+     ===================================================== -->
+
+<form
+    method="POST"
+    action="{{ url_for(
+        'auth.verify_phone',
+        token=token
+    ) }}"
+    class="auth-form otp-form"
+    novalidate
+>
+
+    {{ form.hidden_tag() }}
+
+
+    <!-- Shared 6-digit OTP component -->
+
+    {{ otp_input(form.code) }}
+
+
+    <!-- Expiry -->
+
+    <p class="otp-expiry">
+        Code expires in 5 minutes.
+    </p>
+
+
+    <!-- Verify Phone Button -->
+
+    <div class="auth-submit-row otp-submit-row">
+
+        {{ form.submit(
+            class="auth-submit auth-submit-wide",
+            value="Verify Phone"
+        ) }}
+
+    </div>
+
+</form>
+
+
+<!-- =====================================================
+     RESEND SMS
+     ===================================================== -->
+
+<div class="otp-resend-area">
+
+    <span class="otp-resend-label">
+        Didn’t receive the code?
+    </span>
+
+
+    <form
+        method="POST"
+        action="{{ url_for(
+            'auth.resend_phone_verification_code',
+            token=token
+        ) }}"
+        class="otp-resend-form"
+        data-resend-form
+        data-resend-cooldown="60"
+    >
+
+        {{ resend_form.hidden_tag() }}
+
+
+        {{ resend_form.submit(
+            class="otp-resend-button",
+            value="Resend Code"
+        ) }}
+
+    </form>
+
+</div>
+
+
+<!-- =====================================================
+     INFORMATION
+     ===================================================== -->
+
+<p class="phone-verification-note">
+    This number will be verified for secure account
+    identification and phone-number login.
+</p>
+
+
+<!-- =====================================================
+     BACK TO LOGIN
+     ===================================================== -->
+
+<div class="auth-bottom-link">
+
+    <a
+        href="{{ url_for('auth.login') }}"
+        class="auth-back-link"
+    >
+
+        <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+        >
+
+            <!-- Secondary -->
+            <path
+                class="icon-secondary"
+                d="M9.5 7L4.5 12L9.5 17"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+            />
+
+            <!-- Primary -->
+            <path
+                class="icon-primary"
+                d="M5 12H19"
+                stroke-width="1.5"
+                stroke-linecap="round"
+            />
+
+        </svg>
+
+        <span>
+            Back to Login
+        </span>
+
+    </a>
+
+</div>
+
+{% endblock %}

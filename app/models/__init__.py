@@ -17,3 +17,7 @@ __all__ = [
     "EmailVerification",
     "PasswordResetCode",
 ]
+
+from app.models.phone_verification import (
+    PhoneVerification,
+)

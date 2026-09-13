@@ -2,8 +2,11 @@
 
 
 {% block title %}
-Create Account | BIKA Visual Inspection System
+Register | BIKA Visual Inspection System
 {% endblock %}
+
+
+{% block auth_content %}
 
 
 {% macro password_toggle(field_id) %}
@@ -16,7 +19,9 @@ Create Account | BIKA Visual Inspection System
     aria-pressed="false"
 >
 
-    <!-- HIDDEN PASSWORD -->
+    <!-- =================================================
+         PASSWORD HIDDEN
+         ================================================= -->
 
     <svg
         class="password-eye-icon eye-hidden-icon"
@@ -24,6 +29,7 @@ Create Account | BIKA Visual Inspection System
         fill="none"
         aria-hidden="true"
     >
+
         <!-- Secondary iris -->
         <circle
             class="icon-secondary"
@@ -42,17 +48,20 @@ Create Account | BIKA Visual Inspection System
             stroke-linejoin="round"
         />
 
-        <!-- Slash -->
+        <!-- Primary slash -->
         <path
             class="icon-primary"
             d="M4 20L20 4"
             stroke-width="1.5"
             stroke-linecap="round"
         />
+
     </svg>
 
 
-    <!-- VISIBLE PASSWORD -->
+    <!-- =================================================
+         PASSWORD VISIBLE
+         ================================================= -->
 
     <svg
         class="password-eye-icon eye-visible-icon"
@@ -60,6 +69,7 @@ Create Account | BIKA Visual Inspection System
         fill="none"
         aria-hidden="true"
     >
+
         <!-- Secondary iris -->
         <circle
             class="icon-secondary"
@@ -77,6 +87,7 @@ Create Account | BIKA Visual Inspection System
             stroke-linecap="round"
             stroke-linejoin="round"
         />
+
     </svg>
 
 </button>
@@ -84,151 +95,162 @@ Create Account | BIKA Visual Inspection System
 {% endmacro %}
 
 
-{% macro select_chevron() %}
+<!-- =====================================================
+     BRAND
+     ===================================================== -->
 
-<svg
-    class="auth-select-chevron"
-    viewBox="0 0 24 24"
-    fill="none"
-    aria-hidden="true"
+<div class="auth-brand">
+
+    <h1 class="auth-brand-name">
+        BIKA
+    </h1>
+
+    <p class="auth-brand-subtitle">
+        Visual Inspection System
+    </p>
+
+</div>
+
+
+<!-- =====================================================
+     HEADING
+     ===================================================== -->
+
+<header class="auth-heading register-heading">
+
+    <h2 class="auth-title">
+        Create an account
+    </h2>
+
+    <p class="auth-switch-text">
+
+        Have an account?
+
+        <a
+            href="{{ url_for('auth.login') }}"
+            class="auth-switch-link"
+        >
+            Login
+        </a>
+
+    </p>
+
+</header>
+
+
+<!-- =====================================================
+     FLASH MESSAGES
+     ===================================================== -->
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+
+    {% if messages %}
+
+        <div class="auth-flashes">
+
+            {% for category, message in messages %}
+
+                <div
+                    class="auth-flash {{ category }}"
+                    role="alert"
+                >
+                    {{ message }}
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+    {% endif %}
+
+{% endwith %}
+
+
+<!-- =====================================================
+     REGISTER FORM
+     ===================================================== -->
+
+<form
+    method="POST"
+    action="{{ url_for('auth.register') }}"
+    class="auth-form register-form-clean"
+    novalidate
 >
-    <!-- Secondary -->
-    <path
-        class="icon-secondary"
-        d="M7.5 10L12 14.5L16.5 10"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-    />
 
-    <!-- Primary -->
-    <path
-        class="icon-primary"
-        d="M8.5 10L12 13.5L15.5 10"
-        stroke-width="1.4"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-    />
-</svg>
-
-{% endmacro %}
+    {{ form.hidden_tag() }}
 
 
-{% block auth_content %}
-
-<div class="register-content">
+    <div class="register-form-grid">
 
 
-    <!-- =================================================
-         HEADER
-         ================================================= -->
+        <!-- =================================================
+             FIRST NAME + LAST NAME
+             ================================================= -->
 
-    <header class="auth-heading register-heading">
-
-        <h1 class="auth-title">
-            Create an account
-        </h1>
-
-        <p class="auth-switch-text">
-
-            Have an account?
-
-            <a
-                href="{{ url_for('auth.login') }}"
-                class="auth-switch-link"
-            >
-                Login
-            </a>
-
-        </p>
-
-    </header>
+        <div class="auth-field-row">
 
 
-    <!-- =================================================
-         FLASH MESSAGES
-         ================================================= -->
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-
-        {% if messages %}
-
-            <div class="auth-flashes">
-
-                {% for category, message in messages %}
-
-                    <div
-                        class="auth-flash {{ category }}"
-                        role="alert"
-                    >
-                        {{ message }}
-                    </div>
-
-                {% endfor %}
-
-            </div>
-
-        {% endif %}
-
-    {% endwith %}
-
-
-    <!-- =================================================
-         REGISTER FORM
-         ================================================= -->
-
-    <form
-        method="POST"
-        action="{{ url_for('auth.register') }}"
-        class="auth-form"
-        novalidate
-    >
-
-        {{ form.hidden_tag() }}
-
-
-        <div class="register-form-grid">
-
-
-            <!-- FIRST / LAST NAME -->
+            <!-- FIRST NAME -->
 
             <div class="auth-field">
 
-                {{ form.first_name(
-                    class="auth-input",
-                    placeholder="First Name",
-                    autocomplete="given-name"
-                ) }}
+                <div class="auth-input-wrap">
+
+                    {{ form.first_name(
+                        class="auth-input",
+                        placeholder="First Name",
+                        autocomplete="given-name"
+                    ) }}
+
+                </div>
+
 
                 {% for error in form.first_name.errors %}
+
                     <p class="auth-field-error">
                         {{ error }}
                     </p>
+
                 {% endfor %}
 
             </div>
 
+
+            <!-- LAST NAME -->
 
             <div class="auth-field">
 
-                {{ form.last_name(
-                    class="auth-input",
-                    placeholder="Last Name",
-                    autocomplete="family-name"
-                ) }}
+                <div class="auth-input-wrap">
+
+                    {{ form.last_name(
+                        class="auth-input",
+                        placeholder="Last Name",
+                        autocomplete="family-name"
+                    ) }}
+
+                </div>
+
 
                 {% for error in form.last_name.errors %}
+
                     <p class="auth-field-error">
                         {{ error }}
                     </p>
+
                 {% endfor %}
 
             </div>
 
+        </div>
 
-            <!-- EMAIL -->
 
-            <div class="auth-field auth-field-full">
+        <!-- =================================================
+             EMAIL
+             ================================================= -->
+
+        <div class="auth-field">
+
+            <div class="auth-input-wrap">
 
                 {{ form.email(
                     class="auth-input",
@@ -236,212 +258,216 @@ Create Account | BIKA Visual Inspection System
                     autocomplete="email"
                 ) }}
 
-                {% for error in form.email.errors %}
-                    <p class="auth-field-error">
-                        {{ error }}
-                    </p>
-                {% endfor %}
-
             </div>
+
+
+            {% for error in form.email.errors %}
+
+                <p class="auth-field-error">
+                    {{ error }}
+                </p>
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- =================================================
+             USERNAME + EMPLOYEE ID
+             ================================================= -->
+
+        <div class="auth-field-row">
 
 
             <!-- USERNAME -->
 
-            <div class="auth-field auth-field-full">
+            <div class="auth-field">
 
-                {{ form.username(
-                    class="auth-input",
-                    placeholder="Username",
-                    autocomplete="username"
-                ) }}
+                <div class="auth-input-wrap">
+
+                    {{ form.username(
+                        class="auth-input",
+                        placeholder="Username",
+                        autocomplete="username"
+                    ) }}
+
+                </div>
+
 
                 {% for error in form.username.errors %}
+
                     <p class="auth-field-error">
                         {{ error }}
                     </p>
+
                 {% endfor %}
 
             </div>
 
 
-            <!-- PHONE / EMPLOYEE ID -->
+            <!-- EMPLOYEE ID -->
 
             <div class="auth-field">
 
-                {{ form.phone_number(
-                    class="auth-input",
-                    placeholder="Phone Number",
-                    autocomplete="tel",
-                    inputmode="tel"
-                ) }}
+                <div class="auth-input-wrap">
 
-                {% for error in form.phone_number.errors %}
-                    <p class="auth-field-error">
-                        {{ error }}
-                    </p>
-                {% endfor %}
+                    {{ form.employee_id(
+                        class="auth-input",
+                        placeholder="Employee ID",
+                        autocomplete="off"
+                    ) }}
 
-            </div>
+                </div>
 
-
-            <div class="auth-field">
-
-                {{ form.employee_id(
-                    class="auth-input",
-                    placeholder="Employee ID"
-                ) }}
 
                 {% for error in form.employee_id.errors %}
+
                     <p class="auth-field-error">
                         {{ error }}
                     </p>
+
                 {% endfor %}
 
             </div>
 
+        </div>
 
-            <!-- JOB TITLE / DEPARTMENT -->
 
-            <div class="auth-field">
+        <!-- =================================================
+             PHONE NUMBER
+             ================================================= -->
 
-                {{ form.job_title(
-                    class="auth-input",
-                    placeholder="Job Title",
-                    autocomplete="organization-title"
+        <div class="auth-field">
+
+            <div class="auth-phone-wrap">
+
+                <!-- Fixed Malaysia country code -->
+
+                <div
+                    class="auth-phone-prefix"
+                    aria-hidden="true"
+                >
+                    +60
+                </div>
+
+
+                <!-- User only enters number after +60 -->
+
+                {{ form.phone_number(
+                    class="auth-phone-input",
+                    placeholder="12 345 6789",
+                    autocomplete="tel-national",
+                    inputmode="tel",
+                    maxlength="12",
+                    aria_label="Malaysian phone number"
                 ) }}
 
-                {% for error in form.job_title.errors %}
-                    <p class="auth-field-error">
-                        {{ error }}
-                    </p>
-                {% endfor %}
-
             </div>
 
 
-            <div class="auth-field">
+            {% for error in form.phone_number.errors %}
 
-                <div class="auth-select-wrap">
+                <p class="auth-field-error">
+                    {{ error }}
+                </p>
 
-                    {{ form.department(
-                        class="auth-input auth-select"
-                    ) }}
-
-                    {{ select_chevron() }}
-
-                </div>
-
-                {% for error in form.department.errors %}
-                    <p class="auth-field-error">
-                        {{ error }}
-                    </p>
-                {% endfor %}
-
-            </div>
-
-
-            <!-- SHIFT -->
-
-            <div class="auth-field auth-field-full">
-
-                <div class="auth-select-wrap">
-
-                    {{ form.shift(
-                        class="auth-input auth-select"
-                    ) }}
-
-                    {{ select_chevron() }}
-
-                </div>
-
-                {% for error in form.shift.errors %}
-                    <p class="auth-field-error">
-                        {{ error }}
-                    </p>
-                {% endfor %}
-
-            </div>
-
-
-            <!-- PASSWORD -->
-
-            <div class="auth-field auth-field-full">
-
-                <div
-                    class="
-                        auth-input-wrap
-                        has-trailing-icon
-                    "
-                >
-
-                    {{ form.password(
-                        class="auth-input",
-                        placeholder="Password (Minimum 12 characters)",
-                        autocomplete="new-password"
-                    ) }}
-
-                    {{ password_toggle(
-                        form.password.id
-                    ) }}
-
-                </div>
-
-                {% for error in form.password.errors %}
-                    <p class="auth-field-error">
-                        {{ error }}
-                    </p>
-                {% endfor %}
-
-            </div>
-
-
-            <!-- CONFIRM PASSWORD -->
-
-            <div class="auth-field auth-field-full">
-
-                <div
-                    class="
-                        auth-input-wrap
-                        has-trailing-icon
-                    "
-                >
-
-                    {{ form.confirm_password(
-                        class="auth-input",
-                        placeholder="Confirm Password",
-                        autocomplete="new-password"
-                    ) }}
-
-                    {{ password_toggle(
-                        form.confirm_password.id
-                    ) }}
-
-                </div>
-
-                {% for error in form.confirm_password.errors %}
-                    <p class="auth-field-error">
-                        {{ error }}
-                    </p>
-                {% endfor %}
-
-            </div>
+            {% endfor %}
 
         </div>
 
 
-        <!-- CREATE ACCOUNT -->
+        <!-- =================================================
+             PASSWORD
+             ================================================= -->
 
-        <div class="register-submit-row">
+        <div class="auth-field">
 
-            {{ form.submit(
-                class="auth-submit register-submit",
-                value="Create Account"
-            ) }}
+            <div
+                class="
+                    auth-input-wrap
+                    has-trailing-icon
+                "
+            >
+
+                {{ form.password(
+                    class="auth-input",
+                    placeholder="Password (Minimum 12 characters)",
+                    autocomplete="new-password"
+                ) }}
+
+
+                {{ password_toggle(
+                    form.password.id
+                ) }}
+
+            </div>
+
+
+            {% for error in form.password.errors %}
+
+                <p class="auth-field-error">
+                    {{ error }}
+                </p>
+
+            {% endfor %}
 
         </div>
 
-    </form>
 
-</div>
+        <!-- =================================================
+             CONFIRM PASSWORD
+             ================================================= -->
+
+        <div class="auth-field">
+
+            <div
+                class="
+                    auth-input-wrap
+                    has-trailing-icon
+                "
+            >
+
+                {{ form.confirm_password(
+                    class="auth-input",
+                    placeholder="Confirm Password",
+                    autocomplete="new-password"
+                ) }}
+
+
+                {{ password_toggle(
+                    form.confirm_password.id
+                ) }}
+
+            </div>
+
+
+            {% for error in form.confirm_password.errors %}
+
+                <p class="auth-field-error">
+                    {{ error }}
+                </p>
+
+            {% endfor %}
+
+        </div>
+
+    </div>
+
+
+    <!-- =================================================
+         CREATE ACCOUNT
+         ================================================= -->
+
+    <div class="register-submit-row">
+
+        {{ form.submit(
+            class="auth-submit register-submit",
+            value="Create Account"
+        ) }}
+
+    </div>
+
+</form>
+
 
 {% endblock %}

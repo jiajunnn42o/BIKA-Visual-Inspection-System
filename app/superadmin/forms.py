@@ -11,16 +11,208 @@ from wtforms.validators import (
     DataRequired,
     Email,
     Length,
+    Optional,
 )
 
 
-class RegistrationReviewForm(FlaskForm):
+# =========================================================
+# JOB TITLE OPTIONS
+# =========================================================
+
+JOB_TITLE_CHOICES = [
+    (
+        "",
+        "Select Job Title",
+    ),
+
+    (
+        "Production Operator",
+        "Production Operator",
+    ),
+
+    (
+        "Quality Inspector",
+        "Quality Inspector",
+    ),
+
+    (
+        "Quality Control Executive",
+        "Quality Control Executive",
+    ),
+
+    (
+        "Quality Assurance Executive",
+        "Quality Assurance Executive",
+    ),
+
+    (
+        "Production Supervisor",
+        "Production Supervisor",
+    ),
+
+    (
+        "Maintenance Technician",
+        "Maintenance Technician",
+    ),
+
+    (
+        "Engineer",
+        "Engineer",
+    ),
+
+    (
+        "Warehouse Staff",
+        "Warehouse Staff",
+    ),
+
+    (
+        "Administrative Staff",
+        "Administrative Staff",
+    ),
+
+    (
+        "Manager",
+        "Manager",
+    ),
+]
+
+
+# =========================================================
+# DEPARTMENT OPTIONS
+# =========================================================
+
+DEPARTMENT_CHOICES = [
+    (
+        "",
+        "Select Department",
+    ),
+
+    (
+        "Production",
+        "Production",
+    ),
+
+    (
+        "Quality Assurance",
+        "Quality Assurance",
+    ),
+
+    (
+        "Quality Control",
+        "Quality Control",
+    ),
+
+    (
+        "Engineering",
+        "Engineering",
+    ),
+
+    (
+        "Maintenance",
+        "Maintenance",
+    ),
+
+    (
+        "Warehouse & Logistics",
+        "Warehouse & Logistics",
+    ),
+
+    (
+        "Administration",
+        "Administration",
+    ),
+
+    (
+        "Management",
+        "Management",
+    ),
+]
+
+
+# =========================================================
+# SHIFT OPTIONS
+# =========================================================
+
+SHIFT_CHOICES = [
+    (
+        "",
+        "Select Shift",
+    ),
+
+    (
+        "Day Shift",
+        "Day Shift",
+    ),
+
+    (
+        "Evening Shift",
+        "Evening Shift",
+    ),
+
+    (
+        "Night Shift",
+        "Night Shift",
+    ),
+
+    (
+        "Rotating Shift",
+        "Rotating Shift",
+    ),
+
+    (
+        "Office Hours",
+        "Office Hours",
+    ),
+]
+
+
+# =========================================================
+# ACCESS ROLE OPTIONS
+# =========================================================
+
+ROLE_CHOICES = [
+    (
+        "user",
+        "User",
+    ),
+
+    (
+        "admin",
+        "Admin",
+    ),
+
+    (
+        "superadmin",
+        "SuperAdmin",
+    ),
+]
+
+
+# =========================================================
+# REVIEW REGISTRATION FORM
+# =========================================================
+
+class ReviewRegistrationForm(
+    FlaskForm
+):
+    """
+    Used by the SuperAdmin when reviewing
+    a pending registration.
+
+    Applicant identity fields can be corrected.
+
+    Employment information and access role
+    are assigned by the SuperAdmin.
+    """
 
     first_name = StringField(
         "First Name",
         validators=[
             DataRequired(),
-            Length(max=100),
+            Length(
+                min=1,
+                max=80,
+            ),
         ],
     )
 
@@ -28,7 +220,10 @@ class RegistrationReviewForm(FlaskForm):
         "Last Name",
         validators=[
             DataRequired(),
-            Length(max=100),
+            Length(
+                min=1,
+                max=80,
+            ),
         ],
     )
 
@@ -36,7 +231,10 @@ class RegistrationReviewForm(FlaskForm):
         "Username",
         validators=[
             DataRequired(),
-            Length(min=3, max=100),
+            Length(
+                min=3,
+                max=80,
+            ),
         ],
     )
 
@@ -45,7 +243,9 @@ class RegistrationReviewForm(FlaskForm):
         validators=[
             DataRequired(),
             Email(),
-            Length(max=255),
+            Length(
+                max=255,
+            ),
         ],
     )
 
@@ -53,31 +253,9 @@ class RegistrationReviewForm(FlaskForm):
         "Phone Number",
         validators=[
             DataRequired(),
-            Length(max=30),
-        ],
-    )
-
-    job_title = StringField(
-        "Job Title",
-        validators=[
-            DataRequired(),
-            Length(max=120),
-        ],
-    )
-
-    department = StringField(
-        "Department",
-        validators=[
-            DataRequired(),
-            Length(max=120),
-        ],
-    )
-
-    shift = StringField(
-        "Shift",
-        validators=[
-            DataRequired(),
-            Length(max=80),
+            Length(
+                max=30,
+            ),
         ],
     )
 
@@ -85,37 +263,109 @@ class RegistrationReviewForm(FlaskForm):
         "Employee ID",
         validators=[
             DataRequired(),
-            Length(max=80),
+            Length(
+                max=80,
+            ),
         ],
     )
 
+
+    # =====================================================
+    # EMPLOYMENT ASSIGNMENT
+    #
+    # Optional during Save Changes.
+    # Required later during Approve Registration.
+    # =====================================================
+
+    job_title = SelectField(
+        "Job Title",
+        choices=JOB_TITLE_CHOICES,
+        validators=[
+            Optional(),
+        ],
+    )
+
+    department = SelectField(
+        "Department",
+        choices=DEPARTMENT_CHOICES,
+        validators=[
+            Optional(),
+        ],
+    )
+
+    shift = SelectField(
+        "Shift",
+        choices=SHIFT_CHOICES,
+        validators=[
+            Optional(),
+        ],
+    )
+
+
+    # =====================================================
+    # ACCESS CONTROL
+    # =====================================================
+
     role = SelectField(
         "Access Role",
-        choices=[
-            ("user", "User"),
-            ("admin", "Admin"),
-            ("superadmin", "SuperAdmin"),
-        ],
+        choices=ROLE_CHOICES,
         validators=[
             DataRequired(),
         ],
     )
 
-    rejection_reason = TextAreaField(
-        "Rejection Reason",
-        validators=[
-            Length(max=1000),
-        ],
-    )
 
-    save_changes = SubmitField(
+    submit = SubmitField(
         "Save Changes"
     )
 
-    approve = SubmitField(
+
+# =========================================================
+# APPROVE FORM
+# =========================================================
+
+class ApproveRegistrationForm(
+    FlaskForm
+):
+    """
+    Separate CSRF-protected form
+    for registration approval.
+    """
+
+    submit = SubmitField(
         "Approve Registration"
     )
 
-    reject = SubmitField(
+
+# =========================================================
+# REJECT FORM
+# =========================================================
+
+class RejectRegistrationForm(
+    FlaskForm
+):
+    """
+    SuperAdmin must provide a reason
+    when rejecting an application.
+    """
+
+    reason = TextAreaField(
+        "Rejection Reason",
+        validators=[
+            DataRequired(
+                message=(
+                    "A reason is required "
+                    "when rejecting a registration."
+                )
+            ),
+
+            Length(
+                min=3,
+                max=1000,
+            ),
+        ],
+    )
+
+    submit = SubmitField(
         "Reject Registration"
     )

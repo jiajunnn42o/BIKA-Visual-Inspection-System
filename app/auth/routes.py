@@ -34,6 +34,7 @@ from app.auth.forms import (
     ForgotPasswordForm,
     LoginForm,
     PasswordResetVerificationForm,
+    PhoneVerificationForm,
     RegistrationForm,
     ResendVerificationForm,
     ResetPasswordForm,
@@ -43,6 +44,7 @@ from app.extensions import db
 
 from app.models import (
     PasswordResetCode,
+    PhoneVerification,
     User,
     UserRole,
     UserStatus,
@@ -68,6 +70,16 @@ from app.services.password_reset_service import (
     verify_password_reset_code,
 )
 
+from app.services.phone_verification_service import (
+    PhoneVerificationRateLimitError,
+    issue_phone_verification_code,
+    verify_phone_code,
+)
+
+from app.services.sms_service import (
+    send_phone_verification_code_sms,
+)
+
 from app.utils.phone import (
     InvalidPhoneNumberError,
     normalize_malaysian_mobile,
@@ -78,27 +90,27 @@ from app.utils.phone import (
 # TOKEN SETTINGS
 # =========================================================
 
-# Email verification browser token:
-# valid for 7 days.
 EMAIL_VERIFICATION_TOKEN_MAX_AGE = (
     7 * 24 * 60 * 60
 )
 
-# Password reset browser token:
-# valid for 30 minutes.
+PHONE_VERIFICATION_TOKEN_MAX_AGE = (
+    7 * 24 * 60 * 60
+)
+
 PASSWORD_RESET_TOKEN_MAX_AGE = (
     30 * 60
 )
 
 
 # =========================================================
-# EMAIL VERIFICATION TOKEN HELPERS
+# EMAIL VERIFICATION TOKEN
 # =========================================================
 
 def _verification_serializer():
     """
-    Create a signed serializer for the
-    email verification browser flow.
+    Signed serializer used for the
+    registration email verification flow.
     """
 
     return URLSafeTimedSerializer(
@@ -109,14 +121,11 @@ def _verification_serializer():
 
 def _create_verification_token(user):
     """
-    Create a signed browser token for
-    email verification.
+    Create a browser-only email verification token.
 
-    The token is not sent by email.
-
-    The email is included so that an old token
-    automatically becomes invalid when the
-    user's email address changes.
+    The email address is included so that an old
+    token becomes invalid automatically if the
+    applicant's email address changes.
     """
 
     return (
@@ -125,6 +134,7 @@ def _create_verification_token(user):
             {
                 "user_id": user.id,
                 "email": user.email,
+                "purpose": "email-verification",
             }
         )
     )
@@ -132,12 +142,8 @@ def _create_verification_token(user):
 
 def _get_verification_user(token):
     """
-    Read and validate an email verification
-    browser token.
-
-    Returns:
-        User object if valid.
-        None if invalid or expired.
+    Return the user represented by a valid
+    email verification browser token.
     """
 
     try:
@@ -159,6 +165,12 @@ def _get_verification_user(token):
 
         return None
 
+    if (
+        data.get("purpose")
+        != "email-verification"
+    ):
+        return None
+
     user_id = data.get(
         "user_id"
     )
@@ -178,8 +190,6 @@ def _get_verification_user(token):
     if user is None:
         return None
 
-    # If the user's email changed after the
-    # token was created, reject the old token.
     if (
         user.email
         != token_email
@@ -190,12 +200,143 @@ def _get_verification_user(token):
 
 
 # =========================================================
-# PASSWORD RESET TOKEN HELPERS
+# PHONE VERIFICATION TOKEN
+# =========================================================
+
+def _phone_verification_serializer():
+    """
+    Signed serializer for the
+    phone verification browser flow.
+    """
+
+    return URLSafeTimedSerializer(
+        current_app.config["SECRET_KEY"],
+        salt="bika-phone-verification",
+    )
+
+
+def _create_phone_verification_token(
+    user,
+):
+    """
+    Create a browser-only phone verification token.
+
+    The real OTP is sent through SMS.
+
+    Including the phone number inside the signed token
+    automatically invalidates old tokens if the number
+    is changed later.
+    """
+
+    return (
+        _phone_verification_serializer()
+        .dumps(
+            {
+                "user_id": user.id,
+                "phone_number": (
+                    user.phone_number
+                ),
+                "purpose": (
+                    "phone-verification"
+                ),
+            }
+        )
+    )
+
+
+def _get_phone_verification_user(
+    token,
+):
+    """
+    Return the user represented by a valid
+    phone verification browser token.
+    """
+
+    try:
+
+        data = (
+            _phone_verification_serializer()
+            .loads(
+                token,
+                max_age=(
+                    PHONE_VERIFICATION_TOKEN_MAX_AGE
+                ),
+            )
+        )
+
+    except (
+        SignatureExpired,
+        BadSignature,
+    ):
+
+        return None
+
+    if (
+        data.get("purpose")
+        != "phone-verification"
+    ):
+        return None
+
+    user_id = data.get(
+        "user_id"
+    )
+
+    token_phone = data.get(
+        "phone_number"
+    )
+
+    if user_id is None:
+        return None
+
+    user = db.session.get(
+        User,
+        user_id,
+    )
+
+    if user is None:
+        return None
+
+    if (
+        user.phone_number
+        != token_phone
+    ):
+        return None
+
+    return user
+
+
+def _mask_phone_number(
+    phone_number,
+):
+    """
+    Mask a phone number before displaying it.
+
+    Example:
+        +601121720511
+        ->
+        +6011 **** 0511
+    """
+
+    if not phone_number:
+        return ""
+
+    if len(phone_number) <= 8:
+        return phone_number
+
+    return (
+        f"{phone_number[:5]} "
+        f"**** "
+        f"{phone_number[-4:]}"
+    )
+
+
+# =========================================================
+# PASSWORD RESET TOKEN
 # =========================================================
 
 def _password_reset_serializer():
     """
-    Create a signed serializer for the
+    Signed serializer for the
     password reset browser flow.
     """
 
@@ -205,14 +346,14 @@ def _password_reset_serializer():
     )
 
 
-def _create_password_reset_token(email):
+def _create_password_reset_token(
+    email,
+):
     """
-    Create a signed password reset browser token.
+    Create a browser-only password reset token.
 
-    The token is never sent by email.
-
-    Only the email address and token purpose
-    are stored inside the signed token.
+    The token is never emailed to the user.
+    The email only receives the six-digit OTP.
     """
 
     return (
@@ -226,13 +367,11 @@ def _create_password_reset_token(email):
     )
 
 
-def _get_password_reset_email(token):
+def _get_password_reset_email(
+    token,
+):
     """
     Read a password reset browser token.
-
-    Returns:
-        Email address if valid.
-        None if invalid or expired.
     """
 
     try:
@@ -266,23 +405,22 @@ def _get_password_reset_email(token):
 
 
 # =========================================================
-# PASSWORD RESET ACCOUNT RULES
+# PASSWORD RESET RULES
 # =========================================================
 
-def _password_reset_allowed(user):
+def _password_reset_allowed(
+    user,
+):
     """
-    Decide whether an account is allowed
-    to request a password reset.
+    Accounts allowed to reset their password:
 
-    Allowed:
     - active
     - locked
     - disabled
     - pending with verified email
 
-    Not allowed:
-    - pending with unverified email
-    - rejected
+    Rejected accounts and pending accounts
+    without verified email are not eligible.
     """
 
     if user is None:
@@ -311,6 +449,244 @@ def _password_reset_allowed(user):
 
 
 # =========================================================
+# PHONE VERIFICATION START HELPER
+# =========================================================
+
+def _ensure_phone_verification_started(
+    user,
+):
+    """
+    Ensure that a phone verification record exists.
+
+    Returns:
+        (True, "sent")
+        (True, "existing")
+        (True, "send_failed")
+        (False, "database_error")
+
+    This prevents repeatedly regenerating a phone OTP
+    every time the user revisits the verification page.
+    """
+
+    if (
+        user.phone_verified_at
+        is not None
+    ):
+        return (
+            True,
+            "already_verified",
+        )
+
+    existing_verification = (
+        db.session.scalar(
+            db.select(
+                PhoneVerification
+            ).where(
+                PhoneVerification.user_id
+                == user.id
+            )
+        )
+    )
+
+    if (
+        existing_verification
+        is not None
+    ):
+        return (
+            True,
+            "existing",
+        )
+
+    try:
+
+        phone_code = (
+            issue_phone_verification_code(
+                user=user,
+                is_resend=False,
+            )
+        )
+
+        db.session.commit()
+
+    except SQLAlchemyError:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "Unable to create initial "
+                "phone verification code."
+            )
+        )
+
+        return (
+            False,
+            "database_error",
+        )
+
+    try:
+
+        send_phone_verification_code_sms(
+            user=user,
+            code=phone_code,
+        )
+
+    except Exception:
+
+        current_app.logger.exception(
+            (
+                "Initial phone verification "
+                "SMS could not be sent."
+            )
+        )
+
+        return (
+            True,
+            "send_failed",
+        )
+
+    return (
+        True,
+        "sent",
+    )
+
+
+# =========================================================
+# SUPERADMIN NOTIFICATION HELPER
+# =========================================================
+
+def _notify_superadmins_of_registration(
+    user,
+):
+    """
+    Notify active SuperAdmins only after
+    BOTH email and phone verification
+    have completed.
+    """
+
+    superadmins = (
+        db.session.scalars(
+            db.select(User)
+            .where(
+                User.role
+                == UserRole.SUPERADMIN.value,
+
+                User.status
+                == UserStatus.ACTIVE.value,
+            )
+            .order_by(
+                User.id.asc()
+            )
+        )
+        .all()
+    )
+
+    try:
+
+        result = (
+            send_new_registration_to_superadmins(
+                applicant=user,
+                superadmins=superadmins,
+            )
+        )
+
+        current_app.logger.info(
+            (
+                f"Registration {user.id} "
+                f"completed identity verification. "
+                f"SuperAdmin notifications: "
+                f"{result['sent']} sent, "
+                f"{result['failed']} failed."
+            )
+        )
+
+    except Exception:
+
+        current_app.logger.exception(
+            (
+                "Unable to notify SuperAdmins "
+                "about verified registration."
+            )
+        )
+
+
+# =========================================================
+# LOGIN IDENTIFIER HELPER
+# =========================================================
+
+def _find_user_by_login_identifier(
+    raw_identifier,
+):
+    """
+    Support exactly three login identifiers:
+
+    1. Email
+    2. Username
+    3. Verified Malaysian phone number
+
+    Phone authentication is only allowed after
+    phone_verified_at has been recorded.
+    """
+
+    raw_identifier = (
+        raw_identifier
+        .strip()
+    )
+
+    normalized_identifier = (
+        raw_identifier
+        .lower()
+    )
+
+    # -----------------------------------------------------
+    # EMAIL / USERNAME
+    # -----------------------------------------------------
+
+    user = db.session.scalar(
+        db.select(User)
+        .where(
+            or_(
+                User.email
+                == normalized_identifier,
+
+                User.username
+                == normalized_identifier,
+            )
+        )
+    )
+
+    if user is not None:
+        return user
+
+    # -----------------------------------------------------
+    # MALAYSIAN PHONE
+    # -----------------------------------------------------
+
+    try:
+
+        normalized_phone = (
+            normalize_malaysian_mobile(
+                raw_identifier
+            )
+        )
+
+    except InvalidPhoneNumberError:
+
+        return None
+
+    return db.session.scalar(
+        db.select(User)
+        .where(
+            User.phone_number
+            == normalized_phone,
+
+            User.phone_verified_at
+            .is_not(None),
+        )
+    )
+
+
+# =========================================================
 # REGISTER
 # =========================================================
 
@@ -320,14 +696,20 @@ def _password_reset_allowed(user):
 )
 def register():
     """
-    Public account registration.
+    Public registration.
 
-    Public registration always starts as:
+    New public registrations always begin as:
+
         role = user
         status = pending
 
-    Email verification must be completed
-    before SuperAdmin receives the application.
+    Final approval happens only after:
+
+        Email OTP
+        ->
+        Phone OTP
+        ->
+        SuperAdmin review
     """
 
     if current_user.is_authenticated:
@@ -343,7 +725,7 @@ def register():
     if form.validate_on_submit():
 
         # -------------------------------------------------
-        # NORMALIZE MALAYSIAN PHONE NUMBER
+        # NORMALIZE MALAYSIAN PHONE
         # -------------------------------------------------
 
         try:
@@ -367,7 +749,7 @@ def register():
             )
 
         # -------------------------------------------------
-        # CREATE USER
+        # CREATE ACCOUNT
         # -------------------------------------------------
 
         user = User(
@@ -397,33 +779,19 @@ def register():
                 phone_number
             ),
 
-            job_title=(
-                form.job_title.data
-                .strip()
-            ),
-
-            department=(
-                form.department.data
-                .strip()
-            ),
-
-            shift=(
-                form.shift.data
-                .strip()
-            ),
-
             employee_id=(
                 form.employee_id.data
                 .strip()
                 .upper()
             ),
 
-            # Public registration never
-            # allows role selection.
-            role=UserRole.USER.value,
+            role=(
+                UserRole.USER.value
+            ),
 
-            # SuperAdmin approval is required.
-            status=UserStatus.PENDING.value,
+            status=(
+                UserStatus.PENDING.value
+            ),
         )
 
         user.set_password(
@@ -431,7 +799,7 @@ def register():
         )
 
         # -------------------------------------------------
-        # CREATE USER + EMAIL OTP
+        # CREATE ACCOUNT + EMAIL OTP
         # -------------------------------------------------
 
         try:
@@ -440,7 +808,8 @@ def register():
                 user
             )
 
-            # Generate the user ID before commit.
+            # We need an ID before the verification
+            # record can reference the new user.
             db.session.flush()
 
             verification_code = (
@@ -476,8 +845,8 @@ def register():
 
             current_app.logger.exception(
                 (
-                    "Database error while creating "
-                    "a new registration."
+                    "Database error while "
+                    "creating registration."
                 )
             )
 
@@ -495,7 +864,7 @@ def register():
             )
 
         # -------------------------------------------------
-        # CREATE BROWSER VERIFICATION TOKEN
+        # EMAIL VERIFICATION TOKEN
         # -------------------------------------------------
 
         verification_token = (
@@ -505,7 +874,7 @@ def register():
         )
 
         # -------------------------------------------------
-        # SEND 6-DIGIT EMAIL OTP
+        # EMAIL OTP
         # -------------------------------------------------
 
         try:
@@ -548,7 +917,7 @@ def register():
 
 
 # =========================================================
-# VERIFY REGISTRATION EMAIL
+# VERIFY EMAIL
 # =========================================================
 
 @auth_bp.route(
@@ -557,8 +926,11 @@ def register():
 )
 def verify_email(token):
     """
-    Verify a newly registered email address
-    using a 6-digit OTP.
+    First verification stage:
+
+        Email OTP
+        ->
+        Phone OTP
     """
 
     user = (
@@ -571,8 +943,9 @@ def verify_email(token):
 
         flash(
             (
-                "This email verification session "
-                "is invalid or has expired."
+                "This email verification "
+                "session is invalid "
+                "or has expired."
             ),
             "error",
         )
@@ -583,15 +956,72 @@ def verify_email(token):
             )
         )
 
-    # Already verified.
+    # -----------------------------------------------------
+    # EMAIL ALREADY VERIFIED
+    # -----------------------------------------------------
+
     if (
         user.email_verified_at
         is not None
     ):
 
+        if (
+            user.phone_verified_at
+            is not None
+        ):
+
+            return redirect(
+                url_for(
+                    "auth.registration_submitted"
+                )
+            )
+
+        phone_ready, phone_state = (
+            _ensure_phone_verification_started(
+                user
+            )
+        )
+
+        if not phone_ready:
+
+            flash(
+                (
+                    "Phone verification could not "
+                    "be started. Please try again."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "auth.login"
+                )
+            )
+
+        if (
+            phone_state
+            == "send_failed"
+        ):
+
+            flash(
+                (
+                    "Your email is verified, "
+                    "but the SMS could not be sent. "
+                    "Please use Resend Code."
+                ),
+                "warning",
+            )
+
+        phone_token = (
+            _create_phone_verification_token(
+                user
+            )
+        )
+
         return redirect(
             url_for(
-                "auth.registration_submitted"
+                "auth.verify_phone",
+                token=phone_token,
             )
         )
 
@@ -616,8 +1046,6 @@ def verify_email(token):
 
         try:
 
-            # Save both failed attempt counters
-            # and successful verification.
             db.session.commit()
 
         except SQLAlchemyError:
@@ -664,68 +1092,69 @@ def verify_email(token):
 
         # -------------------------------------------------
         # EMAIL VERIFIED
-        # NOW NOTIFY ACTIVE SUPERADMINS
+        # START PHONE VERIFICATION
         # -------------------------------------------------
 
-        superadmins = (
-            db.session.scalars(
-                db.select(User)
-                .where(
-                    User.role
-                    == UserRole.SUPERADMIN.value,
-
-                    User.status
-                    == UserStatus.ACTIVE.value,
-                )
-                .order_by(
-                    User.id.asc()
-                )
+        phone_ready, phone_state = (
+            _ensure_phone_verification_started(
+                user
             )
-            .all()
         )
 
-        try:
+        if not phone_ready:
 
-            result = (
-                send_new_registration_to_superadmins(
-                    applicant=user,
-                    superadmins=superadmins,
-                )
-            )
-
-            current_app.logger.info(
+            flash(
                 (
-                    f"User {user.id} verified email. "
-                    f"SuperAdmin notifications: "
-                    f"{result['sent']} sent, "
-                    f"{result['failed']} failed."
+                    "Your email was verified, "
+                    "but phone verification could "
+                    "not be started. "
+                    "Please try signing in again."
+                ),
+                "error",
+            )
+
+            return redirect(
+                url_for(
+                    "auth.login"
                 )
             )
 
-        except Exception:
+        if (
+            phone_state
+            == "send_failed"
+        ):
 
-            # User verification must remain successful
-            # even if notification email fails.
-            current_app.logger.exception(
+            flash(
                 (
-                    "Unable to notify SuperAdmins "
-                    "after email verification."
-                )
+                    "Your email was verified, "
+                    "but the SMS verification code "
+                    "could not be sent. "
+                    "Please request another code."
+                ),
+                "warning",
             )
 
-        flash(
-            (
-                "Your email has been verified "
-                "successfully. Your registration "
-                "is now waiting for SuperAdmin "
-                "approval."
-            ),
-            "success",
+        else:
+
+            flash(
+                (
+                    "Your email has been verified. "
+                    "Please verify your phone number "
+                    "to continue."
+                ),
+                "success",
+            )
+
+        phone_token = (
+            _create_phone_verification_token(
+                user
+            )
         )
 
         return redirect(
             url_for(
-                "auth.registration_submitted"
+                "auth.verify_phone",
+                token=phone_token,
             )
         )
 
@@ -739,17 +1168,18 @@ def verify_email(token):
 
 
 # =========================================================
-# RESEND REGISTRATION EMAIL OTP
+# RESEND EMAIL OTP
 # =========================================================
 
 @auth_bp.route(
     "/verify-email/<token>/resend",
     methods=["POST"],
 )
-def resend_verification_code(token):
+def resend_verification_code(
+    token,
+):
     """
-    Send a new registration email
-    verification code.
+    Resend registration email OTP.
     """
 
     user = (
@@ -762,8 +1192,9 @@ def resend_verification_code(token):
 
         flash(
             (
-                "This email verification session "
-                "is invalid or has expired."
+                "This email verification "
+                "session is invalid "
+                "or has expired."
             ),
             "error",
         )
@@ -779,9 +1210,16 @@ def resend_verification_code(token):
         is not None
     ):
 
+        phone_token = (
+            _create_phone_verification_token(
+                user
+            )
+        )
+
         return redirect(
             url_for(
-                "auth.registration_submitted"
+                "auth.verify_phone",
+                token=phone_token,
             )
         )
 
@@ -839,15 +1277,15 @@ def resend_verification_code(token):
 
         current_app.logger.exception(
             (
-                "Unable to create a new "
+                "Unable to create new "
                 "email verification code."
             )
         )
 
         flash(
             (
-                "The verification code could "
-                "not be regenerated."
+                "The verification code "
+                "could not be regenerated."
             ),
             "error",
         )
@@ -902,6 +1340,406 @@ def resend_verification_code(token):
 
 
 # =========================================================
+# VERIFY PHONE
+# =========================================================
+
+@auth_bp.route(
+    "/verify-phone/<token>",
+    methods=["GET", "POST"],
+)
+def verify_phone(token):
+    """
+    Second registration verification stage.
+
+    Email must already be verified.
+
+    When phone verification succeeds:
+        ->
+        Notify SuperAdmins
+        ->
+        Registration Submitted
+    """
+
+    user = (
+        _get_phone_verification_user(
+            token
+        )
+    )
+
+    if user is None:
+
+        flash(
+            (
+                "This phone verification "
+                "session is invalid "
+                "or has expired."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "auth.login"
+            )
+        )
+
+    # -----------------------------------------------------
+    # EMAIL MUST COME FIRST
+    # -----------------------------------------------------
+
+    if (
+        user.email_verified_at
+        is None
+    ):
+
+        verification_token = (
+            _create_verification_token(
+                user
+            )
+        )
+
+        flash(
+            (
+                "Please verify your email "
+                "before verifying your phone."
+            ),
+            "warning",
+        )
+
+        return redirect(
+            url_for(
+                "auth.verify_email",
+                token=verification_token,
+            )
+        )
+
+    # -----------------------------------------------------
+    # ALREADY VERIFIED
+    # -----------------------------------------------------
+
+    if (
+        user.phone_verified_at
+        is not None
+    ):
+
+        return redirect(
+            url_for(
+                "auth.registration_submitted"
+            )
+        )
+
+    # Make sure an OTP record exists.
+    phone_ready, phone_state = (
+        _ensure_phone_verification_started(
+            user
+        )
+    )
+
+    if not phone_ready:
+
+        flash(
+            (
+                "Phone verification could not "
+                "be started. Please try again."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "auth.login"
+            )
+        )
+
+    if (
+        phone_state
+        == "send_failed"
+    ):
+
+        flash(
+            (
+                "The SMS verification code "
+                "could not be sent. "
+                "Please use Resend Code."
+            ),
+            "warning",
+        )
+
+    form = (
+        PhoneVerificationForm()
+    )
+
+    resend_form = (
+        ResendVerificationForm()
+    )
+
+    masked_phone = (
+        _mask_phone_number(
+            user.phone_number
+        )
+    )
+
+    if form.validate_on_submit():
+
+        success, message = (
+            verify_phone_code(
+                user=user,
+                submitted_code=(
+                    form.code.data
+                ),
+            )
+        )
+
+        try:
+
+            db.session.commit()
+
+        except SQLAlchemyError:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "Unable to save phone "
+                    "verification result."
+                )
+            )
+
+            flash(
+                (
+                    "Phone verification could "
+                    "not be completed. "
+                    "Please try again."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "auth/verify_phone.html",
+                user=user,
+                form=form,
+                resend_form=resend_form,
+                masked_phone=masked_phone,
+                token=token,
+            )
+
+        if not success:
+
+            flash(
+                message,
+                "error",
+            )
+
+            return render_template(
+                "auth/verify_phone.html",
+                user=user,
+                form=form,
+                resend_form=resend_form,
+                masked_phone=masked_phone,
+                token=token,
+            )
+
+        # -------------------------------------------------
+        # EMAIL + PHONE BOTH VERIFIED
+        # NOW NOTIFY SUPERADMINS
+        # -------------------------------------------------
+
+        _notify_superadmins_of_registration(
+            user
+        )
+
+        flash(
+            (
+                "Your phone number has been "
+                "verified successfully. "
+                "Your registration is now "
+                "waiting for SuperAdmin approval."
+            ),
+            "success",
+        )
+
+        return redirect(
+            url_for(
+                "auth.registration_submitted"
+            )
+        )
+
+    return render_template(
+        "auth/verify_phone.html",
+        user=user,
+        form=form,
+        resend_form=resend_form,
+        masked_phone=masked_phone,
+        token=token,
+    )
+
+
+# =========================================================
+# RESEND PHONE OTP
+# =========================================================
+
+@auth_bp.route(
+    "/verify-phone/<token>/resend",
+    methods=["POST"],
+)
+def resend_phone_verification_code(
+    token,
+):
+    """
+    Resend phone verification SMS OTP.
+    """
+
+    user = (
+        _get_phone_verification_user(
+            token
+        )
+    )
+
+    if user is None:
+
+        flash(
+            (
+                "This phone verification "
+                "session is invalid "
+                "or has expired."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "auth.login"
+            )
+        )
+
+    if (
+        user.phone_verified_at
+        is not None
+    ):
+
+        return redirect(
+            url_for(
+                "auth.registration_submitted"
+            )
+        )
+
+    form = (
+        ResendVerificationForm()
+    )
+
+    if not form.validate_on_submit():
+
+        flash(
+            (
+                "Unable to resend the "
+                "verification code."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "auth.verify_phone",
+                token=token,
+            )
+        )
+
+    try:
+
+        phone_code = (
+            issue_phone_verification_code(
+                user=user,
+                is_resend=True,
+            )
+        )
+
+        db.session.commit()
+
+    except PhoneVerificationRateLimitError as exc:
+
+        db.session.rollback()
+
+        flash(
+            str(exc),
+            "warning",
+        )
+
+        return redirect(
+            url_for(
+                "auth.verify_phone",
+                token=token,
+            )
+        )
+
+    except SQLAlchemyError:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            (
+                "Database error while "
+                "regenerating phone OTP."
+            )
+        )
+
+        flash(
+            (
+                "The verification code "
+                "could not be regenerated."
+            ),
+            "error",
+        )
+
+        return redirect(
+            url_for(
+                "auth.verify_phone",
+                token=token,
+            )
+        )
+
+    try:
+
+        send_phone_verification_code_sms(
+            user=user,
+            code=phone_code,
+        )
+
+    except Exception:
+
+        current_app.logger.exception(
+            (
+                "Unable to resend phone "
+                "verification SMS."
+            )
+        )
+
+        flash(
+            (
+                "The SMS verification code "
+                "could not be sent."
+            ),
+            "error",
+        )
+
+    else:
+
+        flash(
+            (
+                "A new verification code "
+                "has been sent to your phone."
+            ),
+            "success",
+        )
+
+    return redirect(
+        url_for(
+            "auth.verify_phone",
+            token=token,
+        )
+    )
+
+
+# =========================================================
 # REGISTRATION SUBMITTED
 # =========================================================
 
@@ -910,8 +1748,8 @@ def resend_verification_code(token):
 )
 def registration_submitted():
     """
-    Registration has passed email verification
-    and is now waiting for SuperAdmin approval.
+    Registration completed identity verification
+    and is waiting for SuperAdmin approval.
     """
 
     return render_template(
@@ -929,11 +1767,10 @@ def registration_submitted():
 )
 def forgot_password():
     """
-    Start the password reset process.
+    Begin password reset.
 
-    Security:
-    The response must not reveal whether
-    an email address exists in the system.
+    The response intentionally does not reveal
+    whether an account exists for the entered email.
     """
 
     if current_user.is_authenticated:
@@ -944,7 +1781,9 @@ def forgot_password():
             )
         )
 
-    form = ForgotPasswordForm()
+    form = (
+        ForgotPasswordForm()
+    )
 
     if form.validate_on_submit():
 
@@ -954,41 +1793,32 @@ def forgot_password():
             .lower()
         )
 
-        # -------------------------------------------------
-        # LOOK UP ACCOUNT
-        # -------------------------------------------------
-
         user = db.session.scalar(
             db.select(User)
             .where(
-                User.email == email
+                User.email
+                == email
             )
         )
 
-        # The browser token is created even when
-        # the account does not exist.
-        #
-        # This helps prevent account enumeration.
+        # Always create a browser token,
+        # even when no account exists.
         token = (
             _create_password_reset_token(
                 email
             )
         )
 
-        # -------------------------------------------------
-        # ONLY SEND OTP FOR ELIGIBLE ACCOUNTS
-        # -------------------------------------------------
-
         if (
             user is not None
             and
-            _password_reset_allowed(user)
+            _password_reset_allowed(
+                user
+            )
         ):
 
             try:
 
-                # Check whether a reset record
-                # already exists.
                 existing_reset = (
                     db.session.scalar(
                         db.select(
@@ -1000,8 +1830,6 @@ def forgot_password():
                     )
                 )
 
-                # Repeated Forgot Password requests
-                # should also respect resend limits.
                 reset_code = (
                     issue_password_reset_code(
                         user=user,
@@ -1018,11 +1846,11 @@ def forgot_password():
 
                 db.session.rollback()
 
-                # Do not reveal whether this email exists.
                 current_app.logger.info(
                     (
-                        "Password reset rate limit "
-                        f"reached for account {user.id}."
+                        "Password reset rate "
+                        f"limit reached for "
+                        f"user {user.id}."
                     )
                 )
 
@@ -1032,8 +1860,8 @@ def forgot_password():
 
                 current_app.logger.exception(
                     (
-                        "Database error while creating "
-                        "password reset code."
+                        "Database error while "
+                        "creating reset code."
                     )
                 )
 
@@ -1055,15 +1883,11 @@ def forgot_password():
                         )
                     )
 
-        # -------------------------------------------------
-        # GENERIC RESPONSE
-        # -------------------------------------------------
-
         flash(
             (
-                "If an account exists for this email, "
-                "a 6-digit password reset code "
-                "has been sent."
+                "If an account exists for this "
+                "email, a 6-digit password reset "
+                "code has been sent."
             ),
             "info",
         )
@@ -1089,9 +1913,11 @@ def forgot_password():
     "/password-reset/verify/<token>",
     methods=["GET", "POST"],
 )
-def verify_password_reset(token):
+def verify_password_reset(
+    token,
+):
     """
-    Verify the 6-digit password reset code.
+    Verify the password reset email OTP.
     """
 
     email = (
@@ -1127,26 +1953,25 @@ def verify_password_reset(token):
     user = db.session.scalar(
         db.select(User)
         .where(
-            User.email == email
+            User.email
+            == email
         )
     )
 
     if form.validate_on_submit():
 
-        # -------------------------------------------------
-        # GENERIC FAILURE FOR INVALID / INELIGIBLE ACCOUNT
-        # -------------------------------------------------
-
         if (
             user is None
             or
-            not _password_reset_allowed(user)
+            not _password_reset_allowed(
+                user
+            )
         ):
 
             flash(
                 (
-                    "The verification code is "
-                    "invalid or has expired."
+                    "The verification code "
+                    "is invalid or has expired."
                 ),
                 "error",
             )
@@ -1157,10 +1982,6 @@ def verify_password_reset(token):
                 resend_form=resend_form,
                 token=token,
             )
-
-        # -------------------------------------------------
-        # VERIFY OTP
-        # -------------------------------------------------
 
         success, message = (
             verify_password_reset_code(
@@ -1188,8 +2009,8 @@ def verify_password_reset(token):
 
             flash(
                 (
-                    "The verification could not "
-                    "be completed. Please try again."
+                    "The verification could "
+                    "not be completed."
                 ),
                 "error",
             )
@@ -1218,7 +2039,8 @@ def verify_password_reset(token):
         flash(
             (
                 "Verification successful. "
-                "You can now create a new password."
+                "You can now create "
+                "a new password."
             ),
             "success",
         )
@@ -1246,12 +2068,11 @@ def verify_password_reset(token):
     "/password-reset/verify/<token>/resend",
     methods=["POST"],
 )
-def resend_password_reset_code(token):
+def resend_password_reset_code(
+    token,
+):
     """
-    Send another password reset OTP.
-
-    The response avoids exposing whether
-    the submitted email exists.
+    Resend password reset email OTP.
     """
 
     email = (
@@ -1300,18 +2121,17 @@ def resend_password_reset_code(token):
     user = db.session.scalar(
         db.select(User)
         .where(
-            User.email == email
+            User.email
+            == email
         )
     )
-
-    # -----------------------------------------------------
-    # REAL ELIGIBLE ACCOUNT
-    # -----------------------------------------------------
 
     if (
         user is not None
         and
-        _password_reset_allowed(user)
+        _password_reset_allowed(
+            user
+        )
     ):
 
         try:
@@ -1347,8 +2167,8 @@ def resend_password_reset_code(token):
 
             current_app.logger.exception(
                 (
-                    "Database error while resending "
-                    "password reset code."
+                    "Database error while "
+                    "resending password reset OTP."
                 )
             )
 
@@ -1366,7 +2186,7 @@ def resend_password_reset_code(token):
                 current_app.logger.exception(
                     (
                         "Unable to resend password "
-                        "reset verification code."
+                        "reset verification email."
                     )
                 )
 
@@ -1374,8 +2194,8 @@ def resend_password_reset_code(token):
 
                 flash(
                     (
-                        "A new password reset code "
-                        "has been sent to your email."
+                        "A new password reset "
+                        "code has been sent."
                     ),
                     "success",
                 )
@@ -1387,15 +2207,11 @@ def resend_password_reset_code(token):
                     )
                 )
 
-    # -----------------------------------------------------
-    # GENERIC RESPONSE FOR UNKNOWN / INELIGIBLE ACCOUNT
-    # -----------------------------------------------------
-
     flash(
         (
-            "If an eligible account exists for "
-            "this email, a new verification code "
-            "has been sent."
+            "If an eligible account exists "
+            "for this email, a new verification "
+            "code has been sent."
         ),
         "info",
     )
@@ -1416,10 +2232,12 @@ def resend_password_reset_code(token):
     "/password-reset/new/<token>",
     methods=["GET", "POST"],
 )
-def reset_password(token):
+def reset_password(
+    token,
+):
     """
     Set a new password after successful
-    password reset OTP verification.
+    reset-code verification.
     """
 
     email = (
@@ -1447,14 +2265,17 @@ def reset_password(token):
     user = db.session.scalar(
         db.select(User)
         .where(
-            User.email == email
+            User.email
+            == email
         )
     )
 
     if (
         user is None
         or
-        not _password_reset_allowed(user)
+        not _password_reset_allowed(
+            user
+        )
     ):
 
         flash(
@@ -1471,10 +2292,6 @@ def reset_password(token):
             )
         )
 
-    # -----------------------------------------------------
-    # RESET MUST HAVE PASSED OTP VERIFICATION
-    # -----------------------------------------------------
-
     reset = (
         get_valid_verified_reset(
             user
@@ -1485,8 +2302,9 @@ def reset_password(token):
 
         flash(
             (
-                "Your password reset verification "
-                "has expired. Please start again."
+                "Your password reset "
+                "verification has expired. "
+                "Please start again."
             ),
             "warning",
         )
@@ -1497,17 +2315,15 @@ def reset_password(token):
             )
         )
 
-    form = ResetPasswordForm()
+    form = (
+        ResetPasswordForm()
+    )
 
     if form.validate_on_submit():
 
         now = datetime.now(
             timezone.utc
         )
-
-        # -------------------------------------------------
-        # SET NEW PASSWORD
-        # -------------------------------------------------
 
         user.set_password(
             form.password.data
@@ -1517,15 +2333,11 @@ def reset_password(token):
             now
         )
 
-        # -------------------------------------------------
-        # CLEAR FAILED LOGIN SECURITY STATE
-        # -------------------------------------------------
-
         user.failed_login_attempts = 0
         user.locked_at = None
 
-        # A password reset unlocks accounts locked
-        # specifically by failed login attempts.
+        # Password reset only automatically
+        # unlocks failed-login locks.
         if (
             user.status
             == UserStatus.LOCKED.value
@@ -1535,18 +2347,10 @@ def reset_password(token):
                 UserStatus.ACTIVE.value
             )
 
-        # Disabled accounts remain disabled.
-        # Pending accounts remain pending.
-
-        # -------------------------------------------------
-        # INVALIDATE RESET REQUEST
-        # -------------------------------------------------
+        # Disabled remains disabled.
+        # Pending remains pending.
 
         reset.used_at = now
-
-        # -------------------------------------------------
-        # SAVE
-        # -------------------------------------------------
 
         try:
 
@@ -1558,15 +2362,15 @@ def reset_password(token):
 
             current_app.logger.exception(
                 (
-                    "Database error while resetting "
-                    "account password."
+                    "Database error while "
+                    "resetting password."
                 )
             )
 
             flash(
                 (
-                    "Your password could not "
-                    "be changed. Please try again."
+                    "Your password could "
+                    "not be changed."
                 ),
                 "error",
             )
@@ -1576,10 +2380,6 @@ def reset_password(token):
                 form=form,
                 token=token,
             )
-
-        # -------------------------------------------------
-        # SECURITY NOTIFICATION EMAIL
-        # -------------------------------------------------
 
         try:
 
@@ -1591,8 +2391,8 @@ def reset_password(token):
 
             current_app.logger.exception(
                 (
-                    "Password changed successfully, "
-                    "but security notification email "
+                    "Password changed, "
+                    "but notification email "
                     "could not be sent."
                 )
             )
@@ -1629,13 +2429,11 @@ def reset_password(token):
 )
 def login():
     """
-    Authenticate using:
+    Three supported login identifiers:
 
     - Email
     - Username
-
-    Phone number is profile/contact information
-    only and is not a login identifier.
+    - Verified Malaysian phone number
     """
 
     if current_user.is_authenticated:
@@ -1646,31 +2444,25 @@ def login():
             )
         )
 
-    form = LoginForm()
+    form = (
+        LoginForm()
+    )
 
     if form.validate_on_submit():
 
-        identifier = (
+        raw_identifier = (
             form.identifier.data
             .strip()
-            .lower()
         )
 
-        user = db.session.scalar(
-            db.select(User)
-            .where(
-                or_(
-                    User.email
-                    == identifier,
-
-                    User.username
-                    == identifier,
-                )
+        user = (
+            _find_user_by_login_identifier(
+                raw_identifier
             )
         )
 
         # -------------------------------------------------
-        # INVALID LOGIN
+        # INVALID PASSWORD / ACCOUNT
         # -------------------------------------------------
 
         if (
@@ -1681,8 +2473,6 @@ def login():
             )
         ):
 
-            # Only update failed attempts when
-            # the account actually exists.
             if user is not None:
 
                 user.failed_login_attempts += 1
@@ -1721,13 +2511,11 @@ def login():
 
                     current_app.logger.exception(
                         (
-                            "Unable to update failed "
-                            "login attempt counter."
+                            "Unable to update "
+                            "failed login counter."
                         )
                     )
 
-            # Generic response prevents account
-            # enumeration.
             flash(
                 "Invalid login credentials.",
                 "error",
@@ -1739,7 +2527,7 @@ def login():
             )
 
         # -------------------------------------------------
-        # PENDING ACCOUNT
+        # PENDING REGISTRATION
         # -------------------------------------------------
 
         if (
@@ -1747,7 +2535,7 @@ def login():
             == UserStatus.PENDING.value
         ):
 
-            # Email is not verified yet.
+            # Email verification must come first.
             if (
                 user.email_verified_at
                 is None
@@ -1774,7 +2562,61 @@ def login():
                     )
                 )
 
-            # Email already verified.
+            # Phone verification comes second.
+            if (
+                user.phone_verified_at
+                is None
+            ):
+
+                phone_ready, phone_state = (
+                    _ensure_phone_verification_started(
+                        user
+                    )
+                )
+
+                if not phone_ready:
+
+                    flash(
+                        (
+                            "Phone verification "
+                            "could not be started."
+                        ),
+                        "error",
+                    )
+
+                    return render_template(
+                        "auth/login.html",
+                        form=form,
+                    )
+
+                if (
+                    phone_state
+                    == "send_failed"
+                ):
+
+                    flash(
+                        (
+                            "The SMS could not "
+                            "be sent. Please use "
+                            "Resend Code."
+                        ),
+                        "warning",
+                    )
+
+                phone_token = (
+                    _create_phone_verification_token(
+                        user
+                    )
+                )
+
+                return redirect(
+                    url_for(
+                        "auth.verify_phone",
+                        token=phone_token,
+                    )
+                )
+
+            # Both verification stages finished.
             flash(
                 (
                     "Your account is awaiting "
@@ -1789,7 +2631,7 @@ def login():
             )
 
         # -------------------------------------------------
-        # REJECTED ACCOUNT
+        # REJECTED
         # -------------------------------------------------
 
         if (
@@ -1811,7 +2653,7 @@ def login():
             )
 
         # -------------------------------------------------
-        # DISABLED ACCOUNT
+        # DISABLED
         # -------------------------------------------------
 
         if (
@@ -1833,7 +2675,7 @@ def login():
             )
 
         # -------------------------------------------------
-        # LOCKED ACCOUNT
+        # LOCKED
         # -------------------------------------------------
 
         if (
@@ -1879,7 +2721,7 @@ def login():
             )
 
         # -------------------------------------------------
-        # SUCCESSFUL LOGIN
+        # SUCCESS
         # -------------------------------------------------
 
         now = datetime.now(

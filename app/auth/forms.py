@@ -65,48 +65,6 @@ class RegistrationForm(FlaskForm):
         ],
     )
 
-    job_title = StringField(
-        "Job Title",
-        validators=[
-            DataRequired(),
-            Length(max=120),
-        ],
-    )
-
-    department = SelectField(
-        "Department",
-        choices=[
-            ("", "Select Department"),
-            ("Production", "Production"),
-            ("Quality Assurance", "Quality Assurance"),
-            ("Quality Control", "Quality Control"),
-            ("Engineering", "Engineering"),
-            ("Maintenance", "Maintenance"),
-            ("Warehouse & Logistics", "Warehouse & Logistics"),
-            ("Administration", "Administration"),
-            ("Management", "Management"),
-        ],
-        validators=[
-            DataRequired(),
-        ],
-    )
-
-
-    shift = SelectField(
-        "Shift",
-        choices=[
-            ("", "Select Shift"),
-            ("Day Shift", "Day Shift"),
-            ("Evening Shift", "Evening Shift"),
-            ("Night Shift", "Night Shift"),
-            ("Rotating Shift", "Rotating Shift"),
-            ("Office Hours", "Office Hours"),
-        ],
-        validators=[
-            DataRequired(),
-        ],
-    )
-
     employee_id = StringField(
         "Employee ID",
         validators=[
@@ -214,7 +172,7 @@ from wtforms import BooleanField
 
 class LoginForm(FlaskForm):
     identifier = StringField(
-        "Email or Username",
+        "Email, Username or Phone Number",
         validators=[
             DataRequired(),
             Length(max=255),
@@ -331,4 +289,25 @@ class ResetPasswordForm(FlaskForm):
 
     submit = SubmitField(
         "Reset Password"
+    )
+
+class PhoneVerificationForm(
+    FlaskForm
+):
+    code = StringField(
+        "Verification Code",
+        validators=[
+            DataRequired(),
+            Regexp(
+                r"^\d{6}$",
+                message=(
+                    "Please enter the "
+                    "6-digit verification code."
+                ),
+            ),
+        ],
+    )
+
+    submit = SubmitField(
+        "Verify Phone"
     )

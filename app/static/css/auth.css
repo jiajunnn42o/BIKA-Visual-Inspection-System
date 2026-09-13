@@ -50,6 +50,9 @@
             0.2,
             1
         );
+
+    --auth-input-height: 48px;
+    --auth-input-radius: 999px;
 }
 
 
@@ -342,7 +345,7 @@ a {
 
 .auth-input {
     width: 100%;
-    height: 48px;
+    height: var(--auth-input-height);
 
     padding:
         0
@@ -992,7 +995,7 @@ a {
 }
 
 .register-form-grid .auth-input {
-    height: 48px;
+    height: var(--auth-input-height);
 }
 
 .register-submit-row {
@@ -2022,6 +2025,391 @@ a {
         width: 100%;
 
         min-width: 0;
+    }
+
+}
+
+/* =========================================================
+   PHONE VERIFICATION
+   ========================================================= */
+
+.phone-verification-note {
+    max-width: 430px;
+
+    margin:
+        20px
+        0
+        0;
+
+    color:
+        var(--text-secondary);
+
+    font-size:
+        11px;
+
+    line-height:
+        1.55;
+}
+
+/* =========================================================
+   REGISTER PAGE
+   Clean, balanced layout
+   ========================================================= */
+
+.register-form-clean {
+    width: 100%;
+}
+
+
+/* Force the register form back to ONE main column.
+   This prevents Email / Phone / Password from being
+   pushed into unwanted columns by the global form grid. */
+.register-form-clean .register-form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    width: 100%;
+}
+
+
+/* Only these intentional paired fields use 2 columns:
+   First + Last
+   Username + Employee ID */
+.register-form-clean .auth-field-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px;
+
+    width: 100%;
+}
+
+
+/* Every normal field takes the full available width */
+.register-form-clean .auth-field {
+    width: 100%;
+    min-width: 0;
+}
+
+
+/* Keep your existing input visual language */
+.register-form-clean .auth-input-wrap {
+    position: relative;
+
+    width: 100%;
+}
+
+
+/* Do NOT redesign the existing input.
+   Only make sure Register inputs fill the correct width. */
+.register-form-clean .auth-input {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+/* Password only needs space for the eye icon */
+.register-form-clean .auth-input-wrap.has-trailing-icon .auth-input {
+    padding-right: 58px;
+}
+
+
+/* =========================================================
+   PASSWORD EYE
+   Transparent icon only
+   ========================================================= */
+
+.register-form-clean .password-toggle {
+    position: absolute;
+
+    top: 50%;
+    right: 20px;
+
+    transform: translateY(-50%);
+
+    width: 24px;
+    height: 24px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+
+    border: 0;
+
+    background: transparent !important;
+    box-shadow: none !important;
+
+    cursor: pointer;
+}
+
+
+.register-form-clean .password-toggle:hover,
+.register-form-clean .password-toggle:focus,
+.register-form-clean .password-toggle:active {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+
+.register-form-clean .password-eye-icon {
+    width: 22px;
+    height: 22px;
+
+    display: block;
+
+    fill: none !important;
+    background: transparent !important;
+}
+
+
+.register-form-clean .password-eye-icon * {
+    fill: none !important;
+}
+
+
+.register-form-clean .password-eye-icon .icon-primary {
+    stroke: var(--icon-primary);
+}
+
+
+.register-form-clean .password-eye-icon .icon-secondary {
+    stroke: var(--icon-secondary);
+}
+
+
+/* =========================================================
+   CREATE ACCOUNT BUTTON
+   ========================================================= */
+
+.register-form-clean .register-submit-row {
+    margin-top: 24px;
+}
+
+
+.register-form-clean .register-submit {
+    min-width: 250px;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 640px) {
+
+    .register-form-clean .auth-field-row {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .register-form-clean .register-submit {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* =========================================================
+   MALAYSIA PHONE INPUT
+   Same height / radius / shadow as other auth inputs
+   ========================================================= */
+
+.auth-phone-wrap {
+    width: 100%;
+    height: var(--auth-input-height);
+    min-height: var(--auth-input-height);
+    max-height: var(--auth-input-height);
+
+    display: flex;
+    align-items: center;
+
+    overflow: hidden;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.75);
+
+    border-radius:
+        var(--pill-radius);
+
+    background:
+        var(--input-background);
+
+    box-shadow:
+        var(--input-shadow);
+
+    transition:
+        background-color var(--transition),
+        border-color var(--transition),
+        box-shadow var(--transition);
+}
+
+.auth-phone-wrap:hover {
+    background:
+        rgba(255, 255, 255, 0.88);
+}
+
+.auth-phone-wrap:focus-within {
+    background:
+        rgba(255, 255, 255, 0.94);
+
+    border-color:
+        rgba(116, 31, 46, 0.20);
+
+    box-shadow:
+        0 4px 16px #E3E3E3,
+        0 0 0 3px
+        rgba(116, 31, 46, 0.055);
+}
+
+
+/* Fixed Malaysia country code */
+
+.auth-phone-prefix {
+    flex:
+        0
+        0
+        auto;
+
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding:
+        0
+        18px
+        0
+        22px;
+
+    border-right:
+        1px solid
+        rgba(227, 227, 227, 0.95);
+
+    color:
+        var(--text-primary);
+
+    background:
+        transparent;
+
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+
+    user-select: none;
+}
+
+
+/* Phone number entered by the user */
+
+.auth-phone-wrap .auth-phone-input {
+    flex:
+        1
+        1
+        auto;
+
+    min-width: 0;
+    height: 100%;
+
+    margin: 0;
+
+    padding:
+        0
+        22px;
+
+    appearance: none;
+    -webkit-appearance: none;
+
+    border: 0;
+    outline: 0;
+
+    border-radius: 0;
+
+    background:
+        transparent !important;
+
+    box-shadow:
+        none !important;
+
+    color:
+        var(--text-primary);
+
+    font-size: 14px;
+    font-weight: 400;
+
+    line-height: normal;
+}
+
+.auth-phone-wrap .auth-phone-input::placeholder {
+    color:
+        var(--text-placeholder);
+
+    opacity: 1;
+}
+
+
+/* Prevent browser autofill from changing the phone field */
+
+.auth-phone-wrap
+.auth-phone-input:-webkit-autofill,
+.auth-phone-wrap
+.auth-phone-input:-webkit-autofill:hover,
+.auth-phone-wrap
+.auth-phone-input:-webkit-autofill:focus,
+.auth-phone-wrap
+.auth-phone-input:-webkit-autofill:active {
+    -webkit-text-fill-color:
+        var(--text-primary) !important;
+
+    -webkit-box-shadow:
+        0 0 0 1000px
+        transparent
+        inset !important;
+
+    box-shadow:
+        0 0 0 1000px
+        transparent
+        inset !important;
+
+    transition:
+        background-color
+        9999s
+        ease-out
+        0s;
+}
+
+
+/* =========================================================
+   PHONE INPUT - MOBILE
+   Follow the same 50px height as .auth-input
+   ========================================================= */
+
+@media (max-width: 560px) {
+
+    .auth-phone-wrap {
+        height: 50px;
+        min-height: 50px;
+        max-height: 50px;
+    }
+
+    .auth-phone-prefix {
+        padding:
+            0
+            15px
+            0
+            20px;
+
+        font-size: 14px;
+    }
+
+    .auth-phone-wrap .auth-phone-input {
+        padding:
+            0
+            20px;
+
+        font-size: 14px;
     }
 
 }

@@ -58,6 +58,11 @@ class User(UserMixin, db.Model):
         nullable=True
     )
 
+    phone_verified_at = db.Column(
+    db.DateTime(timezone=True),
+    nullable=True,
+)
+
     phone_number = db.Column(
         db.String(30),
         nullable=False,
@@ -74,17 +79,17 @@ class User(UserMixin, db.Model):
     # Employment information entered during registration.
     job_title = db.Column(
         db.String(120),
-        nullable=False
+        nullable=True,
     )
 
     department = db.Column(
         db.String(120),
-        nullable=False
+        nullable=True,
     )
 
     shift = db.Column(
-        db.String(80),
-        nullable=False
+        db.String(120),
+        nullable=True,
     )
 
     employee_id = db.Column(
