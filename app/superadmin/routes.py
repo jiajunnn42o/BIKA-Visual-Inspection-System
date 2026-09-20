@@ -472,7 +472,15 @@ def pending_registrations():
 
     return render_template(
         "superadmin/pending_registrations.html",
+
+        # Main variable used by the current route/template.
         pending_users=pending_users,
+
+        # Compatibility aliases.
+        # These prevent a template from appearing empty
+        # only because it uses a different variable name.
+        registrations=pending_users,
+        pending_registrations=pending_users,
     )
 
 

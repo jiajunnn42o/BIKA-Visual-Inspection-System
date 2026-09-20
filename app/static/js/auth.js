@@ -687,3 +687,96 @@ document.addEventListener(
 
     }
 );
+
+/* =========================================================
+   AUTH GRADIENT PAGE TRANSITION
+   ========================================================= */
+
+document
+    .querySelectorAll(
+        "[data-auth-transition]"
+    )
+    .forEach((link) => {
+
+        link.addEventListener(
+            "click",
+            (event) => {
+
+                /* -----------------------------------------
+                   Keep normal browser link behavior for:
+                   Ctrl + Click
+                   Cmd + Click
+                   Shift + Click
+                   Alt + Click
+                   ----------------------------------------- */
+
+                if (
+                    event.ctrlKey ||
+                    event.metaKey ||
+                    event.shiftKey ||
+                    event.altKey
+                ) {
+                    return;
+                }
+
+
+                const href =
+                    link.getAttribute(
+                        "href"
+                    );
+
+
+                if (
+                    !href ||
+                    href.startsWith("#")
+                ) {
+                    return;
+                }
+
+
+                const panel =
+                    document.querySelector(
+                        ".auth-content-panel"
+                    );
+
+
+                if (!panel) {
+                    return;
+                }
+
+
+                event.preventDefault();
+
+
+                /* Prevent repeated clicks */
+
+                if (
+                    panel.classList.contains(
+                        "auth-transition-out"
+                    )
+                ) {
+                    return;
+                }
+
+
+                panel.classList.add(
+                    "auth-transition-out"
+                );
+
+
+                /* Navigate after gradient cover */
+
+                window.setTimeout(
+                    () => {
+
+                        window.location.href =
+                            href;
+
+                    },
+                    330
+                );
+
+            }
+        );
+
+    });

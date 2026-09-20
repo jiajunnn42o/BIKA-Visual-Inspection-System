@@ -1,81 +1,184 @@
 {% extends "base.html" %}
 
+
 {% block title %}
 Pending Registrations | BIKA
 {% endblock %}
 
+
 {% block content %}
 
-<h1>Pending Registrations</h1>
+<h1>
+    Pending Registrations
+</h1>
+
+
+<!-- =====================================================
+     FLASH MESSAGES
+     ===================================================== -->
 
 {% with messages = get_flashed_messages(with_categories=true) %}
+
     {% if messages %}
+
         {% for category, message in messages %}
+
             <p class="flash-{{ category }}">
                 {{ message }}
             </p>
+
         {% endfor %}
+
     {% endif %}
+
 {% endwith %}
 
 
-{% if users %}
+<!-- =====================================================
+     PENDING REGISTRATION LIST
+     ===================================================== -->
 
-    <table border="1" cellpadding="10">
+{% if pending_users %}
+
+    <table
+        border="1"
+        cellpadding="10"
+    >
 
         <thead>
+
             <tr>
-                <th>Name</th>
-                <th>Username</th>
-                <th>Email</th>
-                <th>Employee ID</th>
-                <th>Department</th>
-                <th>Job Title</th>
-                <th>Shift</th>
-                <th>Submitted</th>
-                <th>Action</th>
+
+                <th>
+                    Name
+                </th>
+
+                <th>
+                    Username
+                </th>
+
+                <th>
+                    Email
+                </th>
+
+                <th>
+                    Phone
+                </th>
+
+                <th>
+                    Employee ID
+                </th>
+
+                <th>
+                    Verification
+                </th>
+
+                <th>
+                    Submitted
+                </th>
+
+                <th>
+                    Action
+                </th>
+
             </tr>
+
         </thead>
+
 
         <tbody>
 
-            {% for user in users %}
+            {% for user in pending_users %}
 
                 <tr>
+
+                    <!-- NAME -->
 
                     <td>
                         {{ user.full_name }}
                     </td>
 
+
+                    <!-- USERNAME -->
+
                     <td>
                         {{ user.username }}
                     </td>
+
+
+                    <!-- EMAIL -->
 
                     <td>
                         {{ user.email }}
                     </td>
 
+
+                    <!-- PHONE -->
+
+                    <td>
+                        {{ user.phone_number }}
+                    </td>
+
+
+                    <!-- EMPLOYEE ID -->
+
                     <td>
                         {{ user.employee_id }}
                     </td>
 
-                    <td>
-                        {{ user.department }}
-                    </td>
+
+                    <!-- VERIFICATION -->
 
                     <td>
-                        {{ user.job_title }}
+
+                        {% if user.email_verified_at %}
+
+                            Email ✓
+
+                        {% else %}
+
+                            Email ✗
+
+                        {% endif %}
+
+                        <br>
+
+                        {% if user.phone_verified_at %}
+
+                            Phone ✓
+
+                        {% else %}
+
+                            Phone ✗
+
+                        {% endif %}
+
                     </td>
 
-                    <td>
-                        {{ user.shift }}
-                    </td>
+
+                    <!-- SUBMITTED DATE -->
 
                     <td>
-                        {{ user.created_at }}
+
+                        {% if user.created_at %}
+
+                            {{ user.created_at.strftime(
+                                "%d %b %Y %H:%M"
+                            ) }}
+
+                        {% else %}
+
+                            —
+
+                        {% endif %}
+
                     </td>
 
+
+                    <!-- REVIEW -->
+
                     <td>
+
                         <a
                             href="{{ url_for(
                                 'superadmin.review_registration',
@@ -84,6 +187,7 @@ Pending Registrations | BIKA
                         >
                             Review
                         </a>
+
                     </td>
 
                 </tr>
@@ -94,6 +198,7 @@ Pending Registrations | BIKA
 
     </table>
 
+
 {% else %}
 
     <p>
@@ -101,5 +206,6 @@ Pending Registrations | BIKA
     </p>
 
 {% endif %}
+
 
 {% endblock %}
