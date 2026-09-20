@@ -1,14 +1,1929 @@
-* {
+/* =========================================================
+   BIKA VISUAL INSPECTION SYSTEM
+   MAIN.CSS
+   ========================================================= */
+
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+*,
+*::before,
+*::after {
     box-sizing: border-box;
 }
 
+
+html,
 body {
+    width: 100%;
+    min-height: 100%;
+
     margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f7f7f7;
-    color: #222;
+    padding: 0;
 }
 
-h1 {
-    color: #842033;
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+
+button {
+    -webkit-tap-highlight-color:
+        transparent;
+}
+
+
+
+/* =========================================================
+   LIGHT THEME
+   ========================================================= */
+
+:root {
+
+    --bika-red:
+        #741F2E;
+
+    --bika-red-dark:
+        #5E1825;
+
+
+    --text-primary:
+        #242424;
+
+    --text-secondary:
+        #898989;
+
+    --text-placeholder:
+        #9D9D9D;
+
+    --logo-secondary:
+        #181818;
+
+
+    --page-bg:
+        radial-gradient(
+            circle at 50% 0%,
+            #EEEEEE 0%,
+            #FFFFFF 100%
+        );
+
+
+    --sidebar-width:
+        258px;
+
+
+    --border-soft:
+        rgba(
+            195,
+            195,
+            195,
+            0.48
+        );
+
+
+    --border-light:
+        rgba(
+            220,
+            220,
+            220,
+            0.70
+        );
+
+
+    --surface:
+        rgba(
+            255,
+            255,
+            255,
+            0.80
+        );
+
+
+    --surface-strong:
+        rgba(
+            255,
+            255,
+            255,
+            0.94
+        );
+
+
+    --surface-shadow:
+        0 4px 16px
+        #E8E8E8;
+
+
+    --nav-text:
+        #4B4B4B;
+
+
+    --nav-hover:
+        rgba(
+            116,
+            31,
+            46,
+            0.04
+        );
+
+
+    --icon-color:
+        #5F5F5F;
+
+
+    --theme-track:
+        #E9E9E9;
+
+
+    --theme-active:
+        #FFFFFF;
+
+}
+
+
+
+/* =========================================================
+   DARK THEME
+   ========================================================= */
+
+html[data-theme="dark"] {
+
+    --text-primary:
+        #F2F2F2;
+
+    --text-secondary:
+        #A8A8A8;
+
+    --text-placeholder:
+        #888888;
+
+    --logo-secondary:
+        #EEEEEE;
+
+
+    --page-bg:
+        radial-gradient(
+            circle at 50% 0%,
+            #29292C 0%,
+            #151517 100%
+        );
+
+
+    --border-soft:
+        rgba(
+            255,
+            255,
+            255,
+            0.14
+        );
+
+
+    --border-light:
+        rgba(
+            255,
+            255,
+            255,
+            0.08
+        );
+
+
+    --surface:
+        rgba(
+            34,
+            34,
+            37,
+            0.84
+        );
+
+
+    --surface-strong:
+        rgba(
+            38,
+            38,
+            41,
+            0.96
+        );
+
+
+    --surface-shadow:
+        0 4px 16px
+        rgba(
+            0,
+            0,
+            0,
+            0.30
+        );
+
+
+    --nav-text:
+        #D7D7D7;
+
+
+    --nav-hover:
+        rgba(
+            255,
+            255,
+            255,
+            0.045
+        );
+
+
+    --icon-color:
+        #D7D7D7;
+
+
+    --theme-track:
+        rgba(
+            255,
+            255,
+            255,
+            0.10
+        );
+
+
+    --theme-active:
+        rgba(
+            255,
+            255,
+            255,
+            0.15
+        );
+
+}
+
+
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+html {
+    background:
+        var(--page-bg);
+
+    background-attachment:
+        fixed;
+}
+
+
+body {
+    min-height:
+        100vh;
+
+    color:
+        var(--text-primary);
+
+    background:
+        var(--page-bg);
+
+    background-attachment:
+        fixed;
+
+    font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
+    font-weight: 400;
+
+    -webkit-font-smoothing:
+        antialiased;
+
+    text-rendering:
+        optimizeLegibility;
+}
+
+
+
+/* =========================================================
+   APP SHELL
+   ========================================================= */
+
+.app-shell {
+    width:
+        100%;
+
+    min-height:
+        100vh;
+
+    display:
+        grid;
+
+    grid-template-columns:
+        var(--sidebar-width)
+        minmax(0, 1fr);
+
+    background:
+        transparent;
+}
+
+
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.app-sidebar {
+    position:
+        fixed;
+
+    top:
+        0;
+
+    bottom:
+        0;
+
+    left:
+        0;
+
+    z-index:
+        100;
+
+
+    width:
+        var(--sidebar-width);
+
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+
+    padding:
+        29px
+        24px
+        18px;
+
+
+    border-right:
+        1px solid
+        var(--border-light);
+
+
+    background:
+        transparent;
+
+
+    backdrop-filter:
+        none;
+
+    -webkit-backdrop-filter:
+        none;
+}
+
+
+
+/* =========================================================
+   LOGO
+   ========================================================= */
+
+.app-sidebar-brand {
+    display:
+        flex;
+
+    align-items:
+        baseline;
+
+
+    gap:
+        7px;
+
+
+    padding:
+        0
+        18px
+        29px;
+
+
+    white-space:
+        nowrap;
+}
+
+
+.app-sidebar-brand-name {
+    color:
+        var(--bika-red);
+
+
+    font-size:
+        31px;
+
+    font-weight:
+        800;
+
+    font-style:
+        italic;
+
+
+    line-height:
+        1;
+
+
+    letter-spacing:
+        -0.055em;
+}
+
+
+.app-sidebar-brand-subtitle {
+    color:
+        var(--logo-secondary);
+
+
+    font-size:
+        11px;
+
+    font-weight:
+        500;
+
+
+    line-height:
+        1;
+
+
+    letter-spacing:
+        -0.02em;
+}
+
+
+
+/* =========================================================
+   NAV SECTION
+   ========================================================= */
+
+.app-nav-section {
+    margin-bottom:
+        20px;
+}
+
+
+.app-nav-section-heading {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+
+    gap:
+        10px;
+
+
+    margin:
+        0
+        18px
+        10px;
+
+
+    color:
+        var(--text-secondary);
+
+
+    font-size:
+        12px;
+
+    font-weight:
+        400;
+
+
+    line-height:
+        1;
+}
+
+
+.app-nav-section-line {
+    flex:
+        1;
+
+
+    height:
+        1px;
+
+
+    background:
+        var(--border-soft);
+}
+
+
+
+/* =========================================================
+   NAV ITEMS
+   ========================================================= */
+
+.app-nav-item {
+    min-height:
+        43px;
+
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+
+    gap:
+        13px;
+
+
+    margin:
+        2px
+        0;
+
+
+    padding:
+        0
+        16px;
+
+
+    border-radius:
+        0;
+
+
+    background:
+        transparent;
+
+
+    color:
+        var(--nav-text);
+
+
+    font-size:
+        14px;
+
+    font-weight:
+        400;
+
+
+    line-height:
+        1;
+
+
+    text-decoration:
+        none;
+
+
+    transition:
+        color
+        150ms
+        ease,
+
+        background-color
+        150ms
+        ease;
+}
+
+
+.app-nav-item > span {
+    font-weight:
+        400;
+}
+
+
+.app-nav-item:hover {
+    color:
+        var(--bika-red);
+
+
+    background:
+        var(--nav-hover);
+}
+
+
+
+/* =========================================================
+   ACTIVE NAV
+   ========================================================= */
+
+.app-nav-item.is-active {
+    color:
+        #FFFFFF;
+
+
+    background:
+        var(--bika-red);
+
+
+    border-radius:
+        0
+        999px
+        999px
+        0;
+
+
+    font-weight:
+        400 !important;
+}
+
+
+.app-nav-item.is-active > span {
+    font-weight:
+        400 !important;
+}
+
+
+.app-nav-item.is-active:hover {
+    color:
+        #FFFFFF;
+
+
+    background:
+        var(--bika-red-dark);
+}
+
+
+
+/* =========================================================
+   VUESAX / ICONSAX
+   ========================================================= */
+
+iconsax-icon {
+    display:
+        inline-flex;
+
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+
+    background:
+        transparent !important;
+
+
+    color:
+        currentColor;
+}
+
+
+.app-nav-item iconsax-icon {
+    width:
+        22px;
+
+    height:
+        22px;
+
+
+    min-width:
+        22px;
+
+
+    flex:
+        0
+        0
+        22px;
+
+
+    color:
+        var(--icon-color);
+}
+
+
+.app-nav-item.is-active iconsax-icon {
+    color:
+        #FFFFFF;
+}
+
+
+
+/* =========================================================
+   USER CARD
+   ========================================================= */
+
+.app-sidebar-user {
+    width:
+        100%;
+
+
+    min-height:
+        62px;
+
+
+    margin-top:
+        auto;
+
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+
+    gap:
+        11px;
+
+
+    padding:
+        8px
+        10px
+        8px
+        12px;
+
+
+    border-radius:
+        999px;
+
+
+    background:
+        var(--surface);
+
+
+    box-shadow:
+        var(--surface-shadow);
+}
+
+
+
+/* =========================================================
+   AVATAR
+   ========================================================= */
+
+.app-sidebar-avatar {
+    width:
+        43px;
+
+    height:
+        43px;
+
+
+    flex:
+        0
+        0
+        43px;
+
+
+    display:
+        grid;
+
+    place-items:
+        center;
+
+
+    border-radius:
+        50%;
+
+
+    background:
+        rgba(
+            116,
+            31,
+            46,
+            0.09
+        );
+
+
+    color:
+        var(--bika-red);
+
+
+    font-size:
+        14px;
+
+    font-weight:
+        700;
+}
+
+
+
+/* =========================================================
+   USER COPY
+   ========================================================= */
+
+.app-sidebar-user-copy {
+    min-width:
+        0;
+
+
+    flex:
+        1;
+
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+
+    gap:
+        3px;
+}
+
+
+.app-sidebar-user-copy strong {
+    overflow:
+        hidden;
+
+
+    color:
+        var(--text-primary);
+
+
+    font-size:
+        13px;
+
+    font-weight:
+        600;
+
+
+    line-height:
+        1.2;
+
+
+    text-overflow:
+        ellipsis;
+
+    white-space:
+        nowrap;
+}
+
+
+.app-sidebar-user-copy span {
+    color:
+        var(--text-secondary);
+
+
+    font-size:
+        10px;
+
+    font-weight:
+        400;
+
+
+    line-height:
+        1.2;
+}
+
+
+
+/* =========================================================
+   LOGOUT BUTTON
+   ========================================================= */
+
+.app-sidebar-logout {
+    width:
+        36px;
+
+    height:
+        36px;
+
+
+    min-width:
+        36px;
+
+
+    flex:
+        0
+        0
+        36px;
+
+
+    display:
+        grid;
+
+    place-items:
+        center;
+
+
+    padding:
+        0;
+
+
+    border:
+        0;
+
+    outline:
+        0;
+
+
+    border-radius:
+        50%;
+
+
+    background:
+        transparent;
+
+
+    color:
+        #6D6D6D;
+
+
+    cursor:
+        pointer;
+
+
+    position:
+        relative;
+
+
+    z-index:
+        2;
+
+
+    transition:
+        color
+        150ms
+        ease,
+
+        background-color
+        150ms
+        ease,
+
+        transform
+        150ms
+        ease;
+}
+
+
+.app-sidebar-logout:hover {
+    color:
+        var(--bika-red);
+
+
+    background:
+        rgba(
+            116,
+            31,
+            46,
+            0.07
+        );
+}
+
+
+.app-sidebar-logout:active {
+    transform:
+        scale(0.94);
+}
+
+
+.app-sidebar-logout iconsax-icon {
+    width:
+        20px !important;
+
+    height:
+        20px !important;
+
+
+    min-width:
+        20px;
+
+
+    color:
+        currentColor !important;
+}
+
+
+html[data-theme="dark"]
+.app-sidebar-logout {
+    color:
+        #D6D6D6;
+}
+
+
+
+/* =========================================================
+   MAIN AREA
+   ========================================================= */
+
+.app-main {
+    position:
+        relative;
+
+
+    grid-column:
+        2;
+
+
+    min-width:
+        0;
+
+    min-height:
+        100vh;
+
+
+    background:
+        transparent;
+}
+
+
+
+/* =========================================================
+   TOP BAR
+   ========================================================= */
+
+.app-topbar {
+    position:
+        absolute;
+
+
+    top:
+        22px;
+
+    right:
+        28px;
+
+
+    z-index:
+        80;
+
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+
+    gap:
+        14px;
+
+
+    background:
+        transparent;
+}
+
+
+
+/* =========================================================
+   THEME SWITCH
+   KEEP SMALL SIZE
+   ========================================================= */
+
+.app-theme-switch {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+
+    padding:
+        3px;
+
+
+    border-radius:
+        999px;
+
+
+    background:
+        var(--theme-track);
+
+
+    box-shadow:
+        var(--surface-shadow);
+}
+
+
+.app-theme-button {
+    width:
+        31px;
+
+    height:
+        31px;
+
+
+    flex:
+        0
+        0
+        31px;
+
+
+    display:
+        grid;
+
+    place-items:
+        center;
+
+
+    padding:
+        0;
+
+
+    border:
+        0;
+
+    outline:
+        0;
+
+
+    border-radius:
+        50%;
+
+
+    background:
+        transparent;
+
+
+    color:
+        #666666;
+
+
+    cursor:
+        pointer;
+
+
+    transition:
+        background-color
+        160ms
+        ease,
+
+        box-shadow
+        160ms
+        ease;
+}
+
+
+.app-theme-button.is-active {
+    background:
+        var(--theme-active);
+
+
+    box-shadow:
+        0 2px 8px
+        rgba(
+            0,
+            0,
+            0,
+            0.05
+        );
+}
+
+
+.app-theme-button iconsax-icon {
+    width:
+        18px !important;
+
+    height:
+        18px !important;
+
+
+    color:
+        currentColor !important;
+}
+
+
+html[data-theme="dark"]
+.app-theme-button {
+    color:
+        #D7D7D7;
+}
+
+
+
+/* =========================================================
+   NOTIFICATION
+   ========================================================= */
+
+.app-topbar-icon-button {
+    width:
+        38px;
+
+    height:
+        38px;
+
+
+    flex:
+        0
+        0
+        38px;
+
+
+    display:
+        grid;
+
+    place-items:
+        center;
+
+
+    padding:
+        0;
+
+
+    border:
+        0;
+
+    outline:
+        0;
+
+
+    border-radius:
+        50%;
+
+
+    background:
+        var(--surface);
+
+
+    box-shadow:
+        var(--surface-shadow);
+
+
+    color:
+        var(--icon-color);
+
+
+    cursor:
+        pointer;
+}
+
+
+.app-topbar-icon-button iconsax-icon {
+    width:
+        19px !important;
+
+    height:
+        19px !important;
+
+
+    color:
+        currentColor !important;
+}
+
+
+
+/* =========================================================
+   CONTENT
+   ========================================================= */
+
+.app-content {
+    min-width:
+        0;
+
+
+    padding:
+        23px
+        32px
+        48px;
+
+
+    background:
+        transparent;
+}
+
+
+
+/* =========================================================
+   LOGOUT BACKDROP
+   ========================================================= */
+
+.logout-confirm-backdrop {
+    position:
+        fixed;
+
+
+    inset:
+        0;
+
+
+    z-index:
+        5000;
+
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+
+    padding:
+        24px;
+
+
+    background:
+        rgba(
+            24,
+            24,
+            24,
+            0.12
+        );
+
+
+    backdrop-filter:
+        blur(6px);
+
+
+    -webkit-backdrop-filter:
+        blur(6px);
+
+
+    opacity:
+        0;
+
+
+    visibility:
+        hidden;
+
+
+    transition:
+        opacity
+        180ms
+        ease,
+
+        visibility
+        180ms
+        ease;
+}
+
+
+.logout-confirm-backdrop[hidden] {
+    display:
+        none;
+}
+
+
+.logout-confirm-backdrop.is-open {
+    opacity:
+        1;
+
+
+    visibility:
+        visible;
+}
+
+
+
+/* =========================================================
+   PREVENT PAGE SCROLL
+   ========================================================= */
+
+html.logout-modal-open {
+    overflow:
+        hidden;
+}
+
+
+
+/* =========================================================
+   LOGOUT DIALOG
+   ========================================================= */
+
+.logout-confirm-dialog {
+    width:
+        min(
+            360px,
+            calc(
+                100vw
+                -
+                40px
+            )
+        );
+
+
+    padding:
+        25px
+        24px
+        21px;
+
+
+    border:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.55
+        );
+
+
+    border-radius:
+        20px;
+
+
+    background:
+        var(--surface-strong);
+
+
+    box-shadow:
+        0 8px 30px
+        rgba(
+            0,
+            0,
+            0,
+            0.10
+        );
+
+
+    text-align:
+        center;
+
+
+    transform:
+        translateY(8px)
+        scale(0.985);
+
+
+    transition:
+        transform
+        180ms
+        ease;
+}
+
+
+.logout-confirm-backdrop.is-open
+.logout-confirm-dialog {
+    transform:
+        translateY(0)
+        scale(1);
+}
+
+
+
+/* =========================================================
+   LOGOUT DIALOG ICON
+   ========================================================= */
+
+.logout-confirm-icon {
+    width:
+        48px;
+
+    height:
+        48px;
+
+
+    margin:
+        0
+        auto
+        14px;
+
+
+    display:
+        grid;
+
+    place-items:
+        center;
+
+
+    border-radius:
+        50%;
+
+
+    background:
+        rgba(
+            116,
+            31,
+            46,
+            0.08
+        );
+
+
+    color:
+        var(--bika-red);
+}
+
+
+.logout-confirm-icon iconsax-icon {
+    width:
+        24px !important;
+
+    height:
+        24px !important;
+
+
+    color:
+        currentColor !important;
+}
+
+
+
+/* =========================================================
+   LOGOUT TITLE
+   ========================================================= */
+
+.logout-confirm-dialog h2 {
+    margin:
+        0;
+
+
+    color:
+        var(--text-primary);
+
+
+    font-size:
+        18px;
+
+    font-weight:
+        600;
+
+
+    line-height:
+        1.25;
+
+
+    letter-spacing:
+        -0.02em;
+}
+
+
+
+/* =========================================================
+   LOGOUT DESCRIPTION
+   ========================================================= */
+
+.logout-confirm-dialog p {
+    max-width:
+        275px;
+
+
+    margin:
+        7px
+        auto
+        0;
+
+
+    color:
+        var(--text-secondary);
+
+
+    font-size:
+        12px;
+
+    font-weight:
+        400;
+
+
+    line-height:
+        1.5;
+}
+
+
+
+/* =========================================================
+   LOGOUT ACTIONS
+   ========================================================= */
+
+.logout-confirm-actions {
+    display:
+        grid;
+
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(
+                0,
+                1fr
+            )
+        );
+
+
+    gap:
+        10px;
+
+
+    margin-top:
+        22px;
+}
+
+
+.logout-confirm-form {
+    width:
+        100%;
+
+
+    margin:
+        0;
+}
+
+
+
+/* =========================================================
+   LOGOUT ACTION BUTTONS
+   ========================================================= */
+
+.logout-confirm-cancel,
+.logout-confirm-submit {
+    width:
+        100%;
+
+
+    height:
+        39px;
+
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+
+    padding:
+        0
+        16px;
+
+
+    border-radius:
+        999px;
+
+
+    font-size:
+        12px;
+
+    font-weight:
+        500;
+
+
+    cursor:
+        pointer;
+
+
+    transition:
+        background-color
+        150ms
+        ease,
+
+        color
+        150ms
+        ease,
+
+        border-color
+        150ms
+        ease;
+}
+
+
+
+/* =========================================================
+   CANCEL
+   ========================================================= */
+
+.logout-confirm-cancel {
+    border:
+        1px solid
+        var(--border-light);
+
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.55
+        );
+
+
+    color:
+        var(--text-primary);
+}
+
+
+.logout-confirm-cancel:hover {
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.90
+        );
+}
+
+
+
+/* =========================================================
+   CONFIRM LOGOUT
+   ========================================================= */
+
+.logout-confirm-submit {
+    border:
+        1px solid
+        var(--bika-red);
+
+
+    background:
+        var(--bika-red);
+
+
+    color:
+        #FFFFFF;
+}
+
+
+.logout-confirm-submit:hover {
+    border-color:
+        var(--bika-red-dark);
+
+
+    background:
+        var(--bika-red-dark);
+}
+
+
+
+/* =========================================================
+   LOGOUT DARK MODE
+   ========================================================= */
+
+html[data-theme="dark"]
+.logout-confirm-backdrop {
+    background:
+        rgba(
+            0,
+            0,
+            0,
+            0.48
+        );
+}
+
+
+html[data-theme="dark"]
+.logout-confirm-dialog {
+    border-color:
+        rgba(
+            255,
+            255,
+            255,
+            0.08
+        );
+
+
+    box-shadow:
+        0 8px 30px
+        rgba(
+            0,
+            0,
+            0,
+            0.36
+        );
+}
+
+
+html[data-theme="dark"]
+.logout-confirm-cancel {
+    border-color:
+        rgba(
+            255,
+            255,
+            255,
+            0.10
+        );
+
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.06
+        );
+}
+
+
+html[data-theme="dark"]
+.logout-confirm-cancel:hover {
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.10
+        );
+}
+
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (
+    max-width: 900px
+) {
+
+    :root {
+        --sidebar-width:
+            82px;
+    }
+
+
+    .app-sidebar {
+        padding:
+            24px
+            11px
+            14px;
+    }
+
+
+    .app-sidebar-brand-subtitle,
+    .app-nav-section-heading span:first-child,
+    .app-nav-section-line,
+    .app-nav-item > span,
+    .app-sidebar-user-copy {
+
+        display:
+            none;
+    }
+
+
+    .app-sidebar-brand {
+        justify-content:
+            center;
+
+
+        padding:
+            0
+            0
+            26px;
+    }
+
+
+    .app-sidebar-brand-name {
+        font-size:
+            22px;
+    }
+
+
+    .app-nav-item {
+        justify-content:
+            center;
+
+
+        padding:
+            0;
+
+
+        border-radius:
+            10px;
+    }
+
+
+    .app-nav-item.is-active {
+        border-radius:
+            10px;
+    }
+
+
+    .app-sidebar-user {
+        justify-content:
+            center;
+
+
+        padding:
+            8px;
+    }
+
+
+    .app-sidebar-logout {
+        display:
+            none;
+    }
+
+
+    .app-topbar {
+        top:
+            15px;
+
+        right:
+            18px;
+    }
+
+
+    .app-content {
+        padding:
+            18px
+            18px
+            40px;
+    }
+
+}
+
+
+
+/* =========================================================
+   REDUCED MOTION
+   ========================================================= */
+
+@media (
+    prefers-reduced-motion:
+    reduce
+) {
+
+    *,
+    *::before,
+    *::after {
+
+        transition-duration:
+            0.01ms !important;
+
+
+        animation-duration:
+            0.01ms !important;
+
+    }
+
 }

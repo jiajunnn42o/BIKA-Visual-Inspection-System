@@ -10,14 +10,20 @@ from flask import (
     abort,
     current_app,
     flash,
+    jsonify,
     redirect,
     render_template,
+    request,
     url_for,
 )
 
 from flask_login import (
     current_user,
     login_required,
+)
+
+from sqlalchemy import (
+    func,
 )
 
 from sqlalchemy.exc import (
@@ -35,28 +41,9 @@ from app.models import (
 )
 
 from app.services.email_service import (
-    send_email_verification_code_email,
     send_registration_approved_email,
     send_registration_rejected_email,
 )
-
-from app.services.email_verification_service import (
-    issue_verification_code,
-)
-
-from app.services.phone_verification_service import (
-    issue_phone_verification_code,
-)
-
-from app.services.sms_service import (
-    send_phone_verification_code_sms,
-)
-
-from app.utils.phone import (
-    InvalidPhoneNumberError,
-    normalize_malaysian_mobile,
-)
-
 
 from app.superadmin import (
     superadmin_bp,
@@ -109,21 +96,20 @@ VALID_ROLES = {
 }
 
 
+VALID_LIST_STATUSES = {
+    "pending",
+    "approved",
+    "rejected",
+}
+
+
 # =========================================================
 # SUPERADMIN PERMISSION
 # =========================================================
 
-def superadmin_required(
-    view_function,
-):
-    """
-    Restrict route access to
-    authenticated SuperAdmins.
-    """
+def superadmin_required(view_function):
 
-    @wraps(
-        view_function
-    )
+    @wraps(view_function)
     @login_required
     def wrapped_view(
         *args,
@@ -134,10 +120,7 @@ def superadmin_required(
             current_user.role
             != UserRole.SUPERADMIN.value
         ):
-
-            abort(
-                403
-            )
+            abort(403)
 
         return view_function(
             *args,
@@ -151,15 +134,9 @@ def superadmin_required(
 # HELPERS
 # =========================================================
 
-def _get_pending_user_or_404(
+def _get_user_or_404(
     user_id,
 ):
-    """
-    Retrieve a pending applicant.
-
-    Only pending registrations can
-    be processed through this workflow.
-    """
 
     user = db.session.get(
         User,
@@ -167,21 +144,101 @@ def _get_pending_user_or_404(
     )
 
     if user is None:
+        abort(404)
 
-        abort(
-            404
-        )
+    return user
+
+
+def _get_pending_user_or_404(
+    user_id,
+):
+
+    user = _get_user_or_404(
+        user_id
+    )
 
     if (
         user.status
         != UserStatus.PENDING.value
     ):
-
-        abort(
-            404
-        )
+        abort(404)
 
     return user
+
+
+def _get_registration_user_or_404(
+    user_id,
+):
+    """
+    Registration workflow users only.
+
+    Allowed:
+    - pending
+    - approved through registration workflow
+    - rejected
+    """
+
+    user = _get_user_or_404(
+        user_id
+    )
+
+
+    if (
+        user.status
+        == UserStatus.PENDING.value
+    ):
+        return user
+
+
+    if (
+        user.status
+        == UserStatus.REJECTED.value
+    ):
+        return user
+
+
+    if (
+        user.status
+        == UserStatus.ACTIVE.value
+        and
+        user.approved_at
+        is not None
+    ):
+        return user
+
+
+    abort(404)
+
+
+def _registration_view_status(
+    user,
+):
+
+    if (
+        user.status
+        == UserStatus.PENDING.value
+    ):
+        return "pending"
+
+
+    if (
+        user.status
+        == UserStatus.REJECTED.value
+    ):
+        return "rejected"
+
+
+    if (
+        user.status
+        == UserStatus.ACTIVE.value
+        and
+        user.approved_at
+        is not None
+    ):
+        return "approved"
+
+
+    return None
 
 
 def _user_exists(
@@ -189,14 +246,10 @@ def _user_exists(
     value,
     exclude_user_id,
 ):
-    """
-    Check whether another user already
-    owns a unique value.
-    """
 
     if not value:
-
         return False
+
 
     existing_id = db.session.scalar(
         db.select(
@@ -204,13 +257,11 @@ def _user_exists(
         )
         .where(
             field == value,
-            User.id
-            != exclude_user_id,
+            User.id != exclude_user_id,
         )
-        .limit(
-            1
-        )
+        .limit(1)
     )
+
 
     return (
         existing_id
@@ -221,95 +272,59 @@ def _user_exists(
 def _prepare_review_form(
     user,
 ):
-    """
-    Create a ReviewRegistrationForm
-    populated using the applicant data.
 
-    Old registrations may contain legacy
-    employment values from before the
-    fields became SuperAdmin-managed.
-
-    Only valid current choices are loaded.
-    """
-
-    form = (
-        ReviewRegistrationForm(
-            obj=user
-        )
+    form = ReviewRegistrationForm(
+        obj=user
     )
 
-    # -----------------------------------------------------
-    # ROLE
-    # -----------------------------------------------------
 
     if (
         user.role
         in VALID_ROLES
     ):
-
-        form.role.data = (
-            user.role
-        )
+        form.role.data = user.role
 
     else:
-
         form.role.data = (
             UserRole.USER.value
         )
 
 
-    # -----------------------------------------------------
-    # JOB TITLE
-    # -----------------------------------------------------
-
     if (
         user.job_title
         in VALID_JOB_TITLES
     ):
-
         form.job_title.data = (
             user.job_title
         )
 
     else:
-
         form.job_title.data = ""
 
-
-    # -----------------------------------------------------
-    # DEPARTMENT
-    # -----------------------------------------------------
 
     if (
         user.department
         in VALID_DEPARTMENTS
     ):
-
         form.department.data = (
             user.department
         )
 
     else:
-
         form.department.data = ""
 
-
-    # -----------------------------------------------------
-    # SHIFT
-    # -----------------------------------------------------
 
     if (
         user.shift
         in VALID_SHIFTS
     ):
-
         form.shift.data = (
             user.shift
         )
 
     else:
-
         form.shift.data = ""
+
 
     return form
 
@@ -321,19 +336,12 @@ def _validate_unique_fields(
     phone_number,
     employee_id,
 ):
-    """
-    Validate applicant unique account values.
-
-    Returns:
-        error_message or None
-    """
 
     if _user_exists(
         User.username,
         username,
         user.id,
     ):
-
         return (
             "This username is already in use."
         )
@@ -344,7 +352,6 @@ def _validate_unique_fields(
         email,
         user.id,
     ):
-
         return (
             "This email address is already in use."
         )
@@ -355,7 +362,6 @@ def _validate_unique_fields(
         phone_number,
         user.id,
     ):
-
         return (
             "This phone number is already in use."
         )
@@ -366,7 +372,6 @@ def _validate_unique_fields(
         employee_id,
         user.id,
     ):
-
         return (
             "This Employee ID is already in use."
         )
@@ -378,12 +383,6 @@ def _validate_unique_fields(
 def _employment_fields_complete(
     user,
 ):
-    """
-    Return missing or invalid employment fields.
-
-    Approval requires all three fields
-    to contain a predefined valid value.
-    """
 
     missing_fields = []
 
@@ -394,7 +393,6 @@ def _employment_fields_complete(
         user.job_title
         not in VALID_JOB_TITLES
     ):
-
         missing_fields.append(
             "Job Title"
         )
@@ -406,7 +404,6 @@ def _employment_fields_complete(
         user.department
         not in VALID_DEPARTMENTS
     ):
-
         missing_fields.append(
             "Department"
         )
@@ -418,7 +415,6 @@ def _employment_fields_complete(
         user.shift
         not in VALID_SHIFTS
     ):
-
         missing_fields.append(
             "Shift"
         )
@@ -427,8 +423,58 @@ def _employment_fields_complete(
     return missing_fields
 
 
+def _return_to_review(
+    user_id,
+    *,
+    saved=False,
+):
+    """
+    Return to registration review.
+
+    When Save Changes succeeds:
+    ?saved=1 is added so the frontend can
+    display a success toast.
+    """
+
+    if (
+        request.form.get("_modal")
+        == "1"
+    ):
+
+        params = {
+            "status": "pending",
+            "review": user_id,
+        }
+
+        if saved:
+            params["saved"] = "1"
+
+        return redirect(
+            url_for(
+                "superadmin.pending_registrations",
+                **params,
+            )
+        )
+
+
+    params = {
+        "user_id": user_id,
+    }
+
+    if saved:
+        params["saved"] = "1"
+
+
+    return redirect(
+        url_for(
+            "superadmin.review_registration",
+            **params,
+        )
+    )
+
+
 # =========================================================
-# PENDING REGISTRATIONS
+# REGISTRATION REQUEST LIST
 # =========================================================
 
 @superadmin_bp.route(
@@ -436,21 +482,120 @@ def _employment_fields_complete(
 )
 @superadmin_required
 def pending_registrations():
-    """
-    Show applications that completed BOTH:
 
-        Email verification
-        Phone verification
+    current_status = (
+        request.args.get(
+            "status",
+            "pending",
+        )
+        .strip()
+        .lower()
+    )
 
-    Accounts that have not completed both
-    verification stages are intentionally
-    hidden from the SuperAdmin review queue.
-    """
 
-    pending_users = (
-        db.session.scalars(
+    if (
+        current_status
+        not in VALID_LIST_STATUSES
+    ):
+        current_status = "pending"
+
+
+    # =====================================================
+    # PENDING
+    # =====================================================
+
+    if (
+        current_status
+        == "pending"
+    ):
+
+        registration_users = (
+            db.session.scalars(
+                db.select(
+                    User
+                )
+                .where(
+                    User.status
+                    == UserStatus.PENDING.value,
+
+                    User.email_verified_at
+                    .is_not(None),
+
+                    User.phone_verified_at
+                    .is_not(None),
+                )
+                .order_by(
+                    User.created_at.asc()
+                )
+            )
+            .all()
+        )
+
+
+    # =====================================================
+    # APPROVED
+    # =====================================================
+
+    elif (
+        current_status
+        == "approved"
+    ):
+
+        registration_users = (
+            db.session.scalars(
+                db.select(
+                    User
+                )
+                .where(
+                    User.status
+                    == UserStatus.ACTIVE.value,
+
+                    User.approved_at
+                    .is_not(None),
+                )
+                .order_by(
+                    User.approved_at.desc(),
+                    User.created_at.desc(),
+                )
+            )
+            .all()
+        )
+
+
+    # =====================================================
+    # REJECTED
+    # =====================================================
+
+    else:
+
+        registration_users = (
+            db.session.scalars(
+                db.select(
+                    User
+                )
+                .where(
+                    User.status
+                    == UserStatus.REJECTED.value
+                )
+                .order_by(
+                    User.rejected_at.desc(),
+                    User.created_at.desc(),
+                )
+            )
+            .all()
+        )
+
+
+    # =====================================================
+    # COUNTS
+    # =====================================================
+
+    pending_count = (
+        db.session.scalar(
             db.select(
-                User
+                func.count(
+                    User.id
+                )
             )
             .where(
                 User.status
@@ -462,27 +607,239 @@ def pending_registrations():
                 User.phone_verified_at
                 .is_not(None),
             )
-            .order_by(
-                User.created_at.asc()
+        )
+        or 0
+    )
+
+
+    approved_count = (
+        db.session.scalar(
+            db.select(
+                func.count(
+                    User.id
+                )
+            )
+            .where(
+                User.status
+                == UserStatus.ACTIVE.value,
+
+                User.approved_at
+                .is_not(None),
             )
         )
-        .all()
+        or 0
+    )
+
+
+    rejected_count = (
+        db.session.scalar(
+            db.select(
+                func.count(
+                    User.id
+                )
+            )
+            .where(
+                User.status
+                == UserStatus.REJECTED.value
+            )
+        )
+        or 0
     )
 
 
     return render_template(
         "superadmin/pending_registrations.html",
 
-        # Main variable used by the current route/template.
-        pending_users=pending_users,
+        # Keep this name for compatibility
+        # with the existing template.
+        pending_users=registration_users,
 
-        # Compatibility aliases.
-        # These prevent a template from appearing empty
-        # only because it uses a different variable name.
-        registrations=pending_users,
-        pending_registrations=pending_users,
+        current_status=current_status,
+
+        pending_count=pending_count,
+        approved_count=approved_count,
+        rejected_count=rejected_count,
     )
 
+# =========================================================
+# CHECK UNIQUE REGISTRATION VALUE
+# =========================================================
+
+@superadmin_bp.route(
+    "/registrations/<int:user_id>/check-unique"
+)
+@superadmin_required
+def check_registration_unique(
+    user_id,
+):
+    """
+    Real-time availability check for:
+
+    - username
+    - employee_id
+
+    The applicant's own existing value does not
+    count as a collision.
+    """
+
+    user = (
+        _get_pending_user_or_404(
+            user_id
+        )
+    )
+
+
+    field_name = (
+        request.args.get(
+            "field",
+            "",
+        )
+        .strip()
+        .lower()
+    )
+
+
+    raw_value = (
+        request.args.get(
+            "value",
+            "",
+        )
+        .strip()
+    )
+
+
+    # =====================================================
+    # VALID FIELD
+    # =====================================================
+
+    if (
+        field_name
+        not in {
+            "username",
+            "employee_id",
+        }
+    ):
+
+        return jsonify(
+            {
+                "ok": False,
+                "available": False,
+                "message": "Unsupported field.",
+            }
+        ), 400
+
+
+    # =====================================================
+    # EMPTY
+    # =====================================================
+
+    if not raw_value:
+
+        return jsonify(
+            {
+                "ok": True,
+                "available": False,
+                "message": "Required",
+            }
+        )
+
+
+    # =====================================================
+    # USERNAME
+    # =====================================================
+
+    if (
+        field_name
+        == "username"
+    ):
+
+        normalized_value = (
+            raw_value.lower()
+        )
+
+
+        existing_user_id = (
+            db.session.scalar(
+                db.select(
+                    User.id
+                )
+                .where(
+                    db.func.lower(
+                        User.username
+                    )
+                    ==
+                    normalized_value,
+
+                    User.id
+                    !=
+                    user.id,
+                )
+                .limit(1)
+            )
+        )
+
+
+    # =====================================================
+    # EMPLOYEE ID
+    # =====================================================
+
+    else:
+
+        normalized_value = (
+            raw_value.upper()
+        )
+
+
+        existing_user_id = (
+            db.session.scalar(
+                db.select(
+                    User.id
+                )
+                .where(
+                    db.func.upper(
+                        User.employee_id
+                    )
+                    ==
+                    normalized_value,
+
+                    User.id
+                    !=
+                    user.id,
+                )
+                .limit(1)
+            )
+        )
+
+
+    # =====================================================
+    # COLLISION
+    # =====================================================
+
+    if (
+        existing_user_id
+        is not None
+    ):
+
+        return jsonify(
+            {
+                "ok": True,
+                "available": False,
+                "message": "Already in use",
+            }
+        )
+
+
+    # =====================================================
+    # AVAILABLE
+    # =====================================================
+
+    return jsonify(
+        {
+            "ok": True,
+            "available": True,
+            "message": "Available",
+        }
+    )
 
 # =========================================================
 # REVIEW REGISTRATION
@@ -495,52 +852,88 @@ def pending_registrations():
 def review_registration(
     user_id,
 ):
-    """
-    Display one pending registration.
-    """
 
     user = (
-        _get_pending_user_or_404(
+        _get_registration_user_or_404(
             user_id
         )
     )
 
 
-    form = (
-        _prepare_review_form(
+    review_status = (
+        _registration_view_status(
             user
         )
     )
 
 
-    approve_form = (
-        ApproveRegistrationForm()
+    if review_status is None:
+        abort(404)
+
+
+    is_read_only = (
+        review_status
+        != "pending"
     )
 
 
-    reject_form = (
-        RejectRegistrationForm()
+    # Pending still needs editable forms.
+    form = None
+    approve_form = None
+    reject_form = None
+
+
+    if not is_read_only:
+
+        form = (
+            _prepare_review_form(
+                user
+            )
+        )
+
+        approve_form = (
+            ApproveRegistrationForm()
+        )
+
+        reject_form = (
+            RejectRegistrationForm()
+        )
+
+
+    # AJAX / modal request
+    is_modal_request = (
+        request.args.get("modal")
+        == "1"
+        or
+        request.headers.get(
+            "X-Requested-With"
+        )
+        == "XMLHttpRequest"
+    )
+
+
+    template_name = (
+        "superadmin/_review_registration_modal.html"
+        if is_modal_request
+        else
+        "superadmin/review_registration.html"
     )
 
 
     return render_template(
-        "superadmin/review_registration.html",
+        template_name,
 
         user=user,
 
         form=form,
 
-        approve_form=(
-            approve_form
-        ),
+        approve_form=approve_form,
 
-        reject_form=(
-            reject_form
-        ),
+        reject_form=reject_form,
 
-        # Legacy values are passed only
-        # so the UI can tell the SuperAdmin
-        # that old invalid data needs replacing.
+        review_status=review_status,
+
+        is_read_only=is_read_only,
 
         legacy_job_title=(
             user.job_title
@@ -589,20 +982,6 @@ def review_registration(
 def save_registration_changes(
     user_id,
 ):
-    """
-    Save changes made by the SuperAdmin.
-
-    Employment fields can still be empty
-    at this stage.
-
-    Changing email:
-        email_verified_at -> None
-        new Email OTP
-
-    Changing phone:
-        phone_verified_at -> None
-        new Phone OTP
-    """
 
     user = (
         _get_pending_user_or_404(
@@ -629,16 +1008,14 @@ def save_registration_changes(
                     "error",
                 )
 
-        return redirect(
-            url_for(
-                "superadmin.review_registration",
-                user_id=user.id,
-            )
+
+        return _return_to_review(
+            user.id
         )
 
 
     # =====================================================
-    # NORMALIZE VALUES
+    # NORMALIZE
     # =====================================================
 
     first_name = (
@@ -660,13 +1037,6 @@ def save_registration_changes(
     )
 
 
-    email = (
-        form.email.data
-        .strip()
-        .lower()
-    )
-
-
     employee_id = (
         form.employee_id.data
         .strip()
@@ -675,24 +1045,21 @@ def save_registration_changes(
 
 
     job_title = (
-        form.job_title.data
-        .strip()
+        form.job_title.data.strip()
         if form.job_title.data
         else None
     )
 
 
     department = (
-        form.department.data
-        .strip()
+        form.department.data.strip()
         if form.department.data
         else None
     )
 
 
     shift = (
-        form.shift.data
-        .strip()
+        form.shift.data.strip()
         if form.shift.data
         else None
     )
@@ -706,34 +1073,18 @@ def save_registration_changes(
 
 
     # =====================================================
-    # NORMALIZE MALAYSIAN PHONE
+    # EMAIL + PHONE LOCKED
     # =====================================================
 
-    try:
+    email = user.email
 
-        phone_number = (
-            normalize_malaysian_mobile(
-                form.phone_number.data
-            )
-        )
-
-    except InvalidPhoneNumberError as exc:
-
-        flash(
-            str(exc),
-            "error",
-        )
-
-        return redirect(
-            url_for(
-                "superadmin.review_registration",
-                user_id=user.id,
-            )
-        )
+    phone_number = (
+        user.phone_number
+    )
 
 
     # =====================================================
-    # EXTRA WHITELIST PROTECTION
+    # VALIDATION
     # =====================================================
 
     if (
@@ -744,18 +1095,12 @@ def save_registration_changes(
     ):
 
         flash(
-            (
-                "Please select a valid "
-                "Job Title."
-            ),
+            "Please select a valid Job Title.",
             "error",
         )
 
-        return redirect(
-            url_for(
-                "superadmin.review_registration",
-                user_id=user.id,
-            )
+        return _return_to_review(
+            user.id
         )
 
 
@@ -767,18 +1112,12 @@ def save_registration_changes(
     ):
 
         flash(
-            (
-                "Please select a valid "
-                "Department."
-            ),
+            "Please select a valid Department.",
             "error",
         )
 
-        return redirect(
-            url_for(
-                "superadmin.review_registration",
-                user_id=user.id,
-            )
+        return _return_to_review(
+            user.id
         )
 
 
@@ -790,17 +1129,12 @@ def save_registration_changes(
     ):
 
         flash(
-            (
-                "Please select a valid Shift."
-            ),
+            "Please select a valid Shift.",
             "error",
         )
 
-        return redirect(
-            url_for(
-                "superadmin.review_registration",
-                user_id=user.id,
-            )
+        return _return_to_review(
+            user.id
         )
 
 
@@ -810,40 +1144,22 @@ def save_registration_changes(
     ):
 
         flash(
-            (
-                "Please select a valid "
-                "Access Role."
-            ),
+            "Please select a valid Access Role.",
             "error",
         )
 
-        return redirect(
-            url_for(
-                "superadmin.review_registration",
-                user_id=user.id,
-            )
+        return _return_to_review(
+            user.id
         )
 
-
-    # =====================================================
-    # UNIQUE FIELDS
-    # =====================================================
 
     uniqueness_error = (
         _validate_unique_fields(
             user=user,
-
             username=username,
-
             email=email,
-
-            phone_number=(
-                phone_number
-            ),
-
-            employee_id=(
-                employee_id
-            ),
+            phone_number=phone_number,
+            employee_id=employee_id,
         )
     )
 
@@ -855,180 +1171,36 @@ def save_registration_changes(
             "error",
         )
 
-        return redirect(
-            url_for(
-                "superadmin.review_registration",
-                user_id=user.id,
-            )
+        return _return_to_review(
+            user.id
         )
 
 
     # =====================================================
-    # DETECT EMAIL / PHONE CHANGES
+    # UPDATE
     # =====================================================
 
-    email_changed = (
-        email
-        != user.email
-    )
+    user.first_name = first_name
+    user.last_name = last_name
 
+    user.username = username
+    user.employee_id = employee_id
 
-    phone_changed = (
-        phone_number
-        != user.phone_number
-    )
+    user.job_title = job_title
+    user.department = department
+    user.shift = shift
 
-
-    # =====================================================
-    # UPDATE USER
-    # =====================================================
-
-    user.first_name = (
-        first_name
-    )
-
-    user.last_name = (
-        last_name
-    )
-
-    user.username = (
-        username
-    )
-
-    user.email = (
-        email
-    )
-
-    user.phone_number = (
-        phone_number
-    )
-
-    user.employee_id = (
-        employee_id
-    )
-
-    user.job_title = (
-        job_title
-    )
-
-    user.department = (
-        department
-    )
-
-    user.shift = (
-        shift
-    )
-
-    user.role = (
-        role
-    )
-
-
-    email_code = None
-    phone_code = None
+    user.role = role
 
 
     # =====================================================
-    # EMAIL CHANGED
-    # =====================================================
-
-    if email_changed:
-
-        user.email_verified_at = None
-
-        try:
-
-            email_code = (
-                issue_verification_code(
-                    user=user,
-                    is_resend=False,
-                )
-            )
-
-        except Exception:
-
-            current_app.logger.exception(
-                (
-                    "Unable to generate a new "
-                    "email verification OTP "
-                    "after SuperAdmin changed "
-                    "the applicant email."
-                )
-            )
-
-            db.session.rollback()
-
-            flash(
-                (
-                    "The new email address "
-                    "could not be prepared "
-                    "for verification."
-                ),
-                "error",
-            )
-
-            return redirect(
-                url_for(
-                    "superadmin.review_registration",
-                    user_id=user.id,
-                )
-            )
-
-
-    # =====================================================
-    # PHONE CHANGED
-    # =====================================================
-
-    if phone_changed:
-
-        user.phone_verified_at = None
-
-        try:
-
-            phone_code = (
-                issue_phone_verification_code(
-                    user=user,
-                    is_resend=False,
-                )
-            )
-
-        except Exception:
-
-            current_app.logger.exception(
-                (
-                    "Unable to generate a new "
-                    "phone verification OTP "
-                    "after SuperAdmin changed "
-                    "the applicant phone number."
-                )
-            )
-
-            db.session.rollback()
-
-            flash(
-                (
-                    "The new phone number "
-                    "could not be prepared "
-                    "for verification."
-                ),
-                "error",
-            )
-
-            return redirect(
-                url_for(
-                    "superadmin.review_registration",
-                    user_id=user.id,
-                )
-            )
-
-
-    # =====================================================
-    # SAVE DATABASE
+    # COMMIT
     # =====================================================
 
     try:
 
         db.session.commit()
+
 
     except IntegrityError:
 
@@ -1036,18 +1208,14 @@ def save_registration_changes(
 
         flash(
             (
-                "One of the account values "
-                "is already being used by "
-                "another account."
+                "One of the account values is "
+                "already being used by another account."
             ),
             "error",
         )
 
-        return redirect(
-            url_for(
-                "superadmin.review_registration",
-                user_id=user.id,
-            )
+        return _return_to_review(
+            user.id
         )
 
 
@@ -1056,10 +1224,7 @@ def save_registration_changes(
         db.session.rollback()
 
         current_app.logger.exception(
-            (
-                "Unable to save SuperAdmin "
-                "registration changes."
-            )
+            "Unable to save registration changes."
         )
 
         flash(
@@ -1070,130 +1235,24 @@ def save_registration_changes(
             "error",
         )
 
-        return redirect(
-            url_for(
-                "superadmin.review_registration",
-                user_id=user.id,
-            )
+        return _return_to_review(
+            user.id
         )
 
 
-    # =====================================================
-    # SEND NEW EMAIL OTP
-    # =====================================================
-
-    if (
-        email_changed
-        and
-        email_code
-    ):
-
-        try:
-
-            send_email_verification_code_email(
-                user=user,
-                code=email_code,
-            )
-
-        except Exception:
-
-            current_app.logger.exception(
-                (
-                    "Applicant email was changed, "
-                    "but the new verification "
-                    "email could not be sent."
-                )
-            )
-
-            flash(
-                (
-                    "Changes were saved, but "
-                    "the new email verification "
-                    "code could not be sent."
-                ),
-                "warning",
-            )
+    flash(
+        "Registration changes saved successfully.",
+        "success",
+    )
 
 
-    # =====================================================
-    # SEND NEW PHONE OTP
-    # =====================================================
-
-    if (
-        phone_changed
-        and
-        phone_code
-    ):
-
-        try:
-
-            send_phone_verification_code_sms(
-                user=user,
-                code=phone_code,
-            )
-
-        except Exception:
-
-            current_app.logger.exception(
-                (
-                    "Applicant phone was changed, "
-                    "but the new verification "
-                    "code could not be delivered."
-                )
-            )
-
-            flash(
-                (
-                    "Changes were saved, but "
-                    "the new phone verification "
-                    "code could not be delivered."
-                ),
-                "warning",
-            )
-
-
-    # =====================================================
-    # SUCCESS MESSAGE
-    # =====================================================
-
-    if (
-        email_changed
-        or
-        phone_changed
-    ):
-
-        flash(
-            (
-                "Changes saved. "
-                "Because the email or phone "
-                "number was changed, the applicant "
-                "must complete verification again "
-                "before approval."
-            ),
-            "warning",
-        )
-
-    else:
-
-        flash(
-            (
-                "Registration changes saved "
-                "successfully."
-            ),
-            "success",
-        )
-
-
-    return redirect(
-        url_for(
-            "superadmin.review_registration",
-            user_id=user.id,
-        )
+    return _return_to_review(
+        user.id
     )
 
 
 # =========================================================
-# APPROVE REGISTRATION
+# APPROVE
 # =========================================================
 
 @superadmin_bp.route(
@@ -1204,18 +1263,6 @@ def save_registration_changes(
 def approve_registration(
     user_id,
 ):
-    """
-    Approve a pending registration.
-
-    Approval requires:
-
-    - Email verified
-    - Phone verified
-    - Valid Job Title
-    - Valid Department
-    - Valid Shift
-    - Valid Access Role
-    """
 
     user = (
         _get_pending_user_or_404(
@@ -1239,17 +1286,10 @@ def approve_registration(
             "error",
         )
 
-        return redirect(
-            url_for(
-                "superadmin.review_registration",
-                user_id=user.id,
-            )
+        return _return_to_review(
+            user.id
         )
 
-
-    # =====================================================
-    # EMAIL VERIFICATION
-    # =====================================================
 
     if (
         user.email_verified_at
@@ -1259,23 +1299,15 @@ def approve_registration(
         flash(
             (
                 "This applicant must verify "
-                "their email address before "
-                "the account can be approved."
+                "their email address first."
             ),
             "error",
         )
 
-        return redirect(
-            url_for(
-                "superadmin.review_registration",
-                user_id=user.id,
-            )
+        return _return_to_review(
+            user.id
         )
 
-
-    # =====================================================
-    # PHONE VERIFICATION
-    # =====================================================
 
     if (
         user.phone_verified_at
@@ -1285,23 +1317,15 @@ def approve_registration(
         flash(
             (
                 "This applicant must verify "
-                "their phone number before "
-                "the account can be approved."
+                "their phone number first."
             ),
             "error",
         )
 
-        return redirect(
-            url_for(
-                "superadmin.review_registration",
-                user_id=user.id,
-            )
+        return _return_to_review(
+            user.id
         )
 
-
-    # =====================================================
-    # EMPLOYMENT INFORMATION
-    # =====================================================
 
     missing_fields = (
         _employment_fields_complete(
@@ -1314,28 +1338,21 @@ def approve_registration(
 
         flash(
             (
-                "Please complete the following "
-                "employment information before "
-                "approving this registration: "
-                + ", ".join(
+                "Please complete: "
+                +
+                ", ".join(
                     missing_fields
                 )
-                + "."
+                +
+                "."
             ),
             "error",
         )
 
-        return redirect(
-            url_for(
-                "superadmin.review_registration",
-                user_id=user.id,
-            )
+        return _return_to_review(
+            user.id
         )
 
-
-    # =====================================================
-    # ROLE
-    # =====================================================
 
     if (
         user.role
@@ -1345,22 +1362,15 @@ def approve_registration(
         flash(
             (
                 "Please assign a valid "
-                "Access Role before approval."
+                "Access Role."
             ),
             "error",
         )
 
-        return redirect(
-            url_for(
-                "superadmin.review_registration",
-                user_id=user.id,
-            )
+        return _return_to_review(
+            user.id
         )
 
-
-    # =====================================================
-    # APPROVE
-    # =====================================================
 
     now = datetime.now(
         timezone.utc
@@ -1371,9 +1381,7 @@ def approve_registration(
         UserStatus.ACTIVE.value
     )
 
-    user.approved_at = (
-        now
-    )
+    user.approved_at = now
 
     user.approved_by = (
         current_user.id
@@ -1388,15 +1396,13 @@ def approve_registration(
 
         db.session.commit()
 
+
     except SQLAlchemyError:
 
         db.session.rollback()
 
         current_app.logger.exception(
-            (
-                "Unable to approve "
-                "registration."
-            )
+            "Unable to approve registration."
         )
 
         flash(
@@ -1407,17 +1413,10 @@ def approve_registration(
             "error",
         )
 
-        return redirect(
-            url_for(
-                "superadmin.review_registration",
-                user_id=user.id,
-            )
+        return _return_to_review(
+            user.id
         )
 
-
-    # =====================================================
-    # APPROVAL EMAIL
-    # =====================================================
 
     try:
 
@@ -1429,9 +1428,8 @@ def approve_registration(
 
         current_app.logger.exception(
             (
-                "Registration was approved, "
-                "but approval email could "
-                "not be sent."
+                "Registration approved but "
+                "approval email failed."
             )
         )
 
@@ -1447,13 +1445,14 @@ def approve_registration(
 
     return redirect(
         url_for(
-            "superadmin.pending_registrations"
+            "superadmin.pending_registrations",
+            status="approved",
         )
     )
 
 
 # =========================================================
-# REJECT REGISTRATION
+# REJECT
 # =========================================================
 
 @superadmin_bp.route(
@@ -1464,11 +1463,6 @@ def approve_registration(
 def reject_registration(
     user_id,
 ):
-    """
-    Reject a pending registration.
-
-    A rejection reason is required.
-    """
 
     user = (
         _get_pending_user_or_404(
@@ -1495,11 +1489,9 @@ def reject_registration(
                     "error",
                 )
 
-        return redirect(
-            url_for(
-                "superadmin.review_registration",
-                user_id=user.id,
-            )
+
+        return _return_to_review(
+            user.id
         )
 
 
@@ -1518,9 +1510,7 @@ def reject_registration(
         UserStatus.REJECTED.value
     )
 
-    user.rejected_at = (
-        now
-    )
+    user.rejected_at = now
 
     user.rejected_by = (
         current_user.id
@@ -1530,7 +1520,6 @@ def reject_registration(
         reason
     )
 
-
     user.approved_at = None
     user.approved_by = None
 
@@ -1539,15 +1528,13 @@ def reject_registration(
 
         db.session.commit()
 
+
     except SQLAlchemyError:
 
         db.session.rollback()
 
         current_app.logger.exception(
-            (
-                "Unable to reject "
-                "registration."
-            )
+            "Unable to reject registration."
         )
 
         flash(
@@ -1558,32 +1545,24 @@ def reject_registration(
             "error",
         )
 
-        return redirect(
-            url_for(
-                "superadmin.review_registration",
-                user_id=user.id,
-            )
+        return _return_to_review(
+            user.id
         )
 
-
-    # =====================================================
-    # REJECTION EMAIL
-    # =====================================================
 
     try:
 
         send_registration_rejected_email(
             user=user,
-            reason=reason,
+            rejection_reason=reason,
         )
 
     except Exception:
 
         current_app.logger.exception(
             (
-                "Registration was rejected, "
-                "but rejection email could "
-                "not be sent."
+                "Registration rejected but "
+                "rejection email failed."
             )
         )
 
@@ -1599,6 +1578,7 @@ def reject_registration(
 
     return redirect(
         url_for(
-            "superadmin.pending_registrations"
+            "superadmin.pending_registrations",
+            status="rejected",
         )
     )

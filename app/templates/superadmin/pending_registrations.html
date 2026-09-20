@@ -2,210 +2,1022 @@
 
 
 {% block title %}
-Pending Registrations | BIKA
+Registration Requests | BIKA
+{% endblock %}
+
+
+{% block extra_css %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/registration_requests.css'
+    ) }}"
+>
+
 {% endblock %}
 
 
 {% block content %}
 
-<h1>
-    Pending Registrations
-</h1>
+
+<div
+    class="rr-page"
+    data-registration-page
+>
 
 
-<!-- =====================================================
-     FLASH MESSAGES
-     ===================================================== -->
+    <!-- =====================================================
+         PAGE HEADER
+         ===================================================== -->
 
-{% with messages = get_flashed_messages(with_categories=true) %}
+    <header class="rr-page-head">
 
-    {% if messages %}
+        <div>
 
-        {% for category, message in messages %}
+            <h1>
+                Registration Requests
+            </h1>
 
-            <p class="flash-{{ category }}">
-                {{ message }}
+            <p>
+                Review new user registration and approve or reject.
             </p>
 
-        {% endfor %}
+        </div>
 
-    {% endif %}
-
-{% endwith %}
+    </header>
 
 
-<!-- =====================================================
-     PENDING REGISTRATION LIST
-     ===================================================== -->
 
-{% if pending_users %}
+    <!-- =====================================================
+         FLASH MESSAGES
+         ===================================================== -->
 
-    <table
-        border="1"
-        cellpadding="10"
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            <div class="rr-flash-stack">
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="rr-flash rr-flash-{{ category }}"
+                        role="alert"
+                    >
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+
+    <!-- =====================================================
+         STATUS TABS
+         ===================================================== -->
+
+    <nav
+        class="rr-status-tabs"
+        aria-label="Registration request status"
     >
 
-        <thead>
 
-            <tr>
+        <!-- PENDING -->
 
-                <th>
-                    Name
-                </th>
-
-                <th>
-                    Username
-                </th>
-
-                <th>
-                    Email
-                </th>
-
-                <th>
-                    Phone
-                </th>
-
-                <th>
-                    Employee ID
-                </th>
-
-                <th>
-                    Verification
-                </th>
-
-                <th>
-                    Submitted
-                </th>
-
-                <th>
-                    Action
-                </th>
-
-            </tr>
-
-        </thead>
+        <a
+            href="{{ url_for(
+                'superadmin.pending_registrations',
+                status='pending'
+            ) }}"
+            class="
+                rr-status-tab
+                {% if current_status == 'pending' %}
+                    is-active
+                {% endif %}
+            "
+        >
+            Pending
+        </a>
 
 
-        <tbody>
 
-            {% for user in pending_users %}
+        <!-- APPROVED -->
 
-                <tr>
-
-                    <!-- NAME -->
-
-                    <td>
-                        {{ user.full_name }}
-                    </td>
-
-
-                    <!-- USERNAME -->
-
-                    <td>
-                        {{ user.username }}
-                    </td>
-
-
-                    <!-- EMAIL -->
-
-                    <td>
-                        {{ user.email }}
-                    </td>
+        <a
+            href="{{ url_for(
+                'superadmin.pending_registrations',
+                status='approved'
+            ) }}"
+            class="
+                rr-status-tab
+                {% if current_status == 'approved' %}
+                    is-active
+                {% endif %}
+            "
+        >
+            Approved
+        </a>
 
 
-                    <!-- PHONE -->
 
-                    <td>
-                        {{ user.phone_number }}
-                    </td>
+        <!-- REJECTED -->
 
-
-                    <!-- EMPLOYEE ID -->
-
-                    <td>
-                        {{ user.employee_id }}
-                    </td>
-
-
-                    <!-- VERIFICATION -->
-
-                    <td>
-
-                        {% if user.email_verified_at %}
-
-                            Email ✓
-
-                        {% else %}
-
-                            Email ✗
-
-                        {% endif %}
-
-                        <br>
-
-                        {% if user.phone_verified_at %}
-
-                            Phone ✓
-
-                        {% else %}
-
-                            Phone ✗
-
-                        {% endif %}
-
-                    </td>
+        <a
+            href="{{ url_for(
+                'superadmin.pending_registrations',
+                status='rejected'
+            ) }}"
+            class="
+                rr-status-tab
+                {% if current_status == 'rejected' %}
+                    is-active
+                {% endif %}
+            "
+        >
+            Rejected
+        </a>
 
 
-                    <!-- SUBMITTED DATE -->
-
-                    <td>
-
-                        {% if user.created_at %}
-
-                            {{ user.created_at.strftime(
-                                "%d %b %Y %H:%M"
-                            ) }}
-
-                        {% else %}
-
-                            —
-
-                        {% endif %}
-
-                    </td>
+    </nav>
 
 
-                    <!-- REVIEW -->
 
-                    <td>
+    <!-- =====================================================
+         LIST CARD
+         ===================================================== -->
 
-                        <a
-                            href="{{ url_for(
-                                'superadmin.review_registration',
-                                user_id=user.id
-                            ) }}"
+    <section class="rr-list-card">
+
+
+        <!-- =================================================
+             TOOLBAR
+             ================================================= -->
+
+        <div class="rr-list-toolbar">
+
+
+            <!-- =============================================
+                 SEARCH
+                 ============================================= -->
+
+            <label class="rr-search">
+
+                <iconsax-icon
+                    name="search-normal"
+                    type="twotone"
+                    size="17"
+                    color="currentColor"
+                    aria-hidden="true"
+                ></iconsax-icon>
+
+
+                <input
+                    type="search"
+                    placeholder="Search by name, username email, or employee ID..."
+                    autocomplete="off"
+                    aria-label="Search registration requests"
+                    data-registration-search
+                >
+
+            </label>
+
+
+
+            <!-- =============================================
+                 ASSIGNMENT FILTER
+                 PENDING ONLY
+                 ============================================= -->
+
+            {% if current_status == "pending" %}
+
+                <div
+                    class="rr-custom-filter"
+                    data-assignment-filter
+                >
+
+
+                    <button
+                        type="button"
+                        class="rr-filter-trigger"
+                        data-filter-trigger
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                    >
+
+                        <span data-filter-label>
+                            Assignment: All
+                        </span>
+
+
+                        <!--
+                            Rounded Chevron Down
+                            No vertical line.
+                        -->
+
+                        <span
+                            class="rr-filter-caret"
+                            aria-hidden="true"
+                        ></span>
+
+                    </button>
+
+
+
+                    <!-- FILTER MENU -->
+
+                    <div
+                        class="rr-filter-menu"
+                        data-filter-menu
+                        role="listbox"
+                        aria-label="Assignment status"
+                        hidden
+                    >
+
+
+                        <!-- ALL -->
+
+                        <button
+                            type="button"
+                            class="rr-filter-option is-selected"
+                            data-filter-value="all"
+                            data-filter-label="Assignment: All"
+                            role="option"
+                            aria-selected="true"
                         >
-                            Review
-                        </a>
 
-                    </td>
-
-                </tr>
-
-            {% endfor %}
-
-        </tbody>
-
-    </table>
+                            <span>
+                                All Requests
+                            </span>
 
 
-{% else %}
+                            <iconsax-icon
+                                class="rr-filter-check"
+                                name="tick-circle"
+                                type="twotone"
+                                size="17"
+                                color="currentColor"
+                                aria-hidden="true"
+                            ></iconsax-icon>
 
-    <p>
-        There are currently no pending registrations.
-    </p>
+                        </button>
+
+
+
+                        <!-- NOT ASSIGNED -->
+
+                        <button
+                            type="button"
+                            class="rr-filter-option"
+                            data-filter-value="unassigned"
+                            data-filter-label="Not Assigned"
+                            role="option"
+                            aria-selected="false"
+                        >
+
+                            <span>
+                                Not Assigned
+                            </span>
+
+
+                            <iconsax-icon
+                                class="rr-filter-check"
+                                name="tick-circle"
+                                type="twotone"
+                                size="17"
+                                color="currentColor"
+                                aria-hidden="true"
+                            ></iconsax-icon>
+
+                        </button>
+
+
+
+                        <!-- PARTIAL -->
+
+                        <button
+                            type="button"
+                            class="rr-filter-option"
+                            data-filter-value="partial"
+                            data-filter-label="Partially Assigned"
+                            role="option"
+                            aria-selected="false"
+                        >
+
+                            <span>
+                                Partially Assigned
+                            </span>
+
+
+                            <iconsax-icon
+                                class="rr-filter-check"
+                                name="tick-circle"
+                                type="twotone"
+                                size="17"
+                                color="currentColor"
+                                aria-hidden="true"
+                            ></iconsax-icon>
+
+                        </button>
+
+
+
+                        <!-- READY -->
+
+                        <button
+                            type="button"
+                            class="rr-filter-option"
+                            data-filter-value="ready"
+                            data-filter-label="Ready to Approve"
+                            role="option"
+                            aria-selected="false"
+                        >
+
+                            <span>
+                                Ready to Approve
+                            </span>
+
+
+                            <iconsax-icon
+                                class="rr-filter-check"
+                                name="tick-circle"
+                                type="twotone"
+                                size="17"
+                                color="currentColor"
+                                aria-hidden="true"
+                            ></iconsax-icon>
+
+                        </button>
+
+
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             TABLE
+             ================================================= -->
+
+        {% if pending_users %}
+
+
+            <div class="rr-table-wrap">
+
+
+                <table class="rr-table">
+
+
+                    <thead>
+
+                        <tr>
+
+
+                            <!-- # -->
+
+                            <th class="rr-col-index">
+                                #
+                            </th>
+
+
+
+                            <!-- NAME -->
+
+                            <th>
+
+                                <div class="rr-sort-header">
+
+                                    <span>
+                                        Name
+                                    </span>
+
+
+                                    <button
+                                        type="button"
+                                        class="rr-sort-button"
+                                        data-sort-key="name"
+                                        aria-label="Sort by name"
+                                        aria-pressed="false"
+                                        title="Sort by name"
+                                    >
+
+                                        <iconsax-icon
+                                            name="arrow-swap-01"
+                                            type="twotone"
+                                            size="15"
+                                            color="currentColor"
+                                            aria-hidden="true"
+                                        ></iconsax-icon>
+
+                                    </button>
+
+                                </div>
+
+                            </th>
+
+
+
+                            <!-- USERNAME -->
+
+                            <th>
+
+                                <div class="rr-sort-header">
+
+                                    <span>
+                                        Username
+                                    </span>
+
+
+                                    <button
+                                        type="button"
+                                        class="rr-sort-button"
+                                        data-sort-key="username"
+                                        aria-label="Sort by username"
+                                        aria-pressed="false"
+                                        title="Sort by username"
+                                    >
+
+                                        <iconsax-icon
+                                            name="arrow-swap-01"
+                                            type="twotone"
+                                            size="15"
+                                            color="currentColor"
+                                            aria-hidden="true"
+                                        ></iconsax-icon>
+
+                                    </button>
+
+                                </div>
+
+                            </th>
+
+
+
+                            <!-- EMAIL -->
+
+                            <th>
+
+                                <div class="rr-sort-header">
+
+                                    <span>
+                                        Email
+                                    </span>
+
+
+                                    <button
+                                        type="button"
+                                        class="rr-sort-button"
+                                        data-sort-key="email"
+                                        aria-label="Sort by email"
+                                        aria-pressed="false"
+                                        title="Sort by email"
+                                    >
+
+                                        <iconsax-icon
+                                            name="arrow-swap-01"
+                                            type="twotone"
+                                            size="15"
+                                            color="currentColor"
+                                            aria-hidden="true"
+                                        ></iconsax-icon>
+
+                                    </button>
+
+                                </div>
+
+                            </th>
+
+
+
+                            <!-- PHONE -->
+
+                            <th>
+
+                                <div class="rr-sort-header">
+
+                                    <span>
+                                        Phone
+                                    </span>
+
+
+                                    <button
+                                        type="button"
+                                        class="rr-sort-button"
+                                        data-sort-key="phone"
+                                        aria-label="Sort by phone"
+                                        aria-pressed="false"
+                                        title="Sort by phone"
+                                    >
+
+                                        <iconsax-icon
+                                            name="arrow-swap-01"
+                                            type="twotone"
+                                            size="15"
+                                            color="currentColor"
+                                            aria-hidden="true"
+                                        ></iconsax-icon>
+
+                                    </button>
+
+                                </div>
+
+                            </th>
+
+
+
+                            <!-- EMPLOYEE ID -->
+
+                            <th>
+
+                                <div class="rr-sort-header">
+
+                                    <span>
+                                        Employee ID
+                                    </span>
+
+
+                                    <button
+                                        type="button"
+                                        class="rr-sort-button"
+                                        data-sort-key="employee"
+                                        aria-label="Sort by employee ID"
+                                        aria-pressed="false"
+                                        title="Sort by employee ID"
+                                    >
+
+                                        <iconsax-icon
+                                            name="arrow-swap-01"
+                                            type="twotone"
+                                            size="15"
+                                            color="currentColor"
+                                            aria-hidden="true"
+                                        ></iconsax-icon>
+
+                                    </button>
+
+                                </div>
+
+                            </th>
+
+
+
+                            <!-- SUBMITTED -->
+
+                            <th>
+
+                                <div class="rr-sort-header">
+
+                                    <span>
+                                        Submitted
+                                    </span>
+
+
+                                    <button
+                                        type="button"
+                                        class="rr-sort-button"
+                                        data-sort-key="submitted"
+                                        aria-label="Sort by submitted date"
+                                        aria-pressed="false"
+                                        title="Sort by submitted date"
+                                    >
+
+                                        <iconsax-icon
+                                            name="arrow-swap-01"
+                                            type="twotone"
+                                            size="15"
+                                            color="currentColor"
+                                            aria-hidden="true"
+                                        ></iconsax-icon>
+
+                                    </button>
+
+                                </div>
+
+                            </th>
+
+
+
+                            <!-- ACTION -->
+
+                            <th class="rr-action-column">
+                                Action
+                            </th>
+
+
+                        </tr>
+
+                    </thead>
+
+
+
+                    <tbody data-registration-table>
+
+
+                        {% for user in pending_users %}
+
+
+                            <!-- =================================
+                                 ASSIGNMENT STATUS
+                                 ================================= -->
+
+                            {% set has_job_title = user.job_title %}
+                            {% set has_department = user.department %}
+                            {% set has_shift = user.shift %}
+                            {% set has_role = user.role %}
+
+
+                            {% if
+                                has_job_title
+                                and has_department
+                                and has_shift
+                                and has_role
+                            %}
+
+                                {% set assignment_status = "ready" %}
+
+                            {% elif
+                                not has_job_title
+                                and not has_department
+                                and not has_shift
+                            %}
+
+                                {% set assignment_status = "unassigned" %}
+
+                            {% else %}
+
+                                {% set assignment_status = "partial" %}
+
+                            {% endif %}
+
+
+
+                            <tr
+                                data-registration-row
+
+                                data-assignment-status="{{ assignment_status }}"
+
+                                data-sort-name="{{ user.full_name|lower }}"
+
+                                data-sort-username="{{ user.username|lower }}"
+
+                                data-sort-email="{{ user.email|lower }}"
+
+                                data-sort-phone="{{ user.phone_number or '' }}"
+
+                                data-sort-employee="{{ user.employee_id|lower }}"
+
+                                data-sort-submitted="{{
+                                    user.created_at.isoformat()
+                                    if user.created_at
+                                    else ''
+                                }}"
+
+                                data-search-text="{{
+                                    (
+                                        user.full_name
+                                        ~ ' '
+                                        ~ user.username
+                                        ~ ' '
+                                        ~ user.email
+                                        ~ ' '
+                                        ~ (user.phone_number or '')
+                                        ~ ' '
+                                        ~ user.employee_id
+                                    )|lower
+                                }}"
+                            >
+
+
+                                <!-- NUMBER -->
+
+                                <td
+                                    class="rr-col-index"
+                                    data-row-number
+                                >
+                                    {{ loop.index }}
+                                </td>
+
+
+
+                                <!-- NAME -->
+
+                                <td class="rr-name">
+                                    {{ user.full_name }}
+                                </td>
+
+
+
+                                <!-- USERNAME -->
+
+                                <td>
+                                    {{ user.username }}
+                                </td>
+
+
+
+                                <!-- EMAIL -->
+
+                                <td>
+                                    {{ user.email }}
+                                </td>
+
+
+
+                                <!-- PHONE -->
+
+                                <td>
+                                    {{ user.phone_number }}
+                                </td>
+
+
+
+                                <!-- EMPLOYEE ID -->
+
+                                <td>
+                                    {{ user.employee_id }}
+                                </td>
+
+
+
+                                <!-- SUBMITTED -->
+
+                                <td>
+
+                                    {% if user.created_at %}
+
+                                        {{ user.created_at.strftime(
+                                            "%Y-%m-%d %H:%M"
+                                        ) }}
+
+                                    {% else %}
+
+                                        —
+
+                                    {% endif %}
+
+                                </td>
+
+
+
+                                <!-- ACTION -->
+
+                                <td class="rr-action-column">
+
+
+                                    <!-- =========================
+                                         PENDING = REVIEW
+                                         ========================= -->
+
+                                    {% if current_status == "pending" %}
+
+                                        <button
+                                            type="button"
+                                            class="rr-review-button"
+
+                                            data-review-button
+
+                                            data-user-id="{{ user.id }}"
+
+                                            data-review-url="{{ url_for(
+                                                'superadmin.review_registration',
+                                                user_id=user.id
+                                            ) }}"
+                                        >
+                                            Review
+                                        </button>
+
+
+                                    <!-- =========================
+                                         APPROVED
+                                         ========================= -->
+
+                                    {% elif current_status == "approved" %}
+
+                                        <span
+                                            class="
+                                                rr-list-status
+                                                rr-list-status-approved
+                                            "
+                                        >
+                                            Approved
+                                        </span>
+
+
+                                    <!-- =========================
+                                         REJECTED
+                                         ========================= -->
+
+                                    {% else %}
+
+                                        <span
+                                            class="
+                                                rr-list-status
+                                                rr-list-status-rejected
+                                            "
+                                        >
+                                            Rejected
+                                        </span>
+
+                                    {% endif %}
+
+
+                                </td>
+
+
+                            </tr>
+
+
+                        {% endfor %}
+
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 NO SEARCH / FILTER RESULTS
+                 ================================================= -->
+
+            <div
+                class="rr-no-results"
+                data-no-results
+                hidden
+            >
+
+                <p>
+                    No registration requests match your search.
+                </p>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 FOOTER
+                 ================================================= -->
+
+            <footer class="rr-list-footer">
+
+
+                <span data-result-count>
+
+                    Showing 1 to {{ pending_users|length }}
+                    of {{ pending_users|length }} registrations
+
+                </span>
+
+
+
+                <nav
+                    class="rr-pagination"
+                    aria-label="Registration pagination"
+                >
+
+
+                    <button
+                        type="button"
+                        class="rr-page-button"
+                        data-page-previous
+                        aria-label="Previous page"
+                        disabled
+                    >
+                        ‹
+                    </button>
+
+
+                    <span
+                        class="rr-page-current"
+                        data-page-current
+                    >
+                        1
+                    </span>
+
+
+                    <button
+                        type="button"
+                        class="rr-page-button"
+                        data-page-next
+                        aria-label="Next page"
+                    >
+                        ›
+                    </button>
+
+
+                </nav>
+
+
+            </footer>
+
+
+
+        {% else %}
+
+
+            <!-- =================================================
+                 EMPTY STATE
+                 ================================================= -->
+
+            <div class="rr-empty-state">
+
+
+                {% if current_status == "approved" %}
+
+                    <h2>
+                        No approved registrations
+                    </h2>
+
+                    <p>
+                        Approved registration requests will appear here.
+                    </p>
+
+
+                {% elif current_status == "rejected" %}
+
+                    <h2>
+                        No rejected registrations
+                    </h2>
+
+                    <p>
+                        Rejected registration requests will appear here.
+                    </p>
+
+
+                {% else %}
+
+                    <h2>
+                        No pending registrations
+                    </h2>
+
+                    <p>
+                        Verified registration requests will appear here.
+                    </p>
+
+                {% endif %}
+
+
+            </div>
+
+
+        {% endif %}
+
+
+    </section>
+
+
+</div>
+
+
+
+<!-- =========================================================
+     REVIEW MODAL HOST
+     ========================================================= -->
+
+{% if current_status == "pending" %}
+
+    <div
+        class="rr-modal-backdrop"
+        data-modal-backdrop
+        hidden
+    >
+
+        <div
+            class="rr-modal-host"
+            data-modal-host
+        ></div>
+
+    </div>
 
 {% endif %}
 
+
+{% endblock %}
+
+
+
+{% block extra_js %}
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/registration_requests.js'
+    ) }}"
+    defer
+></script>
 
 {% endblock %}

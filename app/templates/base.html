@@ -1,6 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html
+    lang="en"
+    data-theme="light"
+>
+
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -8,26 +13,785 @@
         content="width=device-width, initial-scale=1.0"
     >
 
+
+    <!-- =====================================================
+         PAGE TITLE
+         ===================================================== -->
+
     <title>
         {% block title %}
             BIKA Visual Inspection System
         {% endblock %}
     </title>
 
+
+    <!-- =====================================================
+         INTER FONT
+         ===================================================== -->
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- =====================================================
+         APPLY SAVED THEME BEFORE PAINT
+         ===================================================== -->
+
+    <script>
+
+        (function () {
+
+            const savedTheme =
+                localStorage.getItem(
+                    "bika-theme"
+                );
+
+
+            const prefersDark =
+                window.matchMedia
+                &&
+                window.matchMedia(
+                    "(prefers-color-scheme: dark)"
+                ).matches;
+
+
+            const initialTheme =
+                savedTheme
+                ||
+                (
+                    prefersDark
+                        ? "dark"
+                        : "light"
+                );
+
+
+            document.documentElement.setAttribute(
+                "data-theme",
+                initialTheme
+            );
+
+        })();
+
+    </script>
+
+
+    <!-- =====================================================
+         ICONSAX / VUESAX
+         ===================================================== -->
+
+    <script
+        type="module"
+        src="{{ url_for(
+            'static',
+            filename='js/iconsax.bundle.js'
+        ) }}"
+    ></script>
+
+
+    <!-- =====================================================
+         GLOBAL CSS
+         ===================================================== -->
+
     <link
         rel="stylesheet"
-        href="{{ url_for('static', filename='css/main.css') }}"
+        href="{{ url_for(
+            'static',
+            filename='css/main.css'
+        ) }}"
     >
+
+
+    {% block extra_css %}
+    {% endblock %}
+
 </head>
+
 
 <body>
 
-    {% block content %}
-    {% endblock %}
 
-    <script
-        src="{{ url_for('static', filename='js/main.js') }}"
-    ></script>
+{% if current_user.is_authenticated %}
+
+
+    <!-- =====================================================
+         APPLICATION SHELL
+         ===================================================== -->
+
+    <div class="app-shell">
+
+
+        <!-- =================================================
+             SIDEBAR
+             ================================================= -->
+
+        <aside class="app-sidebar">
+
+
+            <!-- =============================================
+                 BRAND
+                 ============================================= -->
+
+            <div class="app-sidebar-brand">
+
+                <span class="app-sidebar-brand-name">
+                    BIKA
+                </span>
+
+
+                <span class="app-sidebar-brand-subtitle">
+                    Visual Inspection
+                </span>
+
+            </div>
+
+
+
+            <!-- =============================================
+                 WORKSPACE
+                 ============================================= -->
+
+            <nav
+                class="app-nav-section"
+                aria-label="Workspace"
+            >
+
+
+                <div class="app-nav-section-heading">
+
+                    <span>
+                        Workspace
+                    </span>
+
+                    <span class="app-nav-section-line"></span>
+
+                </div>
+
+
+
+                <!-- DASHBOARD -->
+
+                <a
+                    href="#"
+                    class="app-nav-item"
+                >
+
+                    <iconsax-icon
+                        name="category"
+                        type="twotone"
+                        size="22"
+                        color="currentColor"
+                    ></iconsax-icon>
+
+
+                    <span>
+                        Dashboard
+                    </span>
+
+                </a>
+
+
+
+                <!-- INSPECTION -->
+
+                <a
+                    href="#"
+                    class="app-nav-item"
+                >
+
+                    <iconsax-icon
+                        name="scan"
+                        type="twotone"
+                        size="22"
+                        color="currentColor"
+                    ></iconsax-icon>
+
+
+                    <span>
+                        Inspection
+                    </span>
+
+                </a>
+
+
+
+                <!-- REPORTS -->
+
+                <a
+                    href="#"
+                    class="app-nav-item"
+                >
+
+                    <iconsax-icon
+                        name="clock"
+                        type="twotone"
+                        size="22"
+                        color="currentColor"
+                    ></iconsax-icon>
+
+
+                    <span>
+                        Reports
+                    </span>
+
+                </a>
+
+
+
+                <!-- DATA ANALYTICS -->
+
+                <a
+                    href="#"
+                    class="app-nav-item"
+                >
+
+                    <iconsax-icon
+                        name="chart-2"
+                        type="twotone"
+                        size="22"
+                        color="currentColor"
+                    ></iconsax-icon>
+
+
+                    <span>
+                        Data Analytics
+                    </span>
+
+                </a>
+
+
+            </nav>
+
+
+
+            <!-- =============================================
+                 MANAGEMENT
+                 ============================================= -->
+
+            <nav
+                class="app-nav-section"
+                aria-label="Management"
+            >
+
+
+                <div class="app-nav-section-heading">
+
+                    <span>
+                        Management
+                    </span>
+
+                    <span class="app-nav-section-line"></span>
+
+                </div>
+
+
+
+                <!-- ADMINISTRATION -->
+
+                <a
+                    href="#"
+                    class="app-nav-item"
+                >
+
+                    <iconsax-icon
+                        name="shield-tick"
+                        type="twotone"
+                        size="22"
+                        color="currentColor"
+                    ></iconsax-icon>
+
+
+                    <span>
+                        Administration
+                    </span>
+
+                </a>
+
+
+
+                <!-- ABOUT SYSTEM -->
+
+                <a
+                    href="#"
+                    class="app-nav-item"
+                >
+
+                    <iconsax-icon
+                        name="setting-2"
+                        type="twotone"
+                        size="22"
+                        color="currentColor"
+                    ></iconsax-icon>
+
+
+                    <span>
+                        About System
+                    </span>
+
+                </a>
+
+
+
+                <!-- REQUEST STATUS - SUPERADMIN ONLY -->
+
+                {% if current_user.role == "superadmin" %}
+
+                    <a
+                        href="{{ url_for(
+                            'superadmin.pending_registrations'
+                        ) }}"
+                        class="
+                            app-nav-item
+
+                            {% if
+                                request.endpoint
+                                and
+                                request.endpoint.startswith(
+                                    'superadmin.'
+                                )
+                            %}
+                                is-active
+                            {% endif %}
+                        "
+                    >
+
+                        <iconsax-icon
+                            name="message-question"
+                            type="twotone"
+                            size="22"
+                            color="currentColor"
+                        ></iconsax-icon>
+
+
+                        <span>
+                            Request Status
+                        </span>
+
+                    </a>
+
+                {% endif %}
+
+
+            </nav>
+
+
+
+            <!-- =============================================
+                 ACCOUNT
+                 ============================================= -->
+
+            <nav
+                class="app-nav-section"
+                aria-label="Account"
+            >
+
+
+                <div class="app-nav-section-heading">
+
+                    <span>
+                        Account
+                    </span>
+
+                    <span class="app-nav-section-line"></span>
+
+                </div>
+
+
+
+                <a
+                    href="#"
+                    class="app-nav-item"
+                >
+
+                    <iconsax-icon
+                        name="profile-circle"
+                        type="twotone"
+                        size="22"
+                        color="currentColor"
+                    ></iconsax-icon>
+
+
+                    <span>
+                        Account
+                    </span>
+
+                </a>
+
+
+            </nav>
+
+
+
+            <!-- =============================================
+                 CURRENT USER
+                 ============================================= -->
+
+            <div class="app-sidebar-user">
+
+
+                <!-- AVATAR -->
+
+                <div class="app-sidebar-avatar">
+
+                    {% if current_user.first_name %}
+
+                        {{ current_user.first_name[0]|upper }}
+
+                    {% else %}
+
+                        U
+
+                    {% endif %}
+
+                </div>
+
+
+
+                <!-- USER INFORMATION -->
+
+                <div class="app-sidebar-user-copy">
+
+
+                    <strong>
+
+                        {% if current_user.full_name %}
+
+                            {{ current_user.full_name }}
+
+                        {% else %}
+
+                            {{ current_user.username }}
+
+                        {% endif %}
+
+                    </strong>
+
+
+                    <span>
+
+                        {% if current_user.role == "superadmin" %}
+
+                            SuperAdmin
+
+                        {% elif current_user.role == "admin" %}
+
+                            Admin
+
+                        {% else %}
+
+                            User
+
+                        {% endif %}
+
+                    </span>
+
+
+                </div>
+
+
+
+                <!-- =========================================
+                     LOGOUT BUTTON
+
+                     IMPORTANT:
+                     Opens confirmation modal only.
+                     Actual logout is POST.
+                     ========================================= -->
+
+                <button
+                    type="button"
+                    class="app-sidebar-logout"
+                    id="openLogoutModal"
+                    aria-label="Log out"
+                    title="Log out"
+                >
+                    <iconsax-icon
+                        name="logout-01"
+                        type="twotone"
+                        size="20"
+                        color="currentColor"
+                    ></iconsax-icon>
+                </button>
+
+
+            </div>
+
+
+        </aside>
+
+
+
+        <!-- =================================================
+             MAIN
+             ================================================= -->
+
+        <div class="app-main">
+
+
+            <!-- =============================================
+                 TOP RIGHT CONTROLS
+                 ============================================= -->
+
+            <header class="app-topbar">
+
+
+                <!-- THEME SWITCH -->
+
+                <div
+                    class="app-theme-switch"
+                    role="group"
+                    aria-label="Appearance"
+                >
+
+
+                    <!-- DARK -->
+
+                    <button
+                        type="button"
+                        class="app-theme-button"
+                        data-theme-choice="dark"
+                        aria-label="Dark mode"
+                        aria-pressed="false"
+                        title="Dark mode"
+                    >
+
+                        <iconsax-icon
+                            name="moon"
+                            type="twotone"
+                            size="18"
+                            color="currentColor"
+                        ></iconsax-icon>
+
+                    </button>
+
+
+
+                    <!-- LIGHT -->
+
+                    <button
+                        type="button"
+                        class="app-theme-button"
+                        data-theme-choice="light"
+                        aria-label="Light mode"
+                        aria-pressed="false"
+                        title="Light mode"
+                    >
+
+                        <iconsax-icon
+                            name="sun"
+                            type="twotone"
+                            size="18"
+                            color="currentColor"
+                        ></iconsax-icon>
+
+                    </button>
+
+
+                </div>
+
+
+
+                <!-- NOTIFICATION -->
+
+                <button
+                    type="button"
+                    class="app-topbar-icon-button"
+                    aria-label="Notifications"
+                    title="Notifications"
+                >
+
+                    <iconsax-icon
+                        name="notification"
+                        type="twotone"
+                        size="19"
+                        color="currentColor"
+                    ></iconsax-icon>
+
+                </button>
+
+
+            </header>
+
+
+
+            <!-- =============================================
+                 PAGE CONTENT
+                 ============================================= -->
+
+            <main class="app-content">
+
+
+{% endif %}
+
+
+
+                {% block content %}
+                {% endblock %}
+
+
+
+{% if current_user.is_authenticated %}
+
+
+            </main>
+
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- =====================================================
+         LOGOUT CONFIRMATION MODAL
+         ===================================================== -->
+
+    <div
+        class="logout-confirm-backdrop"
+        id="logoutConfirmBackdrop"
+        hidden
+    >
+
+
+        <section
+            class="logout-confirm-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="logoutConfirmTitle"
+            aria-describedby="logoutConfirmText"
+        >
+
+
+            <!-- =============================================
+                 LOGOUT ICON
+                 ============================================= -->
+
+            <div class="logout-confirm-icon">
+
+                <iconsax-icon
+                    name="logout-01"
+                    type="twotone"
+                    size="24"
+                    color="currentColor"
+                ></iconsax-icon>
+
+            </div>
+
+
+
+            <!-- =============================================
+                 TITLE
+                 ============================================= -->
+
+            <h2 id="logoutConfirmTitle">
+                Log out?
+            </h2>
+
+
+
+            <!-- =============================================
+                 DESCRIPTION
+                 ============================================= -->
+
+            <p id="logoutConfirmText">
+                Are you sure you want to log out of your account?
+            </p>
+
+
+
+            <!-- =============================================
+                 ACTIONS
+                 ============================================= -->
+
+            <div class="logout-confirm-actions">
+
+
+                <!-- CANCEL -->
+
+                <button
+                    type="button"
+                    class="logout-confirm-cancel"
+                    id="cancelLogoutButton"
+                >
+                    Cancel
+                </button>
+
+
+
+                <!-- =========================================
+                     ACTUAL LOGOUT
+                     POST REQUEST
+                     ========================================= -->
+
+                <form
+                    method="POST"
+                    action="{{ url_for(
+                        'auth.logout'
+                    ) }}"
+                    class="logout-confirm-form"
+                >
+
+
+                    <input
+                        type="hidden"
+                        name="csrf_token"
+                        value="{{ csrf_token() }}"
+                    >
+
+
+                    <button
+                        type="submit"
+                        class="logout-confirm-submit"
+                    >
+                        Log out
+                    </button>
+
+
+                </form>
+
+
+            </div>
+
+
+        </section>
+
+
+    </div>
+
+
+{% endif %}
+
+
+
+<!-- =========================================================
+     GLOBAL JAVASCRIPT
+     ========================================================= -->
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/main.js'
+    ) }}"
+></script>
+
+
+{% block extra_js %}
+{% endblock %}
+
 
 </body>
+
 </html>

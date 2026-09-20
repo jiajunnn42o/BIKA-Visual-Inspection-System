@@ -1,0 +1,1652 @@
+<div class="rr-modal">
+
+
+    <!-- =====================================================
+         MODAL HEADER
+         ===================================================== -->
+
+    <header class="rr-modal-head">
+
+        <div>
+
+            <h2>
+                Registration Requests
+            </h2>
+
+            <p>
+                {% if review_status == "pending" %}
+                    Review new user registration and approve or reject.
+                {% elif review_status == "approved" %}
+                    Review approved registration information.
+                {% else %}
+                    Review rejected registration information.
+                {% endif %}
+            </p>
+
+        </div>
+
+
+        <!--
+            ONLY THIS BUTTON MAY CLOSE THE REVIEW WINDOW.
+            No circle, only X.
+        -->
+
+        <button
+            type="button"
+            class="rr-modal-close"
+            data-modal-close
+            aria-label="Close review"
+        >
+            <span aria-hidden="true">×</span>
+        </button>
+
+    </header>
+
+
+
+    <!-- =====================================================
+         APPROVED / REJECTED
+         READ-ONLY REVIEW
+         ===================================================== -->
+
+    {% if is_read_only %}
+
+
+        <div class="rr-readonly-review-grid">
+
+
+            <!-- =================================================
+                 LEFT CARD
+                 ================================================= -->
+
+            <section class="rr-review-card">
+
+
+                <!-- =============================================
+                     APPLICANT INFORMATION
+                     ============================================= -->
+
+                <div class="rr-section">
+
+
+                    <div class="rr-section-title">
+
+                        <iconsax-icon
+                            name="user"
+                            type="bold"
+                            size="20"
+                            color="currentColor"
+                            aria-hidden="true"
+                        ></iconsax-icon>
+
+                        <h3>
+                            Applicant Information
+                        </h3>
+
+                    </div>
+
+
+
+                    <div class="rr-three-grid">
+
+
+                        <!-- FIRST NAME -->
+
+                        <div class="rr-field">
+
+                            <span>
+                                First Name
+                            </span>
+
+                            <div class="rr-readonly-input">
+                                {{ user.first_name }}
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- LAST NAME -->
+
+                        <div class="rr-field">
+
+                            <span>
+                                Last Name
+                            </span>
+
+                            <div class="rr-readonly-input">
+                                {{ user.last_name }}
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- USERNAME -->
+
+                        <div class="rr-field">
+
+                            <span>
+                                Username
+                            </span>
+
+                            <div class="rr-readonly-input">
+                                {{ user.username }}
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    <div class="rr-two-grid rr-contact-row">
+
+
+                        <!-- EMAIL -->
+
+                        <div class="rr-field">
+
+                            <span>
+                                Email
+                            </span>
+
+                            <div class="rr-readonly-input">
+
+                                <span class="rr-readonly-value">
+                                    {{ user.email }}
+                                </span>
+
+
+                                {% if user.email_verified_at %}
+
+                                    <iconsax-icon
+                                        name="tick-circle"
+                                        type="bold"
+                                        size="18"
+                                        color="currentColor"
+                                        class="rr-verified-mark"
+                                        aria-hidden="true"
+                                    ></iconsax-icon>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- PHONE -->
+
+                        <div class="rr-field">
+
+                            <span>
+                                Phone Number
+                            </span>
+
+                            <div class="rr-readonly-input">
+
+                                <span class="rr-readonly-value">
+                                    {{ user.phone_number }}
+                                </span>
+
+
+                                {% if user.phone_verified_at %}
+
+                                    <iconsax-icon
+                                        name="tick-circle"
+                                        type="bold"
+                                        size="18"
+                                        color="currentColor"
+                                        class="rr-verified-mark"
+                                        aria-hidden="true"
+                                    ></iconsax-icon>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+
+                <div class="rr-divider"></div>
+
+
+
+                <!-- =============================================
+                     EMPLOYEE ASSIGNMENT
+                     ============================================= -->
+
+                <div class="rr-section">
+
+
+                    <div class="rr-section-title">
+
+                        <iconsax-icon
+                            name="briefcase"
+                            type="bold"
+                            size="20"
+                            color="currentColor"
+                            aria-hidden="true"
+                        ></iconsax-icon>
+
+                        <h3>
+                            Employee Assignment
+                        </h3>
+
+                    </div>
+
+
+
+                    <div class="rr-two-grid">
+
+
+                        <!-- EMPLOYEE ID -->
+
+                        <div class="rr-field">
+
+                            <span>
+                                Employee ID
+                            </span>
+
+                            <div class="rr-readonly-input">
+                                {{ user.employee_id or "—" }}
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- JOB TITLE -->
+
+                        <div class="rr-field">
+
+                            <span>
+                                Job Title
+                            </span>
+
+                            <div class="rr-readonly-input">
+                                {{ user.job_title or "Not Assigned" }}
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- DEPARTMENT -->
+
+                        <div class="rr-field">
+
+                            <span>
+                                Department
+                            </span>
+
+                            <div class="rr-readonly-input">
+                                {{ user.department or "Not Assigned" }}
+                            </div>
+
+                        </div>
+
+
+
+                        <!-- SHIFT -->
+
+                        <div class="rr-field">
+
+                            <span>
+                                Shift
+                            </span>
+
+                            <div class="rr-readonly-input">
+                                {{ user.shift or "Not Assigned" }}
+                            </div>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
+
+
+
+                <div class="rr-divider"></div>
+
+
+
+                <!-- =============================================
+                     ACCESS CONTROL
+                     ============================================= -->
+
+                <div class="rr-section">
+
+
+                    <div class="rr-section-title">
+
+                        <iconsax-icon
+                            name="shield-tick"
+                            type="bold"
+                            size="20"
+                            color="currentColor"
+                            aria-hidden="true"
+                        ></iconsax-icon>
+
+                        <h3>
+                            Access Control
+                        </h3>
+
+                    </div>
+
+
+
+                    <div class="rr-field">
+
+                        <span>
+                            Access Role
+                        </span>
+
+                        <div class="rr-readonly-input">
+                            {{ user.role|title }}
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+            </section>
+
+
+
+            <!-- =================================================
+                 RIGHT STATUS CARD
+                 ================================================= -->
+
+            <section class="rr-review-card rr-decision-card">
+
+
+                <div class="rr-section-title">
+
+                    <iconsax-icon
+                        name="document-text"
+                        type="bold"
+                        size="20"
+                        color="currentColor"
+                        aria-hidden="true"
+                    ></iconsax-icon>
+
+                    <h3>
+                        Registration Status
+                    </h3>
+
+                </div>
+
+
+
+                <!-- =============================================
+                     APPROVED
+                     ============================================= -->
+
+                {% if review_status == "approved" %}
+
+
+                    <div
+                        class="
+                            rr-review-status-pill
+                            rr-review-status-approved
+                        "
+                    >
+                        Approved
+                    </div>
+
+
+
+                    <div class="rr-decision-info">
+
+
+                        <div>
+
+                            <span>
+                                Approved At
+                            </span>
+
+                            <strong>
+
+                                {% if user.approved_at %}
+
+                                    {{ user.approved_at.strftime(
+                                        "%Y-%m-%d %H:%M"
+                                    ) }}
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
+                            </strong>
+
+                        </div>
+
+
+
+                        <div>
+
+                            <span>
+                                Submitted
+                            </span>
+
+                            <strong>
+
+                                {% if user.created_at %}
+
+                                    {{ user.created_at.strftime(
+                                        "%Y-%m-%d %H:%M"
+                                    ) }}
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
+                            </strong>
+
+                        </div>
+
+
+                    </div>
+
+
+
+                <!-- =============================================
+                     REJECTED
+                     ============================================= -->
+
+                {% else %}
+
+
+                    <div
+                        class="
+                            rr-review-status-pill
+                            rr-review-status-rejected
+                        "
+                    >
+                        Rejected
+                    </div>
+
+
+
+                    <div class="rr-decision-info">
+
+
+                        <div>
+
+                            <span>
+                                Rejected At
+                            </span>
+
+                            <strong>
+
+                                {% if user.rejected_at %}
+
+                                    {{ user.rejected_at.strftime(
+                                        "%Y-%m-%d %H:%M"
+                                    ) }}
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
+                            </strong>
+
+                        </div>
+
+
+
+                        <div>
+
+                            <span>
+                                Submitted
+                            </span>
+
+                            <strong>
+
+                                {% if user.created_at %}
+
+                                    {{ user.created_at.strftime(
+                                        "%Y-%m-%d %H:%M"
+                                    ) }}
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
+                            </strong>
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    <div class="rr-rejection-review">
+
+                        <span>
+                            Rejection Reason
+                        </span>
+
+                        <div>
+                            {{ user.rejection_reason or "No reason recorded." }}
+                        </div>
+
+                    </div>
+
+
+                {% endif %}
+
+
+
+                <p class="rr-readonly-note">
+                    This registration has already been processed and is read-only.
+                </p>
+
+
+            </section>
+
+
+        </div>
+
+
+
+    <!-- =====================================================
+         PENDING REGISTRATION
+         EDITABLE
+         ===================================================== -->
+
+    {% else %}
+
+
+        <div class="rr-modal-grid">
+
+
+            <!-- =================================================
+                 LEFT SIDE
+                 ================================================= -->
+
+            <section class="rr-review-card">
+
+
+                <!-- =================================================
+                     MAIN EDIT FORM
+                     ================================================= -->
+
+                <form
+                    id="rr-review-edit-form"
+                    method="POST"
+                    action="{{ url_for(
+                        'superadmin.save_registration_changes',
+                        user_id=user.id
+                    ) }}"
+                    data-review-form
+                >
+
+
+                    {{ form.hidden_tag() }}
+
+
+                    <input
+                        type="hidden"
+                        name="_modal"
+                        value="1"
+                    >
+
+
+                    <!--
+                        Email / Phone are intentionally NOT editable.
+
+                        Hidden values are only submitted so the existing
+                        WTForms validation can still receive them.
+                    -->
+
+                    <input
+                        type="hidden"
+                        name="email"
+                        value="{{ user.email }}"
+                    >
+
+
+                    <input
+                        type="hidden"
+                        name="phone_number"
+                        value="{{ user.phone_number }}"
+                    >
+
+
+
+                    <!-- =========================================
+                         APPLICANT INFORMATION
+                         ========================================= -->
+
+                    <div class="rr-section">
+
+
+                        <div class="rr-section-title">
+
+                            <iconsax-icon
+                                name="user"
+                                type="bold"
+                                size="20"
+                                color="currentColor"
+                                aria-hidden="true"
+                            ></iconsax-icon>
+
+                            <h3>
+                                Applicant Information
+                            </h3>
+
+                        </div>
+
+
+
+                        <div class="rr-three-grid">
+
+
+                            <!-- FIRST NAME -->
+
+                            <label class="rr-field">
+
+                                <span>
+                                    First Name
+                                </span>
+
+                                {{ form.first_name(
+                                    class="rr-input"
+                                ) }}
+
+                            </label>
+
+
+
+                            <!-- LAST NAME -->
+
+                            <label class="rr-field">
+
+                                <span>
+                                    Last Name
+                                </span>
+
+                                {{ form.last_name(
+                                    class="rr-input"
+                                ) }}
+
+                            </label>
+
+
+
+                            <!-- USERNAME -->
+
+                            <label class="rr-field rr-unique-field">
+
+                                <span class="rr-field-title-row">
+
+                                    <span>
+                                        Username
+                                    </span>
+
+                                    <span
+                                        class="rr-unique-status"
+                                        data-unique-status="username"
+                                        aria-live="polite"
+                                    ></span>
+
+                                </span>
+
+
+                                {{ form.username(
+                                    class="rr-input",
+                                    data_unique_field="username",
+                                    data_unique_url=url_for(
+                                        'superadmin.check_registration_unique',
+                                        user_id=user.id
+                                    )
+                                ) }}
+
+                            </label>
+
+
+                        </div>
+
+
+
+                        <div class="rr-two-grid rr-contact-row">
+
+
+                            <!-- =================================
+                                 EMAIL
+                                 LOCKED
+                                 ================================= -->
+
+                            <div class="rr-field">
+
+                                <span>
+                                    Email
+                                </span>
+
+
+                                <div class="rr-readonly-input">
+
+                                    <span class="rr-readonly-value">
+                                        {{ user.email }}
+                                    </span>
+
+
+                                    {% if user.email_verified_at %}
+
+                                        <iconsax-icon
+                                            name="tick-circle"
+                                            type="bold"
+                                            size="18"
+                                            color="currentColor"
+                                            class="rr-verified-mark"
+                                            aria-hidden="true"
+                                        ></iconsax-icon>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+
+                            <!-- =================================
+                                 PHONE
+                                 LOCKED
+                                 ================================= -->
+
+                            <div class="rr-field">
+
+                                <span>
+                                    Phone Number
+                                </span>
+
+
+                                <div class="rr-readonly-input">
+
+                                    <span class="rr-readonly-value">
+                                        {{ user.phone_number }}
+                                    </span>
+
+
+                                    {% if user.phone_verified_at %}
+
+                                        <iconsax-icon
+                                            name="tick-circle"
+                                            type="bold"
+                                            size="18"
+                                            color="currentColor"
+                                            class="rr-verified-mark"
+                                            aria-hidden="true"
+                                        ></iconsax-icon>
+
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    <div class="rr-divider"></div>
+
+
+
+                    <!-- =========================================
+                         EMPLOYEE ASSIGNMENT
+                         ========================================= -->
+
+                    <div class="rr-section">
+
+
+                        <div class="rr-section-title">
+
+                            <iconsax-icon
+                                name="briefcase"
+                                type="bold"
+                                size="20"
+                                color="currentColor"
+                                aria-hidden="true"
+                            ></iconsax-icon>
+
+                            <h3>
+                                Employee Assignment
+                            </h3>
+
+                        </div>
+
+
+
+                        <div class="rr-two-grid">
+
+
+                            <!-- =================================
+                                 EMPLOYEE ID
+                                 ================================= -->
+
+                            <label class="rr-field rr-unique-field">
+
+                                <span class="rr-field-title-row">
+
+                                    <span>
+                                        Employee ID
+                                    </span>
+
+                                    <span
+                                        class="rr-unique-status"
+                                        data-unique-status="employee_id"
+                                        aria-live="polite"
+                                    ></span>
+
+                                </span>
+
+
+                                {{ form.employee_id(
+                                    class="rr-input",
+                                    data_unique_field="employee_id",
+                                    data_unique_url=url_for(
+                                        'superadmin.check_registration_unique',
+                                        user_id=user.id
+                                    )
+                                ) }}
+
+                            </label>
+
+
+
+                            <!-- =================================
+                                 JOB TITLE
+                                 CUSTOM SELECT
+                                 ================================= -->
+
+                            <div class="rr-field">
+
+                                <span>
+                                    Job Title
+                                </span>
+
+
+                                <div
+                                    class="rr-beautiful-select"
+                                    data-beautiful-select
+                                >
+
+
+                                    {{ form.job_title(
+                                        class="rr-native-select",
+                                        data_summary_field="job_title"
+                                    ) }}
+
+
+                                    <button
+                                        type="button"
+                                        class="rr-beautiful-select-trigger"
+                                        data-beautiful-select-trigger
+                                        aria-expanded="false"
+                                    >
+
+                                        <span data-beautiful-select-label>
+                                            Select Job Title
+                                        </span>
+
+
+                                        <span
+                                            class="rr-mini-chevron"
+                                            aria-hidden="true"
+                                        ></span>
+
+                                    </button>
+
+
+                                    <div
+                                        class="rr-beautiful-select-menu"
+                                        data-beautiful-select-menu
+                                        hidden
+                                    ></div>
+
+
+                                </div>
+
+                            </div>
+
+
+
+                            <!-- =================================
+                                 DEPARTMENT
+                                 CUSTOM SELECT
+                                 ================================= -->
+
+                            <div class="rr-field">
+
+                                <span>
+                                    Department
+                                </span>
+
+
+                                <div
+                                    class="rr-beautiful-select"
+                                    data-beautiful-select
+                                >
+
+
+                                    {{ form.department(
+                                        class="rr-native-select",
+                                        data_summary_field="department"
+                                    ) }}
+
+
+                                    <button
+                                        type="button"
+                                        class="rr-beautiful-select-trigger"
+                                        data-beautiful-select-trigger
+                                        aria-expanded="false"
+                                    >
+
+                                        <span data-beautiful-select-label>
+                                            Select Department
+                                        </span>
+
+
+                                        <span
+                                            class="rr-mini-chevron"
+                                            aria-hidden="true"
+                                        ></span>
+
+                                    </button>
+
+
+                                    <div
+                                        class="rr-beautiful-select-menu"
+                                        data-beautiful-select-menu
+                                        hidden
+                                    ></div>
+
+
+                                </div>
+
+                            </div>
+
+
+
+                            <!-- =================================
+                                 SHIFT
+                                 CUSTOM SELECT
+                                 ================================= -->
+
+                            <div class="rr-field">
+
+                                <span>
+                                    Shift
+                                </span>
+
+
+                                <div
+                                    class="rr-beautiful-select"
+                                    data-beautiful-select
+                                >
+
+
+                                    {{ form.shift(
+                                        class="rr-native-select",
+                                        data_summary_field="shift"
+                                    ) }}
+
+
+                                    <button
+                                        type="button"
+                                        class="rr-beautiful-select-trigger"
+                                        data-beautiful_select_trigger="true"
+                                        data-beautiful-select-trigger
+                                        aria-expanded="false"
+                                    >
+
+                                        <span data-beautiful-select-label>
+                                            Select Shift
+                                        </span>
+
+
+                                        <span
+                                            class="rr-mini-chevron"
+                                            aria-hidden="true"
+                                        ></span>
+
+                                    </button>
+
+
+                                    <div
+                                        class="rr-beautiful-select-menu"
+                                        data-beautiful-select-menu
+                                        hidden
+                                    ></div>
+
+
+                                </div>
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+
+                    <div class="rr-divider"></div>
+
+
+
+                    <!-- =========================================
+                         ACCESS CONTROL
+                         ========================================= -->
+
+                    <div class="rr-section">
+
+
+                        <div class="rr-section-title">
+
+                            <iconsax-icon
+                                name="shield-tick"
+                                type="bold"
+                                size="20"
+                                color="currentColor"
+                                aria-hidden="true"
+                            ></iconsax-icon>
+
+                            <h3>
+                                Access Control
+                            </h3>
+
+                        </div>
+
+
+
+                        <div class="rr-access-row">
+
+
+                            <div class="rr-field">
+
+                                <span>
+                                    Access Role
+                                </span>
+
+
+                                <div
+                                    class="rr-beautiful-select"
+                                    data-beautiful-select
+                                >
+
+
+                                    {{ form.role(
+                                        class="rr-native-select",
+                                        data_summary_field="role"
+                                    ) }}
+
+
+                                    <button
+                                        type="button"
+                                        class="rr-beautiful-select-trigger"
+                                        data-beautiful-select-trigger
+                                        aria-expanded="false"
+                                    >
+
+                                        <span data-beautiful-select-label>
+                                            User
+                                        </span>
+
+
+                                        <span
+                                            class="rr-mini-chevron"
+                                            aria-hidden="true"
+                                        ></span>
+
+                                    </button>
+
+
+                                    <div
+                                        class="rr-beautiful-select-menu"
+                                        data-beautiful-select-menu
+                                        hidden
+                                    ></div>
+
+
+                                </div>
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <p class="rr-help">
+                            Only a SuperAdmin can assign or change the account role.
+                        </p>
+
+
+                    </div>
+
+
+                </form>
+
+
+
+                <!-- =================================================
+                     APPROVE FORM
+                     Separate POST form
+                     ================================================= -->
+
+                <form
+                    id="rr-approve-form"
+                    method="POST"
+                    action="{{ url_for(
+                        'superadmin.approve_registration',
+                        user_id=user.id
+                    ) }}"
+                    data-approve-form
+                >
+
+
+                    {{ approve_form.hidden_tag() }}
+
+
+                    <input
+                        type="hidden"
+                        name="_modal"
+                        value="1"
+                    >
+
+
+                </form>
+
+
+
+                <!-- =================================================
+                     FINAL ACTIONS
+
+                     SAVE is LEFT
+                     APPROVE is RIGHT
+                     ================================================= -->
+
+                <div class="rr-final-actions">
+
+
+                    <button
+                        type="submit"
+                        form="rr-review-edit-form"
+                        class="
+                            rr-btn
+                            rr-btn-outline
+                        "
+                        data-save-button
+                    >
+                        Save Changes
+                    </button>
+
+
+
+                    <button
+                        type="submit"
+                        form="rr-approve-form"
+                        class="
+                            rr-btn
+                            rr-btn-primary
+                        "
+                        data-approve-button
+                        disabled
+                    >
+                        Approve Registration
+                    </button>
+
+
+                </div>
+
+
+            </section>
+
+
+
+            <!-- =================================================
+                 RIGHT SIDE
+                 ================================================= -->
+
+            <div class="rr-review-right">
+
+
+                <!-- =============================================
+                     REJECT REGISTRATION
+                     ============================================= -->
+
+                <section class="rr-review-card">
+
+
+                    <div class="rr-section-title">
+
+                        <iconsax-icon
+                            name="close-circle"
+                            type="bold"
+                            size="20"
+                            color="currentColor"
+                            aria-hidden="true"
+                        ></iconsax-icon>
+
+                        <h3>
+                            Reject Registration
+                        </h3>
+
+                    </div>
+
+
+
+                    <form
+                        method="POST"
+                        action="{{ url_for(
+                            'superadmin.reject_registration',
+                            user_id=user.id
+                        ) }}"
+                        data-reject-form
+                    >
+
+
+                        {{ reject_form.hidden_tag() }}
+
+
+                        <input
+                            type="hidden"
+                            name="_modal"
+                            value="1"
+                        >
+
+
+
+                        <label class="rr-field">
+
+                            <span>
+                                Rejection Reason
+                            </span>
+
+
+                            {{ reject_form.reason(
+                                class="rr-reason",
+                                maxlength="500",
+                                placeholder="Enter reason for rejection...",
+                                data_reject_reason=""
+                            ) }}
+
+                        </label>
+
+
+
+                        <div class="rr-reason-meta">
+
+
+                            <span>
+                                A reason is required when rejecting a registration.
+                            </span>
+
+
+                            <span data-reason-count>
+                                0 / 500
+                            </span>
+
+
+                        </div>
+
+
+
+                        <div class="rr-reject-action">
+
+                            <button
+                                type="submit"
+                                class="
+                                    rr-btn
+                                    rr-btn-primary
+                                "
+                                data-reject-button
+                                disabled
+                            >
+                                Reject
+                            </button>
+
+                        </div>
+
+
+                    </form>
+
+
+                </section>
+
+
+
+                <!-- =============================================
+                     REVIEW SUMMARY
+                     ============================================= -->
+
+                <section
+                    class="
+                        rr-review-card
+                        rr-summary-card
+                    "
+                >
+
+
+                    <div
+                        class="
+                            rr-section-title
+                            rr-summary-title
+                        "
+                    >
+
+                        <iconsax-icon
+                            name="document-text"
+                            type="bold"
+                            size="20"
+                            color="currentColor"
+                            aria-hidden="true"
+                        ></iconsax-icon>
+
+                        <h3>
+                            Review Summary
+                        </h3>
+
+                    </div>
+
+
+
+                    <div class="rr-summary-layout">
+
+
+                        <!-- =====================================
+                             VERIFICATION STATUS
+                             ===================================== -->
+
+                        <div
+                            class="
+                                rr-summary-panel
+                                rr-summary-verification
+                            "
+                        >
+
+
+                            <h4>
+
+                                <iconsax-icon
+                                    name="shield-tick"
+                                    type="bold"
+                                    size="17"
+                                    color="currentColor"
+                                    aria-hidden="true"
+                                ></iconsax-icon>
+
+                                <span>
+                                    Verification Status
+                                </span>
+
+                            </h4>
+
+
+
+                            <div
+                                class="
+                                    rr-summary-line
+                                    is-complete
+                                "
+                            >
+
+                                <iconsax-icon
+                                    name="tick-circle"
+                                    type="bold"
+                                    size="15"
+                                    color="currentColor"
+                                    aria-hidden="true"
+                                ></iconsax-icon>
+
+                                <span>
+                                    Email verified
+                                </span>
+
+                            </div>
+
+
+
+                            <div
+                                class="
+                                    rr-summary-line
+                                    is-complete
+                                "
+                            >
+
+                                <iconsax-icon
+                                    name="tick-circle"
+                                    type="bold"
+                                    size="15"
+                                    color="currentColor"
+                                    aria-hidden="true"
+                                ></iconsax-icon>
+
+                                <span>
+                                    Phone verified
+                                </span>
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <!-- =====================================
+                             SUBMITTED
+                             ===================================== -->
+
+                        <div
+                            class="
+                                rr-summary-panel
+                                rr-summary-submitted
+                            "
+                        >
+
+
+                            <h4>
+
+                                <iconsax-icon
+                                    name="calendar"
+                                    type="bold"
+                                    size="17"
+                                    color="currentColor"
+                                    aria-hidden="true"
+                                ></iconsax-icon>
+
+                                <span>
+                                    Submitted
+                                </span>
+
+                            </h4>
+
+
+
+                            <div class="rr-summary-date">
+
+                                {% if user.created_at %}
+
+                                    {{ user.created_at.strftime(
+                                        "%d %b %Y, %I:%M %p"
+                                    ) }}
+
+                                {% else %}
+
+                                    —
+
+                                {% endif %}
+
+                            </div>
+
+
+                        </div>
+
+
+
+                        <!-- =====================================
+                             APPROVAL REQUIREMENTS
+                             ===================================== -->
+
+                        <div
+                            class="
+                                rr-summary-panel
+                                rr-summary-requirements
+                            "
+                        >
+
+
+                            <h4>
+
+                                <iconsax-icon
+                                    name="task-square"
+                                    type="bold"
+                                    size="17"
+                                    color="currentColor"
+                                    aria-hidden="true"
+                                ></iconsax-icon>
+
+                                <span>
+                                    Approval Requirements
+                                </span>
+
+                            </h4>
+
+
+
+                            <!-- JOB TITLE -->
+
+                            <div
+                                class="rr-requirement-row"
+                                data-summary-item="job_title"
+                            >
+
+                                <span class="rr-requirement-state"></span>
+
+                                <span class="rr-requirement-label">
+                                    Job Title
+                                </span>
+
+                                <strong>
+                                    Not Assigned
+                                </strong>
+
+                            </div>
+
+
+
+                            <!-- DEPARTMENT -->
+
+                            <div
+                                class="rr-requirement-row"
+                                data-summary-item="department"
+                            >
+
+                                <span class="rr-requirement-state"></span>
+
+                                <span class="rr-requirement-label">
+                                    Department
+                                </span>
+
+                                <strong>
+                                    Not Assigned
+                                </strong>
+
+                            </div>
+
+
+
+                            <!-- SHIFT -->
+
+                            <div
+                                class="rr-requirement-row"
+                                data-summary-item="shift"
+                            >
+
+                                <span class="rr-requirement-state"></span>
+
+                                <span class="rr-requirement-label">
+                                    Shift
+                                </span>
+
+                                <strong>
+                                    Not Assigned
+                                </strong>
+
+                            </div>
+
+
+
+                            <!-- ACCESS ROLE -->
+
+                            <div
+                                class="rr-requirement-row"
+                                data-summary-item="role"
+                            >
+
+                                <span class="rr-requirement-state"></span>
+
+                                <span class="rr-requirement-label">
+                                    Access Role
+                                </span>
+
+                                <strong>
+                                    Not Assigned
+                                </strong>
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </section>
+
+
+            </div>
+
+
+        </div>
+
+
+    {% endif %}
+
+
+</div>
