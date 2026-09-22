@@ -16,10 +16,56 @@ Registration Requests | BIKA
     ) }}"
 >
 
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/request_type_switch.css'
+    ) }}"
+>
+
 {% endblock %}
 
 
 {% block content %}
+
+
+{# =========================================================
+   CURRENT STATUS
+
+   Supports the current registration backend if it passes
+   current_status.
+
+   Falls back to ?status=
+   ========================================================= #}
+
+{% set registration_status = current_status|default(
+    request.args.get(
+        'status',
+        'pending'
+    ),
+    true
+) %}
+
+
+{# =========================================================
+   USER LIST
+
+   Supports:
+   registration_users = newer backend
+   pending_users      = existing backend
+   ========================================================= #}
+
+{% if registration_users is defined %}
+
+    {% set users_list = registration_users %}
+
+{% else %}
+
+    {% set users_list = pending_users %}
+
+{% endif %}
+
 
 
 <div
@@ -63,8 +109,10 @@ Registration Requests | BIKA
                 {% for category, message in messages %}
 
                     <div
-                        class="rr-flash rr-flash-{{ category }}"
-                        role="alert"
+                        class="
+                            rr-flash
+                            rr-flash-{{ category }}
+                        "
                     >
                         {{ message }}
                     </div>
@@ -80,6 +128,45 @@ Registration Requests | BIKA
 
 
     <!-- =====================================================
+         REQUEST TYPE SWITCH
+
+         Only this part is newly added.
+         ===================================================== -->
+
+    <nav
+        class="request-type-switch"
+        aria-label="Request type"
+    >
+
+
+        <a
+            href="{{ url_for(
+                'superadmin.pending_registrations'
+            ) }}"
+            class="
+                request-type-switch-link
+                is-active
+            "
+        >
+            Registration Requests
+        </a>
+
+
+        <a
+            href="{{ url_for(
+                'superadmin.work_information_requests'
+            ) }}"
+            class="request-type-switch-link"
+        >
+            Work Information Requests
+        </a>
+
+
+    </nav>
+
+
+
+    <!-- =====================================================
          STATUS TABS
          ===================================================== -->
 
@@ -89,7 +176,9 @@ Registration Requests | BIKA
     >
 
 
-        <!-- PENDING -->
+        <!-- =================================================
+             PENDING
+             ================================================= -->
 
         <a
             href="{{ url_for(
@@ -98,17 +187,24 @@ Registration Requests | BIKA
             ) }}"
             class="
                 rr-status-tab
-                {% if current_status == 'pending' %}
+                {% if registration_status == 'pending' %}
                     is-active
                 {% endif %}
             "
+            aria-current="{{
+                'page'
+                if registration_status == 'pending'
+                else 'false'
+            }}"
         >
             Pending
         </a>
 
 
 
-        <!-- APPROVED -->
+        <!-- =================================================
+             APPROVED
+             ================================================= -->
 
         <a
             href="{{ url_for(
@@ -117,17 +213,24 @@ Registration Requests | BIKA
             ) }}"
             class="
                 rr-status-tab
-                {% if current_status == 'approved' %}
+                {% if registration_status == 'approved' %}
                     is-active
                 {% endif %}
             "
+            aria-current="{{
+                'page'
+                if registration_status == 'approved'
+                else 'false'
+            }}"
         >
             Approved
         </a>
 
 
 
-        <!-- REJECTED -->
+        <!-- =================================================
+             REJECTED
+             ================================================= -->
 
         <a
             href="{{ url_for(
@@ -136,10 +239,15 @@ Registration Requests | BIKA
             ) }}"
             class="
                 rr-status-tab
-                {% if current_status == 'rejected' %}
+                {% if registration_status == 'rejected' %}
                     is-active
                 {% endif %}
             "
+            aria-current="{{
+                'page'
+                if registration_status == 'rejected'
+                else 'false'
+            }}"
         >
             Rejected
         </a>
@@ -150,7 +258,7 @@ Registration Requests | BIKA
 
 
     <!-- =====================================================
-         LIST CARD
+         REGISTRATION LIST CARD
          ===================================================== -->
 
     <section class="rr-list-card">
@@ -169,6 +277,7 @@ Registration Requests | BIKA
 
             <label class="rr-search">
 
+
                 <iconsax-icon
                     name="search-normal"
                     type="twotone"
@@ -180,11 +289,11 @@ Registration Requests | BIKA
 
                 <input
                     type="search"
-                    placeholder="Search by name, username email, or employee ID..."
+                    placeholder="Search by name, username, email, or employee ID..."
                     autocomplete="off"
-                    aria-label="Search registration requests"
                     data-registration-search
                 >
+
 
             </label>
 
@@ -192,175 +301,131 @@ Registration Requests | BIKA
 
             <!-- =============================================
                  ASSIGNMENT FILTER
-                 PENDING ONLY
                  ============================================= -->
 
-            {% if current_status == "pending" %}
+            <div
+                class="rr-custom-filter"
+                data-assignment-filter
+            >
 
-                <div
-                    class="rr-custom-filter"
-                    data-assignment-filter
+
+                <!-- FILTER TRIGGER -->
+
+                <button
+                    type="button"
+                    class="rr-filter-trigger"
+                    data-filter-trigger
+                    aria-haspopup="listbox"
+                    aria-expanded="false"
                 >
 
 
+                    <span
+                        data-filter-label
+                    >
+                        Assignment: All
+                    </span>
+
+
+                    <span
+                        class="rr-filter-caret"
+                        aria-hidden="true"
+                    ></span>
+
+
+                </button>
+
+
+
+                <!-- FILTER MENU -->
+
+                <div
+                    class="rr-filter-menu"
+                    data-filter-menu
+                    role="listbox"
+                    aria-label="Assignment filter"
+                    hidden
+                >
+
+
+                    <!-- ALL -->
+
                     <button
                         type="button"
-                        class="rr-filter-trigger"
-                        data-filter-trigger
-                        aria-haspopup="listbox"
-                        aria-expanded="false"
+                        class="
+                            rr-filter-option
+                            is-selected
+                        "
+                        data-filter-value="all"
+                        data-filter-label="Assignment: All"
+                        role="option"
+                        aria-selected="true"
                     >
 
-                        <span data-filter-label>
-                            Assignment: All
+                        <span>
+                            All
                         </span>
 
 
-                        <!--
-                            Rounded Chevron Down
-                            No vertical line.
-                        -->
-
-                        <span
-                            class="rr-filter-caret"
-                            aria-hidden="true"
-                        ></span>
+                        <span class="rr-filter-check">
+                            ✓
+                        </span>
 
                     </button>
 
 
 
-                    <!-- FILTER MENU -->
+                    <!-- ASSIGNED -->
 
-                    <div
-                        class="rr-filter-menu"
-                        data-filter-menu
-                        role="listbox"
-                        aria-label="Assignment status"
-                        hidden
+                    <button
+                        type="button"
+                        class="rr-filter-option"
+                        data-filter-value="assigned"
+                        data-filter-label="Assignment: Assigned"
+                        role="option"
+                        aria-selected="false"
                     >
 
-
-                        <!-- ALL -->
-
-                        <button
-                            type="button"
-                            class="rr-filter-option is-selected"
-                            data-filter-value="all"
-                            data-filter-label="Assignment: All"
-                            role="option"
-                            aria-selected="true"
-                        >
-
-                            <span>
-                                All Requests
-                            </span>
+                        <span>
+                            Assigned
+                        </span>
 
 
-                            <iconsax-icon
-                                class="rr-filter-check"
-                                name="tick-circle"
-                                type="twotone"
-                                size="17"
-                                color="currentColor"
-                                aria-hidden="true"
-                            ></iconsax-icon>
+                        <span class="rr-filter-check">
+                            ✓
+                        </span>
 
-                        </button>
+                    </button>
 
 
 
-                        <!-- NOT ASSIGNED -->
+                    <!-- UNASSIGNED -->
 
-                        <button
-                            type="button"
-                            class="rr-filter-option"
-                            data-filter-value="unassigned"
-                            data-filter-label="Not Assigned"
-                            role="option"
-                            aria-selected="false"
-                        >
+                    <button
+                        type="button"
+                        class="rr-filter-option"
+                        data-filter-value="unassigned"
+                        data-filter-label="Assignment: Unassigned"
+                        role="option"
+                        aria-selected="false"
+                    >
 
-                            <span>
-                                Not Assigned
-                            </span>
-
-
-                            <iconsax-icon
-                                class="rr-filter-check"
-                                name="tick-circle"
-                                type="twotone"
-                                size="17"
-                                color="currentColor"
-                                aria-hidden="true"
-                            ></iconsax-icon>
-
-                        </button>
+                        <span>
+                            Unassigned
+                        </span>
 
 
+                        <span class="rr-filter-check">
+                            ✓
+                        </span>
 
-                        <!-- PARTIAL -->
+                    </button>
 
-                        <button
-                            type="button"
-                            class="rr-filter-option"
-                            data-filter-value="partial"
-                            data-filter-label="Partially Assigned"
-                            role="option"
-                            aria-selected="false"
-                        >
-
-                            <span>
-                                Partially Assigned
-                            </span>
-
-
-                            <iconsax-icon
-                                class="rr-filter-check"
-                                name="tick-circle"
-                                type="twotone"
-                                size="17"
-                                color="currentColor"
-                                aria-hidden="true"
-                            ></iconsax-icon>
-
-                        </button>
-
-
-
-                        <!-- READY -->
-
-                        <button
-                            type="button"
-                            class="rr-filter-option"
-                            data-filter-value="ready"
-                            data-filter-label="Ready to Approve"
-                            role="option"
-                            aria-selected="false"
-                        >
-
-                            <span>
-                                Ready to Approve
-                            </span>
-
-
-                            <iconsax-icon
-                                class="rr-filter-check"
-                                name="tick-circle"
-                                type="twotone"
-                                size="17"
-                                color="currentColor"
-                                aria-hidden="true"
-                            ></iconsax-icon>
-
-                        </button>
-
-
-                    </div>
 
                 </div>
 
-            {% endif %}
+
+            </div>
 
 
         </div>
@@ -371,7 +436,7 @@ Registration Requests | BIKA
              TABLE
              ================================================= -->
 
-        {% if pending_users %}
+        {% if users_list %}
 
 
             <div class="rr-table-wrap">
@@ -380,12 +445,17 @@ Registration Requests | BIKA
                 <table class="rr-table">
 
 
+                    <!-- =====================================
+                         HEADER
+                         ===================================== -->
+
                     <thead>
+
 
                         <tr>
 
 
-                            <!-- # -->
+                            <!-- NUMBER -->
 
                             <th class="rr-col-index">
                                 #
@@ -397,7 +467,7 @@ Registration Requests | BIKA
 
                             <th>
 
-                                <div class="rr-sort-header">
+                                <span class="rr-sort-header">
 
                                     <span>
                                         Name
@@ -408,9 +478,9 @@ Registration Requests | BIKA
                                         type="button"
                                         class="rr-sort-button"
                                         data-sort-key="name"
+                                        data-sort-rotation="0"
                                         aria-label="Sort by name"
                                         aria-pressed="false"
-                                        title="Sort by name"
                                     >
 
                                         <iconsax-icon
@@ -423,7 +493,7 @@ Registration Requests | BIKA
 
                                     </button>
 
-                                </div>
+                                </span>
 
                             </th>
 
@@ -433,7 +503,7 @@ Registration Requests | BIKA
 
                             <th>
 
-                                <div class="rr-sort-header">
+                                <span class="rr-sort-header">
 
                                     <span>
                                         Username
@@ -444,9 +514,9 @@ Registration Requests | BIKA
                                         type="button"
                                         class="rr-sort-button"
                                         data-sort-key="username"
+                                        data-sort-rotation="0"
                                         aria-label="Sort by username"
                                         aria-pressed="false"
-                                        title="Sort by username"
                                     >
 
                                         <iconsax-icon
@@ -459,7 +529,7 @@ Registration Requests | BIKA
 
                                     </button>
 
-                                </div>
+                                </span>
 
                             </th>
 
@@ -469,7 +539,7 @@ Registration Requests | BIKA
 
                             <th>
 
-                                <div class="rr-sort-header">
+                                <span class="rr-sort-header">
 
                                     <span>
                                         Email
@@ -480,9 +550,9 @@ Registration Requests | BIKA
                                         type="button"
                                         class="rr-sort-button"
                                         data-sort-key="email"
+                                        data-sort-rotation="0"
                                         aria-label="Sort by email"
                                         aria-pressed="false"
-                                        title="Sort by email"
                                     >
 
                                         <iconsax-icon
@@ -495,7 +565,7 @@ Registration Requests | BIKA
 
                                     </button>
 
-                                </div>
+                                </span>
 
                             </th>
 
@@ -505,7 +575,7 @@ Registration Requests | BIKA
 
                             <th>
 
-                                <div class="rr-sort-header">
+                                <span class="rr-sort-header">
 
                                     <span>
                                         Phone
@@ -516,9 +586,9 @@ Registration Requests | BIKA
                                         type="button"
                                         class="rr-sort-button"
                                         data-sort-key="phone"
+                                        data-sort-rotation="0"
                                         aria-label="Sort by phone"
                                         aria-pressed="false"
-                                        title="Sort by phone"
                                     >
 
                                         <iconsax-icon
@@ -531,7 +601,7 @@ Registration Requests | BIKA
 
                                     </button>
 
-                                </div>
+                                </span>
 
                             </th>
 
@@ -541,7 +611,7 @@ Registration Requests | BIKA
 
                             <th>
 
-                                <div class="rr-sort-header">
+                                <span class="rr-sort-header">
 
                                     <span>
                                         Employee ID
@@ -552,9 +622,9 @@ Registration Requests | BIKA
                                         type="button"
                                         class="rr-sort-button"
                                         data-sort-key="employee"
+                                        data-sort-rotation="0"
                                         aria-label="Sort by employee ID"
                                         aria-pressed="false"
-                                        title="Sort by employee ID"
                                     >
 
                                         <iconsax-icon
@@ -567,7 +637,7 @@ Registration Requests | BIKA
 
                                     </button>
 
-                                </div>
+                                </span>
 
                             </th>
 
@@ -577,7 +647,7 @@ Registration Requests | BIKA
 
                             <th>
 
-                                <div class="rr-sort-header">
+                                <span class="rr-sort-header">
 
                                     <span>
                                         Submitted
@@ -588,9 +658,9 @@ Registration Requests | BIKA
                                         type="button"
                                         class="rr-sort-button"
                                         data-sort-key="submitted"
+                                        data-sort-rotation="0"
                                         aria-label="Sort by submitted date"
                                         aria-pressed="false"
-                                        title="Sort by submitted date"
                                     >
 
                                         <iconsax-icon
@@ -603,7 +673,7 @@ Registration Requests | BIKA
 
                                     </button>
 
-                                </div>
+                                </span>
 
                             </th>
 
@@ -618,84 +688,85 @@ Registration Requests | BIKA
 
                         </tr>
 
+
                     </thead>
 
 
 
-                    <tbody data-registration-table>
+                    <!-- =====================================
+                         BODY
+                         ===================================== -->
+
+                    <tbody
+                        data-registration-table
+                    >
 
 
-                        {% for user in pending_users %}
+                        {% for user in users_list %}
 
 
-                            <!-- =================================
-                                 ASSIGNMENT STATUS
-                                 ================================= -->
+                            {# =================================
+                               ASSIGNMENT STATE
 
-                            {% set has_job_title = user.job_title %}
-                            {% set has_department = user.department %}
-                            {% set has_shift = user.shift %}
-                            {% set has_role = user.role %}
+                               Registration is considered
+                               assigned once Job Title,
+                               Department and Shift exist.
+                               ================================= #}
 
-
-                            {% if
-                                has_job_title
-                                and has_department
-                                and has_shift
-                                and has_role
+                            {% set assignments_complete =
+                                user.job_title
+                                and
+                                user.department
+                                and
+                                user.shift
                             %}
-
-                                {% set assignment_status = "ready" %}
-
-                            {% elif
-                                not has_job_title
-                                and not has_department
-                                and not has_shift
-                            %}
-
-                                {% set assignment_status = "unassigned" %}
-
-                            {% else %}
-
-                                {% set assignment_status = "partial" %}
-
-                            {% endif %}
-
 
 
                             <tr
                                 data-registration-row
 
-                                data-assignment-status="{{ assignment_status }}"
+                                data-assignment-status="{{
+                                    'assigned'
+                                    if assignments_complete
+                                    else 'unassigned'
+                                }}"
 
-                                data-sort-name="{{ user.full_name|lower }}"
+                                data-search-text="{{ (
+                                    user.full_name
+                                    ~ ' '
+                                    ~ user.username
+                                    ~ ' '
+                                    ~ user.email
+                                    ~ ' '
+                                    ~ user.phone_number
+                                    ~ ' '
+                                    ~ user.employee_id
+                                )|lower }}"
 
-                                data-sort-username="{{ user.username|lower }}"
+                                data-sort-name="{{
+                                    user.full_name|lower
+                                }}"
 
-                                data-sort-email="{{ user.email|lower }}"
+                                data-sort-username="{{
+                                    user.username|lower
+                                }}"
 
-                                data-sort-phone="{{ user.phone_number or '' }}"
+                                data-sort-email="{{
+                                    user.email|lower
+                                }}"
 
-                                data-sort-employee="{{ user.employee_id|lower }}"
+                                data-sort-phone="{{
+                                    user.phone_number
+                                }}"
+
+                                data-sort-employee="{{
+                                    user.employee_id|lower
+                                }}"
 
                                 data-sort-submitted="{{
                                     user.created_at.isoformat()
                                     if user.created_at
                                     else ''
-                                }}"
-
-                                data-search-text="{{
-                                    (
-                                        user.full_name
-                                        ~ ' '
-                                        ~ user.username
-                                        ~ ' '
-                                        ~ user.email
-                                        ~ ' '
-                                        ~ (user.phone_number or '')
-                                        ~ ' '
-                                        ~ user.employee_id
-                                    )|lower
                                 }}"
                             >
 
@@ -776,61 +847,23 @@ Registration Requests | BIKA
                                 <td class="rr-action-column">
 
 
-                                    <!-- =========================
-                                         PENDING = REVIEW
-                                         ========================= -->
+                                    <button
+                                        type="button"
+                                        class="rr-review-button"
 
-                                    {% if current_status == "pending" %}
+                                        data-review-button
 
-                                        <button
-                                            type="button"
-                                            class="rr-review-button"
+                                        data-user-id="{{
+                                            user.id
+                                        }}"
 
-                                            data-review-button
-
-                                            data-user-id="{{ user.id }}"
-
-                                            data-review-url="{{ url_for(
-                                                'superadmin.review_registration',
-                                                user_id=user.id
-                                            ) }}"
-                                        >
-                                            Review
-                                        </button>
-
-
-                                    <!-- =========================
-                                         APPROVED
-                                         ========================= -->
-
-                                    {% elif current_status == "approved" %}
-
-                                        <span
-                                            class="
-                                                rr-list-status
-                                                rr-list-status-approved
-                                            "
-                                        >
-                                            Approved
-                                        </span>
-
-
-                                    <!-- =========================
-                                         REJECTED
-                                         ========================= -->
-
-                                    {% else %}
-
-                                        <span
-                                            class="
-                                                rr-list-status
-                                                rr-list-status-rejected
-                                            "
-                                        >
-                                            Rejected
-                                        </span>
-
-                                    {% endif %}
+                                        data-review-url="{{ url_for(
+                                            'superadmin.review_registration',
+                                            user_id=user.id
+                                        ) }}"
+                                    >
+                                        Review
+                                    </button>
 
 
                                 </td>
@@ -844,14 +877,16 @@ Registration Requests | BIKA
 
                     </tbody>
 
+
                 </table>
+
 
             </div>
 
 
 
             <!-- =================================================
-                 NO SEARCH / FILTER RESULTS
+                 SEARCH / FILTER NO RESULTS
                  ================================================= -->
 
             <div
@@ -861,7 +896,7 @@ Registration Requests | BIKA
             >
 
                 <p>
-                    No registration requests match your search.
+                    No registrations match your search or filter.
                 </p>
 
             </div>
@@ -869,16 +904,26 @@ Registration Requests | BIKA
 
 
             <!-- =================================================
-                 FOOTER
+                 FOOTER / PAGINATION
                  ================================================= -->
 
             <footer class="rr-list-footer">
 
 
-                <span data-result-count>
+                <span
+                    data-result-count
+                >
 
-                    Showing 1 to {{ pending_users|length }}
-                    of {{ pending_users|length }} registrations
+                    Showing 1 to
+                    {{ [
+                        users_list|length,
+                        8
+                    ]|min }}
+
+                    of
+                    {{ users_list|length }}
+
+                    registrations
 
                 </span>
 
@@ -889,6 +934,8 @@ Registration Requests | BIKA
                     aria-label="Registration pagination"
                 >
 
+
+                    <!-- PREVIOUS -->
 
                     <button
                         type="button"
@@ -901,6 +948,9 @@ Registration Requests | BIKA
                     </button>
 
 
+
+                    <!-- CURRENT -->
+
                     <span
                         class="rr-page-current"
                         data-page-current
@@ -908,6 +958,9 @@ Registration Requests | BIKA
                         1
                     </span>
 
+
+
+                    <!-- NEXT -->
 
                     <button
                         type="button"
@@ -936,39 +989,57 @@ Registration Requests | BIKA
             <div class="rr-empty-state">
 
 
-                {% if current_status == "approved" %}
+                <div class="rr-empty-icon">
 
-                    <h2>
+                    <iconsax-icon
+                        name="profile-circle"
+                        type="twotone"
+                        size="25"
+                        color="currentColor"
+                        aria-hidden="true"
+                    ></iconsax-icon>
+
+                </div>
+
+
+
+                <h2>
+
+                    {% if registration_status == 'approved' %}
+
                         No approved registrations
-                    </h2>
 
-                    <p>
-                        Approved registration requests will appear here.
-                    </p>
+                    {% elif registration_status == 'rejected' %}
 
-
-                {% elif current_status == "rejected" %}
-
-                    <h2>
                         No rejected registrations
-                    </h2>
 
-                    <p>
-                        Rejected registration requests will appear here.
-                    </p>
+                    {% else %}
 
-
-                {% else %}
-
-                    <h2>
                         No pending registrations
-                    </h2>
 
-                    <p>
+                    {% endif %}
+
+                </h2>
+
+
+
+                <p>
+
+                    {% if registration_status == 'approved' %}
+
+                        Approved registration requests will appear here.
+
+                    {% elif registration_status == 'rejected' %}
+
+                        Rejected registration requests will appear here.
+
+                    {% else %}
+
                         Verified registration requests will appear here.
-                    </p>
 
-                {% endif %}
+                    {% endif %}
+
+                </p>
 
 
             </div>
@@ -985,25 +1056,24 @@ Registration Requests | BIKA
 
 
 <!-- =========================================================
-     REVIEW MODAL HOST
+     REVIEW MODAL
+
+     Your existing registration_requests.js loads the
+     Review HTML into this host.
      ========================================================= -->
 
-{% if current_status == "pending" %}
+<div
+    class="rr-modal-backdrop"
+    data-modal-backdrop
+    hidden
+>
 
     <div
-        class="rr-modal-backdrop"
-        data-modal-backdrop
-        hidden
-    >
+        class="rr-modal-host"
+        data-modal-host
+    ></div>
 
-        <div
-            class="rr-modal-host"
-            data-modal-host
-        ></div>
-
-    </div>
-
-{% endif %}
+</div>
 
 
 {% endblock %}

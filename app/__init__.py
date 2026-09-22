@@ -17,6 +17,7 @@ def create_app():
     app.config.from_object(Config)
 
     db.init_app(app)
+    from app import workflow_models  # noqa: F401
     migrate.init_app(app, db)
     login_manager.init_app(app)
     csrf.init_app(app)
@@ -37,7 +38,15 @@ def create_app():
     app.register_blueprint(auth_bp)
 
     from app.superadmin import superadmin_bp
+    from app.notifications import notifications_bp
     app.register_blueprint(superadmin_bp)
+
+    from app.account import account_bp
+    app.register_blueprint(account_bp)
+
+    app.register_blueprint(
+        notifications_bp
+    )
 
     from app.cli import create_superadmin
     app.cli.add_command(create_superadmin)

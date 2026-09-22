@@ -13,6 +13,11 @@
         content="width=device-width, initial-scale=1.0"
     >
 
+    <meta
+        name="csrf-token"
+        content="{{ csrf_token() }}"
+    >
+
 
     <!-- =====================================================
          PAGE TITLE
@@ -113,6 +118,13 @@
         ) }}"
     >
 
+    <link
+        rel="stylesheet"
+        href="{{ url_for(
+            'static',
+            filename='css/notifications.css'
+        ) }}"
+    >
 
     {% block extra_css %}
     {% endblock %}
@@ -411,8 +423,17 @@
 
 
                 <a
-                    href="#"
-                    class="app-nav-item"
+                    href="{{ url_for('account.index') }}"
+                    class="
+                        app-nav-item
+                        {% if
+                            request.endpoint
+                            and
+                            request.endpoint.startswith('account.')
+                        %}
+                            is-active
+                        {% endif %}
+                    "
                 >
 
                     <iconsax-icon
@@ -445,7 +466,14 @@
 
                 <div class="app-sidebar-avatar">
 
-                    {% if current_user.first_name %}
+                    {% if current_user.profile_photo %}
+
+                        <img
+                            src="{{ url_for('static', filename=current_user.profile_photo) }}"
+                            alt="{{ current_user.full_name }}"
+                        >
+
+                    {% elif current_user.first_name %}
 
                         {{ current_user.first_name[0]|upper }}
 
@@ -603,23 +631,186 @@
 
 
 
-                <!-- NOTIFICATION -->
+                <!-- =====================================
+                    NOTIFICATION
+                    ===================================== -->
 
-                <button
-                    type="button"
-                    class="app-topbar-icon-button"
-                    aria-label="Notifications"
-                    title="Notifications"
+                <div
+                    class="app-notification"
+                    data-notification-root
+                    data-notification-api="{{ url_for(
+                        'notifications.latest_notifications'
+                    ) }}"
+                    data-notification-read-all-url="{{ url_for(
+                        'notifications.mark_all_notifications_read'
+                    ) }}"
                 >
 
-                    <iconsax-icon
-                        name="notification"
-                        type="twotone"
-                        size="19"
-                        color="currentColor"
-                    ></iconsax-icon>
 
-                </button>
+                    <!-- =================================
+                        BELL
+                        ================================= -->
+
+                    <button
+                        type="button"
+                        class="app-topbar-icon-button app-notification-button"
+                        aria-label="Notifications"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        data-notification-toggle
+                    >
+
+                        <iconsax-icon
+                            name="notification"
+                            type="twotone"
+                            size="21"
+                            color="currentColor"
+                        ></iconsax-icon>
+
+
+                        <span
+                            class="app-notification-badge"
+                            data-notification-badge
+                            hidden
+                        >
+                            0
+                        </span>
+
+                    </button>
+
+
+                    <!-- =================================
+                        DROPDOWN
+                        ================================= -->
+
+                    <div
+                        class="app-notification-dropdown"
+                        data-notification-dropdown
+                        hidden
+                    >
+
+
+                        <!-- HEADER -->
+
+                        <div class="app-notification-head">
+
+
+                            <div>
+
+                                <h3>
+                                    Notifications
+                                </h3>
+
+                                <span
+                                    data-notification-summary
+                                >
+                                    You're all caught up
+                                </span>
+
+                            </div>
+
+
+                            <button
+                                type="button"
+                                class="app-notification-read-all"
+                                data-notification-read-all
+                                hidden
+                            >
+                                Mark all as read
+                            </button>
+
+
+                        </div>
+
+
+                        <!-- LOADING -->
+
+                        <div
+                            class="app-notification-loading"
+                            data-notification-loading
+                        >
+
+                            <span class="app-notification-spinner"></span>
+
+                            <span>
+                                Loading notifications...
+                            </span>
+
+                        </div>
+
+
+                        <!-- LIST -->
+
+                        <div
+                            class="app-notification-list"
+                            data-notification-list
+                            hidden
+                        ></div>
+
+
+                        <!-- EMPTY -->
+
+                        <div
+                            class="app-notification-empty"
+                            data-notification-empty
+                            hidden
+                        >
+
+                            <div class="app-notification-empty-icon">
+
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    aria-hidden="true"
+                                >
+                                    <path
+                                        d="
+                                            M6 16
+                                            H18
+                                            L17 14
+                                            V10
+                                            C17 7.2
+                                            15 5
+                                            12 5
+                                            C9 5
+                                            7 7.2
+                                            7 10
+                                            V14
+                                            Z
+                                        "
+                                    />
+
+                                    <path
+                                        d="
+                                            M10 19
+                                            C10.5 20
+                                            11.1 20.5
+                                            12 20.5
+                                            C12.9 20.5
+                                            13.5 20
+                                            14 19
+                                        "
+                                    />
+                                </svg>
+
+                            </div>
+
+
+                            <strong>
+                                No notifications
+                            </strong>
+
+
+                            <span>
+                                New updates will appear here.
+                            </span>
+
+                        </div>
+
+
+                    </div>
+
+
+                </div>
 
 
             </header>
@@ -787,6 +978,12 @@
     ) }}"
 ></script>
 
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/notifications.js'
+    ) }}"
+></script>
 
 {% block extra_js %}
 {% endblock %}

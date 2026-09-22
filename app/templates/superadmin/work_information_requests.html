@@ -1,0 +1,1292 @@
+{% extends "base.html" %}
+
+
+{% block title %}
+Work Information Requests | BIKA
+{% endblock %}
+
+
+{% block extra_css %}
+
+<!--
+    IMPORTANT:
+    Work Information Requests intentionally reuses
+    Registration Requests layout components.
+
+    This guarantees:
+    - Same title size
+    - Same subtitle size
+    - Same spacing
+    - Same status tabs
+    - Same card
+    - Same search
+    - Same table typography
+    - Same Review button
+-->
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/registration_requests.css'
+    ) }}"
+>
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/request_type_switch.css'
+    ) }}"
+>
+
+<link
+    rel="stylesheet"
+    href="{{ url_for(
+        'static',
+        filename='css/work_information_requests.css'
+    ) }}"
+>
+
+{% endblock %}
+
+
+{% block content %}
+
+
+<div
+    class="rr-page"
+    data-work-requests-page
+>
+
+
+    <!-- =====================================================
+         PAGE HEADER
+
+         SAME COMPONENT AS REGISTRATION REQUESTS
+         ===================================================== -->
+
+    <header class="rr-page-head">
+
+        <div>
+
+            <h1>
+                Request Status
+            </h1>
+
+            <p>
+                Review registration and work information change requests.
+            </p>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =====================================================
+         FLASH
+         SAME AS REGISTRATION REQUESTS
+         ===================================================== -->
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+        {% if messages %}
+
+            <div class="rr-flash-stack">
+
+                {% for category, message in messages %}
+
+                    <div
+                        class="
+                            rr-flash
+                            rr-flash-{{ category }}
+                        "
+                    >
+                        {{ message }}
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% endif %}
+
+    {% endwith %}
+
+
+
+    <!-- =====================================================
+         REQUEST TYPE SWITCH
+         SAME SHARED COMPONENT ON BOTH PAGES
+         ===================================================== -->
+
+    <nav
+        class="request-type-switch"
+        aria-label="Request type"
+    >
+
+
+        <a
+            href="{{ url_for(
+                'superadmin.pending_registrations'
+            ) }}"
+            class="request-type-switch-link"
+        >
+            Registration Requests
+        </a>
+
+
+        <a
+            href="{{ url_for(
+                'superadmin.work_information_requests'
+            ) }}"
+            class="
+                request-type-switch-link
+                is-active
+            "
+        >
+            Work Information Requests
+        </a>
+
+
+    </nav>
+
+
+
+    <!-- =====================================================
+         STATUS TABS
+
+         EXACT SAME rr-status-tabs AS REGISTRATION
+         No separate work-request sizing here.
+         ===================================================== -->
+
+    <nav
+        class="rr-status-tabs"
+        aria-label="Work information request status"
+    >
+
+
+        <!-- PENDING -->
+
+        <a
+            href="{{ url_for(
+                'superadmin.work_information_requests',
+                status='pending'
+            ) }}"
+            class="
+                rr-status-tab
+                {% if current_status == 'pending' %}
+                    is-active
+                {% endif %}
+            "
+        >
+            Pending
+        </a>
+
+
+
+        <!-- APPROVED -->
+
+        <a
+            href="{{ url_for(
+                'superadmin.work_information_requests',
+                status='approved'
+            ) }}"
+            class="
+                rr-status-tab
+                {% if current_status == 'approved' %}
+                    is-active
+                {% endif %}
+            "
+        >
+            Approved
+        </a>
+
+
+
+        <!-- REJECTED -->
+
+        <a
+            href="{{ url_for(
+                'superadmin.work_information_requests',
+                status='rejected'
+            ) }}"
+            class="
+                rr-status-tab
+                {% if current_status == 'rejected' %}
+                    is-active
+                {% endif %}
+            "
+        >
+            Rejected
+        </a>
+
+
+    </nav>
+
+
+
+    <!-- =====================================================
+         REQUEST LIST CARD
+
+         SAME rr-list-card AS REGISTRATION
+         ===================================================== -->
+
+    <section class="rr-list-card">
+
+
+        <!-- =================================================
+             TOOLBAR
+             SAME HEIGHT / PADDING / SEARCH AS REGISTRATION
+             ================================================= -->
+
+        <div class="rr-list-toolbar">
+
+
+            <!-- SEARCH -->
+
+            <label class="rr-search">
+
+                <iconsax-icon
+                    name="search-normal"
+                    type="twotone"
+                    size="17"
+                    color="currentColor"
+                    aria-hidden="true"
+                ></iconsax-icon>
+
+
+                <input
+                    type="search"
+                    placeholder="Search by name, username or employee ID..."
+                    autocomplete="off"
+                    data-work-search
+                >
+
+            </label>
+
+
+
+            <!-- REQUEST COUNT -->
+
+            <div class="wir-request-total">
+
+                <span data-visible-count>
+                    {{ requests_list|length }}
+                </span>
+
+                {% if requests_list|length == 1 %}
+                    request
+                {% else %}
+                    requests
+                {% endif %}
+
+            </div>
+
+
+        </div>
+
+
+
+        <!-- =================================================
+             TABLE
+             SAME rr-table AS REGISTRATION
+             ================================================= -->
+
+        {% if requests_list %}
+
+
+            <div class="rr-table-wrap">
+
+
+                <table class="rr-table">
+
+
+                    <thead>
+
+
+                        <tr>
+
+
+                            <th class="rr-col-index">
+                                #
+                            </th>
+
+
+                            <th>
+                                Name
+                            </th>
+
+
+                            <th>
+                                Username
+                            </th>
+
+
+                            <th>
+                                Employee ID
+                            </th>
+
+
+                            <th>
+                                Changes
+                            </th>
+
+
+                            <th>
+                                Submitted
+                            </th>
+
+
+                            <th>
+                                Status
+                            </th>
+
+
+                            <th class="rr-action-column">
+                                Action
+                            </th>
+
+
+                        </tr>
+
+
+                    </thead>
+
+
+
+                    <tbody>
+
+
+                        {% for item in requests_list %}
+
+
+                            <tr
+                                data-work-row
+                                data-search-text="{{ (
+                                    item.user.full_name
+                                    ~ ' '
+                                    ~ item.user.username
+                                    ~ ' '
+                                    ~ (item.user.employee_id or '')
+                                )|lower }}"
+                            >
+
+
+                                <!-- NUMBER -->
+
+                                <td class="rr-col-index">
+                                    {{ loop.index }}
+                                </td>
+
+
+
+                                <!-- NAME -->
+
+                                <td class="rr-name">
+                                    {{ item.user.full_name }}
+                                </td>
+
+
+
+                                <!-- USERNAME -->
+
+                                <td>
+                                    {{ item.user.username }}
+                                </td>
+
+
+
+                                <!-- EMPLOYEE ID -->
+
+                                <td>
+                                    {{ item.user.employee_id or '—' }}
+                                </td>
+
+
+
+                                <!-- CHANGES -->
+
+                                <td>
+
+                                    <span class="wir-change-count">
+
+                                        {{ item.changed_fields()|length }}
+
+                                        {% if item.changed_fields()|length == 1 %}
+                                            field
+                                        {% else %}
+                                            fields
+                                        {% endif %}
+
+                                    </span>
+
+                                </td>
+
+
+
+                                <!-- SUBMITTED -->
+
+                                <td>
+
+                                    {% if item.created_at %}
+
+                                        {{ item.created_at.strftime(
+                                            "%d %b %Y, %H:%M"
+                                        ) }}
+
+                                    {% else %}
+
+                                        —
+
+                                    {% endif %}
+
+                                </td>
+
+
+
+                                <!-- STATUS -->
+
+                                <td>
+
+                                    <span
+                                        class="
+                                            wir-table-status
+                                            wir-table-status-{{ item.status }}
+                                        "
+                                    >
+
+                                        <span
+                                            class="wir-table-status-dot"
+                                            aria-hidden="true"
+                                        ></span>
+
+                                        {{ item.status|title }}
+
+                                    </span>
+
+                                </td>
+
+
+
+                                <!-- ACTION -->
+
+                                <td class="rr-action-column">
+
+                                    <button
+                                        type="button"
+                                        class="rr-review-button"
+                                        data-work-review-button
+                                        data-request-id="{{ item.id }}"
+                                    >
+                                        Review
+                                    </button>
+
+                                </td>
+
+
+                            </tr>
+
+
+                        {% endfor %}
+
+
+                    </tbody>
+
+
+                </table>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 FOOTER
+                 SAME rr-list-footer
+                 ================================================= -->
+
+            <footer class="rr-list-footer">
+
+
+                <span data-table-result-text>
+
+                    Showing 1 to
+                    {{ requests_list|length }}
+
+                    of
+                    {{ requests_list|length }}
+
+                    requests
+
+                </span>
+
+
+            </footer>
+
+
+        {% else %}
+
+
+            <!-- =================================================
+                 EMPTY STATE
+                 SAME rr-empty-state
+                 ================================================= -->
+
+            <div class="rr-empty-state">
+
+
+                <div class="wir-empty-icon">
+
+                    <iconsax-icon
+                        name="clock"
+                        type="twotone"
+                        size="25"
+                        color="currentColor"
+                    ></iconsax-icon>
+
+                </div>
+
+
+                <h2>
+
+                    {% if current_status == 'approved' %}
+
+                        No approved requests
+
+                    {% elif current_status == 'rejected' %}
+
+                        No rejected requests
+
+                    {% else %}
+
+                        No pending requests
+
+                    {% endif %}
+
+                </h2>
+
+
+                <p>
+
+                    {% if current_status == 'approved' %}
+
+                        Approved work information requests will appear here.
+
+                    {% elif current_status == 'rejected' %}
+
+                        Rejected work information requests will appear here.
+
+                    {% else %}
+
+                        Work information change requests will appear here.
+
+                    {% endif %}
+
+                </p>
+
+
+            </div>
+
+
+        {% endif %}
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         REVIEW MODALS
+         ===================================================== -->
+
+    {% for item in requests_list %}
+
+
+        <div
+            class="rr-modal-backdrop"
+            data-work-modal="{{ item.id }}"
+            hidden
+        >
+
+
+            <div class="rr-modal-host">
+
+
+                <section
+                    class="
+                        rr-modal
+                        wir-review-modal
+                    "
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="wirRequestTitle{{ item.id }}"
+                >
+
+
+                    <!-- =========================================
+                         MODAL HEADER
+                         SAME rr-modal-head
+                         ========================================= -->
+
+                    <header class="rr-modal-head">
+
+
+                        <div>
+
+                            <h2 id="wirRequestTitle{{ item.id }}">
+                                Work Information Request
+                            </h2>
+
+
+                            <p>
+
+                                {{ item.user.full_name }}
+
+                                ·
+
+                                @{{ item.user.username }}
+
+                                ·
+
+                                {{ item.user.employee_id or '—' }}
+
+                            </p>
+
+                        </div>
+
+
+
+                        <button
+                            type="button"
+                            class="rr-modal-close"
+                            data-work-modal-close
+                            aria-label="Close"
+                        >
+                            <span aria-hidden="true">
+                                ×
+                            </span>
+                        </button>
+
+
+                    </header>
+
+
+
+                    <!-- =========================================
+                         REVIEW GRID
+                         ========================================= -->
+
+                    <div class="wir-review-layout">
+
+
+                        <!-- =====================================
+                             LEFT
+                             ===================================== -->
+
+                        <div class="wir-review-main">
+
+
+                            <!-- ===============================
+                                 SUMMARY
+                                 =============================== -->
+
+                            <section class="rr-review-card">
+
+
+                                <div class="rr-section-title">
+
+                                    <iconsax-icon
+                                        name="document-text"
+                                        type="bold"
+                                        size="20"
+                                        color="currentColor"
+                                    ></iconsax-icon>
+
+
+                                    <h3>
+                                        Request Summary
+                                    </h3>
+
+                                </div>
+
+
+
+                                <div class="wir-summary-grid">
+
+
+                                    <div class="wir-summary-item">
+
+                                        <span>
+                                            Employee
+                                        </span>
+
+                                        <strong>
+                                            {{ item.user.full_name }}
+                                        </strong>
+
+                                    </div>
+
+
+
+                                    <div class="wir-summary-item">
+
+                                        <span>
+                                            Employee ID
+                                        </span>
+
+                                        <strong>
+                                            {{ item.user.employee_id or '—' }}
+                                        </strong>
+
+                                    </div>
+
+
+
+                                    <div class="wir-summary-item">
+
+                                        <span>
+                                            Submitted
+                                        </span>
+
+                                        <strong>
+
+                                            {% if item.created_at %}
+
+                                                {{ item.created_at.strftime(
+                                                    "%d %b %Y, %H:%M"
+                                                ) }}
+
+                                            {% else %}
+
+                                                —
+
+                                            {% endif %}
+
+                                        </strong>
+
+                                    </div>
+
+
+
+                                    <div class="wir-summary-item">
+
+                                        <span>
+                                            Status
+                                        </span>
+
+                                        <strong>
+                                            {{ item.status|title }}
+                                        </strong>
+
+                                    </div>
+
+
+                                </div>
+
+
+                            </section>
+
+
+
+                            <!-- ===============================
+                                 REQUESTED CHANGES
+                                 =============================== -->
+
+                            <section class="rr-review-card">
+
+
+                                <div class="rr-section-title">
+
+                                    <iconsax-icon
+                                        name="edit-2"
+                                        type="bold"
+                                        size="20"
+                                        color="currentColor"
+                                    ></iconsax-icon>
+
+
+                                    <h3>
+                                        Requested Changes
+                                    </h3>
+
+                                </div>
+
+
+
+                                <div class="wir-change-list">
+
+
+                                    {% for label, old_value, new_value in item.changed_fields() %}
+
+
+                                        <div class="wir-change-row">
+
+
+                                            <div class="wir-change-label">
+                                                {{ label }}
+                                            </div>
+
+
+
+                                            <div class="wir-change-values">
+
+
+                                                <!-- CURRENT -->
+
+                                                <div class="wir-change-value">
+
+                                                    <span>
+                                                        Current
+                                                    </span>
+
+                                                    <strong>
+                                                        {{ old_value or '—' }}
+                                                    </strong>
+
+                                                </div>
+
+
+
+                                                <!-- ARROW -->
+
+                                                <div class="wir-change-arrow">
+                                                    →
+                                                </div>
+
+
+
+                                                <!-- REQUESTED -->
+
+                                                <div
+                                                    class="
+                                                        wir-change-value
+                                                        wir-change-value-requested
+                                                    "
+                                                >
+
+                                                    <span>
+                                                        Requested
+                                                    </span>
+
+                                                    <strong>
+                                                        {{ new_value or '—' }}
+                                                    </strong>
+
+                                                </div>
+
+
+                                            </div>
+
+
+                                        </div>
+
+
+                                    {% endfor %}
+
+
+                                </div>
+
+
+                            </section>
+
+
+                        </div>
+
+
+
+                        <!-- =====================================
+                             RIGHT SIDE
+                             ===================================== -->
+
+                        <div class="wir-review-side">
+
+
+                            {% if item.status == 'pending' %}
+
+
+                                <!-- ===========================
+                                     APPROVE
+                                     =========================== -->
+
+                                <section class="rr-review-card">
+
+
+                                    <div class="rr-section-title">
+
+                                        <iconsax-icon
+                                            name="tick-circle"
+                                            type="bold"
+                                            size="20"
+                                            color="currentColor"
+                                        ></iconsax-icon>
+
+
+                                        <h3>
+                                            Approve Request
+                                        </h3>
+
+                                    </div>
+
+
+
+                                    <p class="rr-help">
+
+                                        Approving this request will immediately apply the requested work information to the user's account.
+
+                                    </p>
+
+
+
+                                    <button
+                                        type="button"
+                                        class="
+                                            rr-btn
+                                            rr-btn-primary
+                                            wir-full-button
+                                        "
+                                        data-approve-open="{{ item.id }}"
+                                    >
+                                        Approve Request
+                                    </button>
+
+
+                                </section>
+
+
+
+                                <!-- ===========================
+                                     REJECT
+                                     =========================== -->
+
+                                <section class="rr-review-card">
+
+
+                                    <div class="rr-section-title">
+
+                                        <iconsax-icon
+                                            name="close-circle"
+                                            type="bold"
+                                            size="20"
+                                            color="currentColor"
+                                        ></iconsax-icon>
+
+
+                                        <h3>
+                                            Reject Request
+                                        </h3>
+
+                                    </div>
+
+
+
+                                    <form
+                                        method="POST"
+                                        action="{{ url_for(
+                                            'superadmin.reject_work_information_request',
+                                            request_id=item.id
+                                        ) }}"
+                                        data-reject-form
+                                    >
+
+
+                                        <input
+                                            type="hidden"
+                                            name="csrf_token"
+                                            value="{{ csrf_token() }}"
+                                        >
+
+
+
+                                        <textarea
+                                            name="reason"
+                                            class="rr-reason"
+                                            maxlength="1000"
+                                            placeholder="Enter rejection reason..."
+                                            data-rejection-reason
+                                        ></textarea>
+
+
+
+                                        <div class="rr-reason-meta">
+
+                                            <span>
+                                                A reason is required.
+                                            </span>
+
+
+                                            <span data-reason-count>
+                                                0 / 1000
+                                            </span>
+
+                                        </div>
+
+
+
+                                        <div class="rr-reject-action">
+
+                                            <button
+                                                type="submit"
+                                                class="
+                                                    rr-btn
+                                                    rr-btn-outline
+                                                "
+                                                data-reject-button
+                                                disabled
+                                            >
+                                                Reject Request
+                                            </button>
+
+                                        </div>
+
+
+                                    </form>
+
+
+                                </section>
+
+
+
+                                <!-- REAL APPROVE FORM -->
+
+                                <form
+                                    method="POST"
+                                    action="{{ url_for(
+                                        'superadmin.approve_work_information_request',
+                                        request_id=item.id
+                                    ) }}"
+                                    data-approve-form="{{ item.id }}"
+                                    hidden
+                                >
+
+                                    <input
+                                        type="hidden"
+                                        name="csrf_token"
+                                        value="{{ csrf_token() }}"
+                                    >
+
+                                </form>
+
+
+                            {% else %}
+
+
+                                <!-- ===========================
+                                     COMPLETED RESULT
+                                     =========================== -->
+
+                                <section class="rr-review-card rr-decision-card">
+
+
+                                    <div
+                                        class="
+                                            rr-review-status-pill
+
+                                            {% if item.status == 'approved' %}
+                                                rr-review-status-approved
+                                            {% else %}
+                                                rr-review-status-rejected
+                                            {% endif %}
+                                        "
+                                    >
+                                        {{ item.status|title }}
+                                    </div>
+
+
+
+                                    <div class="rr-decision-info">
+
+
+                                        <div>
+
+                                            <span>
+                                                Reviewed By
+                                            </span>
+
+                                            <strong>
+
+                                                {% if item.reviewed_by %}
+
+                                                    {{ item.reviewed_by.full_name }}
+
+                                                {% else %}
+
+                                                    —
+
+                                                {% endif %}
+
+                                            </strong>
+
+                                        </div>
+
+
+
+                                        <div>
+
+                                            <span>
+                                                Reviewed At
+                                            </span>
+
+                                            <strong>
+
+                                                {% if item.reviewed_at %}
+
+                                                    {{ item.reviewed_at.strftime(
+                                                        "%d %b %Y, %H:%M"
+                                                    ) }}
+
+                                                {% else %}
+
+                                                    —
+
+                                                {% endif %}
+
+                                            </strong>
+
+                                        </div>
+
+
+                                    </div>
+
+
+
+                                    {% if (
+                                        item.status == 'rejected'
+                                        and
+                                        item.rejection_reason
+                                    ) %}
+
+
+                                        <div class="rr-rejection-review">
+
+                                            <span>
+                                                Rejection Reason
+                                            </span>
+
+                                            <div>
+                                                {{ item.rejection_reason }}
+                                            </div>
+
+                                        </div>
+
+
+                                    {% endif %}
+
+
+                                </section>
+
+
+                            {% endif %}
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </section>
+
+
+            </div>
+
+
+        </div>
+
+
+    {% endfor %}
+
+
+
+    <!-- =====================================================
+         APPROVE CONFIRMATION
+         ===================================================== -->
+
+    <div
+        class="wir-confirm-backdrop"
+        data-approve-confirm
+        hidden
+    >
+
+
+        <div
+            class="wir-confirm-dialog"
+            role="dialog"
+            aria-modal="true"
+        >
+
+
+            <div class="wir-confirm-icon">
+
+                <iconsax-icon
+                    name="tick-circle"
+                    type="twotone"
+                    size="27"
+                    color="currentColor"
+                ></iconsax-icon>
+
+            </div>
+
+
+
+            <h3>
+                Approve this request?
+            </h3>
+
+
+
+            <p>
+                The requested work information will be applied to the user's account immediately.
+            </p>
+
+
+
+            <div class="wir-confirm-actions">
+
+
+                <button
+                    type="button"
+                    class="wir-confirm-cancel"
+                    data-approve-cancel
+                >
+                    Cancel
+                </button>
+
+
+
+                <button
+                    type="button"
+                    class="wir-confirm-approve"
+                    data-approve-confirm-button
+                >
+                    Approve Request
+                </button>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+{% endblock %}
+
+
+
+{% block extra_js %}
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/work_information_requests.js'
+    ) }}"
+    defer
+></script>
+
+{% endblock %}

@@ -1,0 +1,735 @@
+/* =========================================================
+   BIKA
+   WORK INFORMATION REQUESTS
+
+   IMPORTANT:
+   Shared page layout intentionally comes from:
+   registration_requests.css
+
+   DO NOT redefine:
+   - rr-page
+   - rr-page-head
+   - rr-status-tabs
+   - rr-status-tab
+   - rr-list-card
+   - rr-list-toolbar
+   - rr-search
+   - rr-table
+   - rr-review-button
+   - rr-list-footer
+   - rr-empty-state
+   - rr-modal
+   ========================================================= */
+
+
+/* =========================================================
+   TOOLBAR REQUEST COUNT
+   ========================================================= */
+
+.wir-request-total {
+    color:
+        var(--rr-muted);
+
+    font-size: 12.5px;
+
+    font-weight: 400;
+
+    white-space: nowrap;
+}
+
+
+.wir-request-total span {
+    color:
+        var(--rr-text);
+
+    font-weight: 500;
+}
+
+
+/* =========================================================
+   CHANGED FIELD PILL
+   ========================================================= */
+
+.wir-change-count {
+    min-width: 52px;
+
+    height: 28px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding:
+        0
+        10px;
+
+    border-radius: 999px;
+
+    background:
+        rgba(
+            116,
+            31,
+            46,
+            0.06
+        );
+
+    color:
+        var(--rr-brand);
+
+    font-size: 12.5px;
+
+    font-weight: 500;
+
+    line-height: 1;
+}
+
+
+/* =========================================================
+   TABLE STATUS
+   ========================================================= */
+
+.wir-table-status {
+    min-width: 78px;
+
+    height: 28px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 6px;
+
+    padding:
+        0
+        11px;
+
+    border-radius: 999px;
+
+    font-size: 12px;
+
+    font-weight: 500;
+
+    line-height: 1;
+}
+
+
+.wir-table-status-dot {
+    width: 5px;
+
+    height: 5px;
+
+    flex:
+        0
+        0
+        5px;
+
+    border-radius: 50%;
+
+    background:
+        currentColor;
+}
+
+
+.wir-table-status-pending {
+    color:
+        #A27322;
+
+    background:
+        rgba(
+            204,
+            157,
+            69,
+            0.12
+        );
+}
+
+
+.wir-table-status-approved {
+    color:
+        #62875B;
+
+    background:
+        rgba(
+            128,
+            163,
+            119,
+            0.13
+        );
+}
+
+
+.wir-table-status-rejected {
+    color:
+        #9D3F4D;
+
+    background:
+        rgba(
+            181,
+            72,
+            88,
+            0.09
+        );
+}
+
+
+/* =========================================================
+   EMPTY ICON
+   ========================================================= */
+
+.wir-empty-icon {
+    width: 42px;
+
+    height: 42px;
+
+    display: grid;
+
+    place-items: center;
+
+    margin:
+        0
+        auto
+        8px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(
+            116,
+            31,
+            46,
+            0.06
+        );
+
+    color:
+        var(--rr-brand);
+}
+
+
+.wir-empty-icon iconsax-icon {
+    width: 25px !important;
+
+    height: 25px !important;
+}
+
+
+/* =========================================================
+   REVIEW MODAL LAYOUT
+   ========================================================= */
+
+.wir-review-layout {
+    display: grid;
+
+    grid-template-columns:
+        minmax(
+            0,
+            1.08fr
+        )
+        minmax(
+            300px,
+            0.72fr
+        );
+
+    gap: 22px;
+}
+
+
+.wir-review-main,
+.wir-review-side {
+    min-width: 0;
+
+    display: grid;
+
+    align-content: start;
+
+    gap: 22px;
+}
+
+
+/* =========================================================
+   SUMMARY
+   ========================================================= */
+
+.wir-summary-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(
+                0,
+                1fr
+            )
+        );
+
+    gap: 10px;
+}
+
+
+.wir-summary-item {
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 4px;
+
+    padding:
+        11px
+        12px;
+
+    border:
+        1px solid
+        var(--rr-border);
+
+    border-radius: 8px;
+}
+
+
+.wir-summary-item span {
+    color:
+        var(--rr-muted);
+
+    font-size: 10px;
+
+    font-weight: 400;
+}
+
+
+.wir-summary-item strong {
+    overflow: hidden;
+
+    color:
+        var(--rr-text);
+
+    font-size: 11px;
+
+    font-weight: 500;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   REQUESTED CHANGE LIST
+   ========================================================= */
+
+.wir-change-list {
+    display: grid;
+
+    gap: 10px;
+}
+
+
+.wir-change-row {
+    padding:
+        11px
+        12px;
+
+    border:
+        1px solid
+        var(--rr-border);
+
+    border-radius: 9px;
+}
+
+
+.wir-change-label {
+    margin-bottom: 8px;
+
+    color:
+        var(--rr-text);
+
+    font-size: 11.5px;
+
+    font-weight: 600;
+}
+
+
+.wir-change-values {
+    display: grid;
+
+    grid-template-columns:
+        minmax(
+            0,
+            1fr
+        )
+        30px
+        minmax(
+            0,
+            1fr
+        );
+
+    align-items: center;
+
+    gap: 8px;
+}
+
+
+.wir-change-value {
+    min-width: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 4px;
+
+    padding:
+        9px
+        11px;
+
+    border-radius: 8px;
+
+    background:
+        rgba(
+            225,
+            225,
+            225,
+            0.48
+        );
+}
+
+
+.wir-change-value span {
+    color:
+        var(--rr-muted);
+
+    font-size: 9.5px;
+
+    font-weight: 400;
+}
+
+
+.wir-change-value strong {
+    overflow: hidden;
+
+    color:
+        var(--rr-text);
+
+    font-size: 11px;
+
+    font-weight: 500;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+
+.wir-change-value-requested {
+    background:
+        rgba(
+            116,
+            31,
+            46,
+            0.055
+        );
+}
+
+
+.wir-change-value-requested strong {
+    color:
+        var(--rr-brand);
+
+    font-weight: 600;
+}
+
+
+.wir-change-arrow {
+    color:
+        var(--rr-muted);
+
+    font-size: 15px;
+
+    text-align: center;
+}
+
+
+/* =========================================================
+   APPROVE CARD BUTTON
+   ========================================================= */
+
+.wir-full-button {
+    width: 100%;
+
+    margin-top: 12px;
+}
+
+
+/* =========================================================
+   CONFIRM APPROVAL BACKDROP
+   ========================================================= */
+
+.wir-confirm-backdrop {
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 1900;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 24px;
+
+    background:
+        var(--rr-backdrop);
+
+    backdrop-filter:
+        blur(8px);
+
+    -webkit-backdrop-filter:
+        blur(8px);
+}
+
+
+.wir-confirm-backdrop[hidden] {
+    display: none;
+}
+
+
+/* =========================================================
+   CONFIRM DIALOG
+   ========================================================= */
+
+.wir-confirm-dialog {
+    width:
+        min(
+            420px,
+            calc(
+                100vw
+                -
+                40px
+            )
+        );
+
+    padding:
+        27px;
+
+    border-radius: 17px;
+
+    background:
+        var(--rr-surface);
+
+    box-shadow:
+        var(--rr-shadow);
+
+    color:
+        var(--rr-text);
+
+    font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
+    text-align: center;
+}
+
+
+.wir-confirm-icon {
+    width: 48px;
+
+    height: 48px;
+
+    display: grid;
+
+    place-items: center;
+
+    margin:
+        0
+        auto
+        13px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(
+            116,
+            31,
+            46,
+            0.07
+        );
+
+    color:
+        var(--rr-brand);
+}
+
+
+.wir-confirm-dialog h3 {
+    margin: 0;
+
+    color:
+        var(--rr-text);
+
+    font-size: 17px;
+
+    font-weight: 600;
+}
+
+
+.wir-confirm-dialog p {
+    margin:
+        8px
+        0
+        21px;
+
+    color:
+        var(--rr-muted);
+
+    font-size: 11px;
+
+    line-height: 1.5;
+}
+
+
+.wir-confirm-actions {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(
+                0,
+                1fr
+            )
+        );
+
+    gap: 9px;
+}
+
+
+.wir-confirm-cancel,
+.wir-confirm-approve {
+    height: 38px;
+
+    border-radius: 999px;
+
+    font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
+    font-size: 11px;
+
+    font-weight: 500;
+
+    cursor: pointer;
+}
+
+
+.wir-confirm-cancel {
+    border:
+        1px solid
+        var(--rr-border);
+
+    background:
+        transparent;
+
+    color:
+        var(--rr-text);
+}
+
+
+.wir-confirm-approve {
+    border:
+        1px solid
+        var(--rr-brand);
+
+    background:
+        var(--rr-brand);
+
+    color:
+        #FFFFFF;
+}
+
+
+.wir-confirm-approve:hover {
+    background:
+        var(--rr-brand-dark);
+
+    border-color:
+        var(--rr-brand-dark);
+}
+
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme="dark"]
+.wir-change-value {
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.05
+        );
+}
+
+
+html[data-theme="dark"]
+.wir-change-value-requested {
+    background:
+        rgba(
+            116,
+            31,
+            46,
+            0.20
+        );
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (
+    max-width: 1000px
+) {
+
+    .wir-review-layout {
+        grid-template-columns:
+            1fr;
+    }
+
+}
+
+
+@media (
+    max-width: 760px
+) {
+
+    .wir-request-total {
+        display: none;
+    }
+
+
+    .wir-summary-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .wir-change-values {
+        grid-template-columns:
+            1fr;
+    }
+
+
+    .wir-change-arrow {
+        transform:
+            rotate(90deg);
+    }
+
+}
