@@ -4023,3 +4023,1358 @@ html[data-theme="dark"]
     min-height: 62px;
 
 }
+
+/* =========================================================
+   SYSTEM USER EDIT MODAL
+   ========================================================= */
+
+.system-user-modal-backdrop,
+.system-user-confirm-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 5200;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+
+    background: rgba(22, 22, 22, 0.36);
+
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.system-user-modal-backdrop[hidden],
+.system-user-confirm-backdrop[hidden] {
+    display: none;
+}
+
+
+/* =========================================================
+   MAIN MODAL
+   ========================================================= */
+
+.system-user-modal {
+    width: min(760px, 100%);
+    max-height: min(88vh, 820px);
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.58);
+
+    border-radius: 22px;
+
+    background: #FFFFFF;
+
+    box-shadow:
+        0 28px 72px
+        rgba(0, 0, 0, 0.18);
+
+    color: #242424;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.system-user-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding:
+        21px
+        24px
+        16px;
+
+    border-bottom:
+        1px solid
+        #EEEEEE;
+}
+
+.system-user-modal-header h2 {
+    margin: 0;
+
+    color: #242424;
+
+    font-size: 21px;
+    font-weight: 650;
+    line-height: 1.2;
+}
+
+.system-user-modal-header p {
+    margin:
+        5px
+        0
+        0;
+
+    color: #898989;
+
+    font-size: 12.5px;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+.system-user-modal-close {
+    width: 30px;
+    height: 30px;
+
+    display: grid;
+    place-items: center;
+
+    flex: 0 0 30px;
+
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+
+    color: #777777;
+
+    font-family:
+        Arial,
+        sans-serif;
+
+    font-size: 25px;
+    font-weight: 300;
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+.system-user-modal-close:hover {
+    color: #741F2E;
+}
+
+
+/* =========================================================
+   LOADING / CONTENT
+   ========================================================= */
+
+.system-user-modal-loading {
+    min-height: 220px;
+
+    display: grid;
+    place-items: center;
+
+    padding: 30px;
+
+    color: #8C8C8C;
+
+    font-size: 13px;
+}
+
+.system-user-modal-content {
+    overflow-y: auto;
+
+    padding:
+        20px
+        24px
+        4px;
+}
+
+
+/* =========================================================
+   IDENTITY
+   ========================================================= */
+
+.system-user-modal-identity {
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    margin-bottom: 18px;
+}
+
+.system-user-modal-avatar {
+    width: 54px;
+    height: 54px;
+
+    display: grid;
+    place-items: center;
+
+    flex: 0 0 54px;
+
+    overflow: hidden;
+
+    border-radius: 50%;
+
+    background:
+        rgba(
+            116,
+            31,
+            46,
+            0.08
+        );
+
+    color: #741F2E;
+
+    font-size: 15px;
+    font-weight: 650;
+}
+
+.system-user-modal-avatar img {
+    width: 100%;
+    height: 100%;
+
+    display: block;
+
+    object-fit: cover;
+}
+
+.system-user-modal-identity-copy {
+    min-width: 0;
+
+    display: grid;
+
+    gap: 2px;
+}
+
+.system-user-modal-identity-copy strong {
+    color: #242424;
+
+    font-size: 17px;
+    font-weight: 650;
+    line-height: 1.3;
+}
+
+.system-user-modal-identity-copy span {
+    color: #666666;
+
+    font-size: 12.5px;
+    font-weight: 400;
+}
+
+.system-user-modal-identity-copy small {
+    color: #9A9A9A;
+
+    font-size: 11.5px;
+    font-weight: 400;
+}
+
+
+/* =========================================================
+   MODAL SECTIONS
+   ========================================================= */
+
+.system-user-modal-section {
+    padding:
+        17px
+        0;
+
+    border-top:
+        1px solid
+        #EEEEEE;
+}
+
+.system-user-modal-section-heading {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 9px;
+
+    margin-bottom: 14px;
+
+    color: #5B5B5B;
+}
+
+.system-user-modal-section-heading > iconsax-icon {
+    flex: 0 0 auto;
+
+    margin-top: 1px;
+}
+
+.system-user-modal-section-heading h3 {
+    margin: 0;
+
+    color: #333333;
+
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.system-user-modal-section-heading p {
+    margin:
+        3px
+        0
+        0;
+
+    color: #9A9A9A;
+
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+
+/* =========================================================
+   READONLY INFORMATION
+   ========================================================= */
+
+.system-user-modal-info-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            3,
+            minmax(
+                0,
+                1fr
+            )
+        );
+
+    gap: 11px;
+}
+
+.system-user-readonly-field {
+    min-width: 0;
+
+    display: grid;
+
+    gap: 6px;
+}
+
+.system-user-readonly-field > span {
+    color: #7A7A7A;
+
+    font-size: 11px;
+    font-weight: 500;
+}
+
+.system-user-readonly-field > strong {
+    min-height: 37px;
+
+    display: flex;
+    align-items: center;
+
+    overflow: hidden;
+
+    padding:
+        0
+        12px;
+
+    border:
+        1px solid
+        #E4E4E4;
+
+    border-radius: 11px;
+
+    background: #FAFAFA;
+
+    color: #454545;
+
+    font-size: 12px;
+    font-weight: 500;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   ACCESS CONTROL
+   ========================================================= */
+
+.system-user-access-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(
+                0,
+                1fr
+            )
+        );
+
+    gap: 15px;
+}
+
+.system-user-access-field {
+    min-width: 0;
+
+    display: grid;
+
+    gap: 7px;
+}
+
+.system-user-access-field > span {
+    color: #666666;
+
+    font-size: 11.5px;
+    font-weight: 500;
+}
+
+.system-user-select-wrap {
+    position: relative;
+}
+
+.system-user-select-wrap::after {
+    content: "";
+
+    position: absolute;
+
+    top: 50%;
+    right: 15px;
+
+    width: 7px;
+    height: 7px;
+
+    border-right:
+        1.5px solid
+        #8C8C8C;
+
+    border-bottom:
+        1.5px solid
+        #8C8C8C;
+
+    pointer-events: none;
+
+    transform:
+        translateY(-70%)
+        rotate(45deg);
+}
+
+.system-user-select-wrap select {
+    width: 100%;
+    height: 39px;
+
+    padding:
+        0
+        38px
+        0
+        13px;
+
+    border:
+        1px solid
+        #DEDEDE;
+
+    border-radius: 11px;
+
+    outline: 0;
+
+    appearance: none;
+    -webkit-appearance: none;
+
+    background: #FFFFFF;
+
+    color: #333333;
+
+    font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
+    font-size: 12.5px;
+    font-weight: 500;
+
+    cursor: pointer;
+}
+
+.system-user-select-wrap select:focus {
+    border-color:
+        rgba(
+            116,
+            31,
+            46,
+            0.42
+        );
+
+    box-shadow:
+        0 0 0 3px
+        rgba(
+            116,
+            31,
+            46,
+            0.06
+        );
+}
+
+.system-user-select-wrap select:disabled {
+    cursor: not-allowed;
+
+    background: #F3F3F3;
+
+    color: #8D8D8D;
+}
+
+.system-user-field-help {
+    min-height: 16px;
+
+    color: #969696;
+
+    font-size: 10.5px;
+    font-weight: 400;
+    line-height: 1.35;
+}
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.system-user-status-control {
+    min-height: 39px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    padding:
+        5px
+        6px
+        5px
+        11px;
+
+    border:
+        1px solid
+        #DEDEDE;
+
+    border-radius: 11px;
+
+    background: #FFFFFF;
+}
+
+.system-user-status-badge {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 6px;
+
+    color: #666666;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.system-user-status-badge::before {
+    content: "";
+
+    width: 7px;
+    height: 7px;
+
+    flex: 0 0 7px;
+
+    border-radius: 50%;
+
+    background: #A7A7A7;
+}
+
+.system-user-status-badge.is-active {
+    color: #6F9968;
+}
+
+.system-user-status-badge.is-active::before {
+    background: #7DA775;
+}
+
+.system-user-status-badge.is-disabled {
+    color: #9A7B4B;
+}
+
+.system-user-status-badge.is-disabled::before {
+    background: #C29A60;
+}
+
+.system-user-status-badge.is-locked {
+    color: #B55C6E;
+}
+
+.system-user-status-badge.is-locked::before {
+    background: #C9687A;
+}
+
+.system-user-status-badge.is-pending {
+    color: #8B7A5A;
+}
+
+.system-user-status-badge.is-pending::before {
+    background: #B9A06F;
+}
+
+.system-user-status-action {
+    min-height: 29px;
+
+    padding:
+        0
+        12px;
+
+    border:
+        1px solid
+        rgba(
+            116,
+            31,
+            46,
+            0.32
+        );
+
+    border-radius: 999px;
+
+    background: #FFFFFF;
+
+    color: #741F2E;
+
+    font-family:
+        "Inter",
+        sans-serif;
+
+    font-size: 10.5px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.system-user-status-action:hover {
+    background:
+        rgba(
+            116,
+            31,
+            46,
+            0.05
+        );
+}
+
+.system-user-status-action.is-positive {
+    border-color:
+        rgba(
+            91,
+            136,
+            82,
+            0.34
+        );
+
+    color: #66885F;
+}
+
+.system-user-status-action.is-undo {
+    border-color: #D8D8D8;
+
+    color: #666666;
+}
+
+.system-user-status-action:disabled {
+    opacity: 0.5;
+
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   SELF PROTECTION
+   ========================================================= */
+
+.system-user-self-protection {
+    margin-top: 14px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+
+    padding:
+        10px
+        12px;
+
+    border:
+        1px solid
+        rgba(
+            116,
+            31,
+            46,
+            0.10
+        );
+
+    border-radius: 10px;
+
+    background:
+        rgba(
+            116,
+            31,
+            46,
+            0.045
+        );
+
+    color: #741F2E;
+
+    font-size: 10.8px;
+    font-weight: 500;
+}
+
+.system-user-self-protection[hidden] {
+    display: none;
+}
+
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+
+.system-user-modal-error {
+    min-height: 18px;
+
+    margin:
+        3px
+        0
+        8px;
+
+    color: #C43F51;
+
+    font-size: 11.5px;
+    font-weight: 500;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.system-user-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    padding:
+        14px
+        24px
+        20px;
+
+    border-top:
+        1px solid
+        #EEEEEE;
+}
+
+.system-user-modal-button {
+    min-width: 104px;
+    height: 35px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding:
+        0
+        17px;
+
+    border-radius: 999px;
+
+    font-family:
+        "Inter",
+        sans-serif;
+
+    font-size: 11.5px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+.system-user-modal-button-secondary {
+    border:
+        1px solid
+        #DCDCDC;
+
+    background: #FFFFFF;
+
+    color: #5A5A5A;
+}
+
+.system-user-modal-button-primary {
+    border:
+        1px solid
+        #741F2E;
+
+    background: #741F2E;
+
+    color: #FFFFFF;
+}
+
+.system-user-modal-button-primary:hover:not(:disabled) {
+    border-color: #5E1825;
+
+    background: #5E1825;
+}
+
+.system-user-modal-button:disabled {
+    opacity: 0.5;
+
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   CONFIRMATION
+   ========================================================= */
+
+.system-user-confirm-backdrop {
+    z-index: 5300;
+}
+
+.system-user-confirm {
+    width: min(390px, 100%);
+
+    padding:
+        24px;
+
+    border:
+        1px solid
+        rgba(
+            255,
+            255,
+            255,
+            0.58
+        );
+
+    border-radius: 20px;
+
+    background: #FFFFFF;
+
+    box-shadow:
+        0 26px 68px
+        rgba(
+            0,
+            0,
+            0,
+            0.19
+        );
+
+    text-align: center;
+}
+
+.system-user-confirm-icon {
+    width: 50px;
+    height: 50px;
+
+    display: grid;
+    place-items: center;
+
+    margin:
+        0
+        auto
+        12px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(
+            116,
+            31,
+            46,
+            0.07
+        );
+
+    color: #741F2E;
+}
+
+.system-user-confirm h2 {
+    margin: 0;
+
+    color: #242424;
+
+    font-size: 18px;
+    font-weight: 650;
+}
+
+.system-user-confirm p {
+    margin:
+        8px
+        auto
+        18px;
+
+    max-width: 310px;
+
+    color: #858585;
+
+    font-size: 11.8px;
+    font-weight: 400;
+    line-height: 1.55;
+}
+
+/* =========================================================
+   SUPERADMIN PASSWORD VERIFICATION
+   ========================================================= */
+
+.system-user-confirm-password {
+    margin:
+        18px
+        0
+        20px;
+
+    text-align: left;
+}
+
+.system-user-confirm-password[hidden] {
+    display: none !important;
+}
+
+.system-user-confirm-security-note {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 10px;
+
+    margin-bottom: 15px;
+
+    padding:
+        12px
+        13px;
+
+    border:
+        1px solid
+        rgba(
+            116,
+            31,
+            46,
+            0.12
+        );
+
+    border-radius: 12px;
+
+    background:
+        rgba(
+            116,
+            31,
+            46,
+            0.045
+        );
+
+    color: #741F2E;
+}
+
+.system-user-confirm-security-note iconsax-icon {
+    flex: 0 0 auto;
+
+    margin-top: 1px;
+}
+
+.system-user-confirm-security-note div {
+    min-width: 0;
+}
+
+.system-user-confirm-security-note strong {
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: #4A252B;
+
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.system-user-confirm-security-note span {
+    display: block;
+
+    color: #8A7478;
+
+    font-size: 10.8px;
+    font-weight: 400;
+    line-height: 1.45;
+}
+
+.system-user-confirm-password-field {
+    display: block;
+}
+
+.system-user-confirm-password-field > span {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #555555;
+
+    font-size: 11.5px;
+    font-weight: 550;
+}
+
+.system-user-confirm-password-input-wrap {
+    width: 100%;
+    min-height: 44px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    padding:
+        0
+        12px;
+
+    border:
+        1px solid
+        #DEDEDE;
+
+    border-radius: 12px;
+
+    background: #FFFFFF;
+
+    transition:
+        border-color 160ms ease,
+        box-shadow 160ms ease,
+        background 160ms ease;
+}
+
+.system-user-confirm-password-input-wrap:focus-within {
+    border-color:
+        rgba(
+            116,
+            31,
+            46,
+            0.55
+        );
+
+    box-shadow:
+        0
+        0
+        0
+        3px
+        rgba(
+            116,
+            31,
+            46,
+            0.07
+        );
+}
+
+.system-user-confirm-password-input-wrap > iconsax-icon {
+    flex: 0 0 auto;
+
+    color: #969696;
+}
+
+.system-user-confirm-password-input-wrap input {
+    min-width: 0;
+    flex: 1;
+
+    border: 0;
+    outline: 0;
+
+    background: transparent;
+
+    color: #333333;
+
+    font: inherit;
+    font-size: 12px;
+}
+
+.system-user-confirm-password-input-wrap input::placeholder {
+    color: #AAAAAA;
+}
+
+.system-user-confirm-password-toggle {
+    width: 30px;
+    height: 30px;
+
+    flex: 0 0 auto;
+
+    display: grid;
+    place-items: center;
+
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+
+    color: #969696;
+
+    cursor: pointer;
+
+    border-radius: 8px;
+}
+
+.system-user-confirm-password-toggle:hover {
+    background:
+        rgba(
+            0,
+            0,
+            0,
+            0.045
+        );
+
+    color: #741F2E;
+}
+
+.system-user-confirm-password-error {
+    min-height: 16px;
+
+    margin-top: 6px;
+
+    color: #B43B4B;
+
+    font-size: 10.5px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.system-user-confirm-actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+}
+
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme="dark"]
+.system-user-modal,
+html[data-theme="dark"]
+.system-user-confirm {
+    border-color:
+        rgba(
+            255,
+            255,
+            255,
+            0.09
+        );
+
+    background: #242426;
+
+    color: #F2F2F2;
+}
+
+html[data-theme="dark"]
+.system-user-modal-header,
+html[data-theme="dark"]
+.system-user-modal-footer,
+html[data-theme="dark"]
+.system-user-modal-section {
+    border-color:
+        rgba(
+            255,
+            255,
+            255,
+            0.08
+        );
+}
+
+html[data-theme="dark"]
+.system-user-modal-header h2,
+html[data-theme="dark"]
+.system-user-modal-identity-copy strong,
+html[data-theme="dark"]
+.system-user-modal-section-heading h3,
+html[data-theme="dark"]
+.system-user-confirm h2 {
+    color: #F4F4F4;
+}
+
+html[data-theme="dark"]
+.system-user-modal-header p,
+html[data-theme="dark"]
+.system-user-modal-identity-copy span,
+html[data-theme="dark"]
+.system-user-modal-identity-copy small,
+html[data-theme="dark"]
+.system-user-modal-section-heading p,
+html[data-theme="dark"]
+.system-user-field-help,
+html[data-theme="dark"]
+.system-user-confirm p {
+    color: #A7A7A7;
+}
+
+html[data-theme="dark"]
+.system-user-readonly-field > strong,
+html[data-theme="dark"]
+.system-user-select-wrap select,
+html[data-theme="dark"]
+.system-user-status-control {
+    border-color:
+        rgba(
+            255,
+            255,
+            255,
+            0.09
+        );
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.045
+        );
+
+    color: #EEEEEE;
+}
+
+html[data-theme="dark"]
+.system-user-select-wrap select:disabled {
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.025
+        );
+
+    color: #8F8F8F;
+}
+
+html[data-theme="dark"]
+.system-user-status-action,
+html[data-theme="dark"]
+.system-user-modal-button-secondary {
+    border-color:
+        rgba(
+            255,
+            255,
+            255,
+            0.12
+        );
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.04
+        );
+
+    color: #E9E9E9;
+}
+
+
+html[data-theme="dark"]
+.system-user-confirm-security-note {
+    border-color:
+        rgba(
+            255,
+            255,
+            255,
+            0.08
+        );
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.045
+        );
+}
+
+html[data-theme="dark"]
+.system-user-confirm-security-note strong {
+    color: #F0E6E8;
+}
+
+html[data-theme="dark"]
+.system-user-confirm-security-note span {
+    color: #AFA2A5;
+}
+
+html[data-theme="dark"]
+.system-user-confirm-password-field > span {
+    color: #C7C7C7;
+}
+
+html[data-theme="dark"]
+.system-user-confirm-password-input-wrap {
+    border-color:
+        rgba(
+            255,
+            255,
+            255,
+            0.09
+        );
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.045
+        );
+}
+
+html[data-theme="dark"]
+.system-user-confirm-password-input-wrap input {
+    color: #F1F1F1;
+}
+
+html[data-theme="dark"]
+.system-user-confirm-password-input-wrap input::placeholder {
+    color: #7E7E7E;
+}
+
+html[data-theme="dark"]
+.system-user-confirm-password-toggle {
+    color: #999999;
+}
+
+html[data-theme="dark"]
+.system-user-confirm-password-toggle:hover {
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.06
+        );
+
+    color: #F0DDE1;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 720px) {
+
+    .system-user-modal-backdrop,
+    .system-user-confirm-backdrop {
+        padding: 14px;
+    }
+
+    .system-user-modal {
+        max-height: 92vh;
+
+        border-radius: 18px;
+    }
+
+    .system-user-modal-info-grid,
+    .system-user-access-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .system-user-modal-header,
+    .system-user-modal-content,
+    .system-user-modal-footer {
+        padding-left: 17px;
+        padding-right: 17px;
+    }
+
+}
+
+/* =========================================================
+   SYSTEM USER EDIT MODAL
+   FIX HIDDEN STATES
+   ========================================================= */
+
+.system-user-modal-loading[hidden],
+.system-user-modal-content[hidden],
+.system-user-confirm-backdrop[hidden] {
+    display: none !important;
+}

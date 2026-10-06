@@ -1371,6 +1371,2071 @@
     );
 
 
+
+    /* =====================================================
+       USER EDIT MODAL
+       ===================================================== */
+
+    const editButtons =
+        Array.from(
+            page.querySelectorAll(
+                "[data-system-edit-user]"
+            )
+        );
+
+
+    const userModal =
+        page.querySelector(
+            "[data-system-user-modal]"
+        );
+
+
+    const userModalCloseButtons =
+        Array.from(
+            page.querySelectorAll(
+                "[data-system-user-modal-close]"
+            )
+        );
+
+
+    const userModalLoading =
+        page.querySelector(
+            "[data-system-user-modal-loading]"
+        );
+
+
+    const userModalContent =
+        page.querySelector(
+            "[data-system-user-modal-content]"
+        );
+
+
+    const userModalError =
+        page.querySelector(
+            "[data-system-user-modal-error]"
+        );
+
+
+    const editAvatar =
+        page.querySelector(
+            "[data-system-edit-avatar]"
+        );
+
+
+    const editInitials =
+        page.querySelector(
+            "[data-system-edit-initials]"
+        );
+
+
+    const editName =
+        page.querySelector(
+            "[data-system-edit-name]"
+        );
+
+
+    const editEmail =
+        page.querySelector(
+            "[data-system-edit-email]"
+        );
+
+
+    const editUsername =
+        page.querySelector(
+            "[data-system-edit-username]"
+        );
+
+
+    const editReadonlyName =
+        page.querySelector(
+            "[data-system-edit-readonly-name]"
+        );
+
+
+    const editEmployeeId =
+        page.querySelector(
+            "[data-system-edit-employee-id]"
+        );
+
+
+    const editPhone =
+        page.querySelector(
+            "[data-system-edit-phone]"
+        );
+
+
+    const editDepartment =
+        page.querySelector(
+            "[data-system-edit-department]"
+        );
+
+
+    const editJobTitle =
+        page.querySelector(
+            "[data-system-edit-job-title]"
+        );
+
+
+    const editShift =
+        page.querySelector(
+            "[data-system-edit-shift]"
+        );
+
+
+    const editRole =
+        page.querySelector(
+            "[data-system-edit-role]"
+        );
+
+
+    const editRoleHelp =
+        page.querySelector(
+            "[data-system-edit-role-help]"
+        );
+
+
+    const editStatusBadge =
+        page.querySelector(
+            "[data-system-edit-status-badge]"
+        );
+
+
+    const editStatusAction =
+        page.querySelector(
+            "[data-system-edit-status-action]"
+        );
+
+
+    const editStatusHelp =
+        page.querySelector(
+            "[data-system-edit-status-help]"
+        );
+
+
+    const editProtection =
+        page.querySelector(
+            "[data-system-edit-protection]"
+        );
+
+
+    const editSaveButton =
+        page.querySelector(
+            "[data-system-user-save]"
+        );
+
+
+    const userConfirm =
+        page.querySelector(
+            "[data-system-user-confirm]"
+        );
+
+
+    const userConfirmMessage =
+        page.querySelector(
+            "[data-system-user-confirm-message]"
+        );
+
+
+    const userConfirmCancel =
+        page.querySelector(
+            "[data-system-user-confirm-cancel]"
+        );
+
+
+    const userConfirmSave =
+        page.querySelector(
+            "[data-system-user-confirm-save]"
+        );
+
+
+    const userConfirmTitle =
+        page.querySelector(
+            "[data-system-user-confirm-title]"
+        );
+
+
+    const userConfirmPasswordWrap =
+        page.querySelector(
+            "[data-system-user-confirm-password-wrap]"
+        );
+
+
+    const userConfirmPassword =
+        page.querySelector(
+            "[data-system-user-confirm-password]"
+        );
+
+
+    const userConfirmPasswordToggle =
+        page.querySelector(
+            "[data-system-user-confirm-password-toggle]"
+        );
+
+
+    const userConfirmPasswordEye =
+        page.querySelector(
+            "[data-system-user-confirm-password-eye]"
+        );
+
+
+    const userConfirmPasswordError =
+        page.querySelector(
+            "[data-system-user-confirm-password-error]"
+        );
+
+
+    let activeEditButton = null;
+
+    let activeUserData = null;
+
+    let originalRole = "";
+
+    let pendingStatusAction = "none";
+
+    let editBusy = false;
+
+
+    /* =====================================================
+       USER EDIT HELPERS
+       ===================================================== */
+
+    function getCsrfToken() {
+
+        return (
+            document.querySelector(
+                'meta[name="csrf-token"]'
+            )
+            ?.content
+            ||
+            ""
+        );
+
+    }
+
+
+    function setUserModalError(
+        message = ""
+    ) {
+
+        if (
+            userModalError
+        ) {
+
+            userModalError.textContent =
+                message;
+
+        }
+
+    }
+
+
+    function displayValue(
+        value
+    ) {
+
+        const text =
+            String(
+                value
+                ??
+                ""
+            )
+                .trim();
+
+
+        return (
+            text
+            ||
+            "—"
+        );
+
+    }
+
+
+    function setText(
+        element,
+        value
+    ) {
+
+        if (!element) {
+            return;
+        }
+
+
+        element.textContent =
+            displayValue(
+                value
+            );
+
+    }
+
+
+    function statusDestination(
+        status,
+        action
+    ) {
+
+        if (
+            action === "disable"
+        ) {
+            return "disabled";
+        }
+
+
+        if (
+            action === "reactivate"
+            ||
+            action === "unlock"
+        ) {
+            return "active";
+        }
+
+
+        return status;
+
+    }
+
+
+    function statusLabel(
+        status
+    ) {
+
+        const labels = {
+
+            active:
+                "Active",
+
+            disabled:
+                "Disabled",
+
+            locked:
+                "Locked",
+
+            pending:
+                "Pending",
+
+            rejected:
+                "Rejected"
+
+        };
+
+
+        return (
+            labels[status]
+            ||
+            String(
+                status
+                ||
+                "Unknown"
+            )
+                .replace(
+                    /_/g,
+                    " "
+                )
+                .replace(
+                    /\b\w/g,
+                    (
+                        character
+                    ) => {
+
+                        return character
+                            .toUpperCase();
+
+                    }
+                )
+        );
+
+    }
+
+
+    function actionForStatus(
+        status
+    ) {
+
+        if (
+            status === "active"
+        ) {
+
+            return {
+                action:
+                    "disable",
+
+                label:
+                    "Disable Account",
+
+                help:
+                    "Disables login access while keeping the account and history."
+            };
+
+        }
+
+
+        if (
+            status === "disabled"
+        ) {
+
+            return {
+                action:
+                    "reactivate",
+
+                label:
+                    "Reactivate Account",
+
+                help:
+                    "Restores login access for this account."
+            };
+
+        }
+
+
+        if (
+            status === "locked"
+        ) {
+
+            return {
+                action:
+                    "unlock",
+
+                label:
+                    "Unlock Account",
+
+                help:
+                    "Clears the security lock and restores login access."
+            };
+
+        }
+
+
+        return {
+            action:
+                "none",
+
+            label:
+                "Managed elsewhere",
+
+            help:
+                "This status is controlled by the registration workflow."
+        };
+
+    }
+
+
+    function renderEditAvatar(
+        data
+    ) {
+
+        if (!editAvatar) {
+            return;
+        }
+
+
+        editAvatar.innerHTML =
+            "";
+
+
+        if (
+            data.profile_photo_url
+        ) {
+
+            const image =
+                document.createElement(
+                    "img"
+                );
+
+
+            image.src =
+                data.profile_photo_url;
+
+
+            image.alt =
+                "";
+
+
+            editAvatar.appendChild(
+                image
+            );
+
+
+            return;
+
+        }
+
+
+        const initials =
+            document.createElement(
+                "span"
+            );
+
+
+        initials.textContent =
+            data.initials
+            ||
+            "U";
+
+
+        editAvatar.appendChild(
+            initials
+        );
+
+    }
+
+
+    function updateStatusControl() {
+
+        if (
+            !activeUserData
+            ||
+            !editStatusBadge
+            ||
+            !editStatusAction
+        ) {
+            return;
+        }
+
+
+        const destination =
+            statusDestination(
+                activeUserData.status,
+                pendingStatusAction
+            );
+
+
+        editStatusBadge.textContent =
+            statusLabel(
+                destination
+            );
+
+
+        editStatusBadge.className =
+            (
+                "system-user-status-badge "
+                +
+                `is-${destination}`
+            );
+
+
+        editStatusAction.classList.remove(
+            "is-positive",
+            "is-undo"
+        );
+
+
+        if (
+            !activeUserData.can_change_status
+        ) {
+
+            editStatusAction.disabled =
+                true;
+
+
+            editStatusAction.textContent =
+                "Protected";
+
+
+            if (
+                editStatusHelp
+            ) {
+
+                editStatusHelp.textContent =
+                    (
+                        activeUserData.status_help
+                        ||
+                        "This account status cannot be changed here."
+                    );
+
+            }
+
+
+            return;
+
+        }
+
+
+        if (
+            pendingStatusAction
+            !==
+            "none"
+        ) {
+
+            editStatusAction.disabled =
+                false;
+
+
+            editStatusAction.textContent =
+                "Undo Status Change";
+
+
+            editStatusAction.classList.add(
+                "is-undo"
+            );
+
+
+            if (
+                editStatusHelp
+            ) {
+
+                editStatusHelp.textContent =
+                    (
+                        "This status change will be applied "
+                        +
+                        "after Save Changes."
+                    );
+
+            }
+
+
+            return;
+
+        }
+
+
+        const config =
+            actionForStatus(
+                activeUserData.status
+            );
+
+
+        editStatusAction.textContent =
+            config.label;
+
+
+        editStatusAction.disabled =
+            (
+                config.action
+                ===
+                "none"
+            );
+
+
+        if (
+            config.action === "reactivate"
+            ||
+            config.action === "unlock"
+        ) {
+
+            editStatusAction.classList.add(
+                "is-positive"
+            );
+
+        }
+
+
+        if (
+            editStatusHelp
+        ) {
+
+            editStatusHelp.textContent =
+                config.help;
+
+        }
+
+    }
+
+
+    function hasEditChanges() {
+
+        if (
+            !activeUserData
+        ) {
+            return false;
+        }
+
+
+        const roleChanged =
+            (
+                editRole
+                &&
+                editRole.value
+                !==
+                originalRole
+            );
+
+
+        const statusChanged =
+            (
+                pendingStatusAction
+                !==
+                "none"
+            );
+
+
+        return (
+            roleChanged
+            ||
+            statusChanged
+        );
+
+    }
+
+
+    function updateEditSaveState() {
+
+        if (!editSaveButton) {
+            return;
+        }
+
+
+        editSaveButton.disabled =
+            (
+                editBusy
+                ||
+                !hasEditChanges()
+            );
+
+    }
+
+
+    function fillUserModal(
+        data
+    ) {
+
+        activeUserData =
+            data;
+
+
+        originalRole =
+            data.role
+            ||
+            "user";
+
+
+        pendingStatusAction =
+            "none";
+
+
+        renderEditAvatar(
+            data
+        );
+
+
+        setText(
+            editName,
+            data.name
+        );
+
+
+        setText(
+            editEmail,
+            data.email
+        );
+
+
+        if (
+            editUsername
+        ) {
+
+            editUsername.textContent =
+                data.username
+                    ? `@${data.username}`
+                    : "—";
+
+        }
+
+
+        setText(
+            editReadonlyName,
+            data.name
+        );
+
+
+        setText(
+            editEmployeeId,
+            data.employee_id
+        );
+
+
+        setText(
+            editPhone,
+            data.phone_number
+        );
+
+
+        setText(
+            editDepartment,
+            data.department
+        );
+
+
+        setText(
+            editJobTitle,
+            data.job_title
+        );
+
+
+        setText(
+            editShift,
+            data.shift
+        );
+
+
+        if (
+            editRole
+        ) {
+
+            editRole.value =
+                originalRole;
+
+
+            editRole.disabled =
+                (
+                    !data.can_edit_role
+                );
+
+        }
+
+
+        if (
+            editRoleHelp
+        ) {
+
+            editRoleHelp.textContent =
+                data.can_edit_role
+
+                    ? (
+                        "Role changes take effect immediately after saving."
+                    )
+
+                    : (
+                        "You cannot change your own SuperAdmin role."
+                    );
+
+        }
+
+
+        if (
+            editProtection
+        ) {
+
+            editProtection.hidden =
+                (
+                    !data.is_self
+                );
+
+        }
+
+
+        updateStatusControl();
+
+        updateEditSaveState();
+
+    }
+
+
+    async function openUserEditModal(
+        button
+    ) {
+
+        if (
+            !userModal
+            ||
+            !userModalLoading
+            ||
+            !userModalContent
+        ) {
+            return;
+        }
+
+
+        const editUrl =
+            button.dataset
+                .editUrl;
+
+
+        if (!editUrl) {
+            return;
+        }
+
+
+        activeEditButton =
+            button;
+
+
+        activeUserData =
+            null;
+
+
+        originalRole =
+            "";
+
+
+        pendingStatusAction =
+            "none";
+
+
+        setUserModalError(
+            ""
+        );
+
+
+        userModalLoading.hidden =
+            false;
+
+
+        userModalContent.hidden =
+            true;
+
+
+        if (
+            editSaveButton
+        ) {
+
+            editSaveButton.disabled =
+                true;
+
+        }
+
+
+        userModal.hidden =
+            false;
+
+
+        document.body.style.overflow =
+            "hidden";
+
+
+        button.disabled =
+            true;
+
+
+        try {
+
+            const response =
+                await fetch(
+                    editUrl,
+                    {
+                        method:
+                            "GET",
+
+                        credentials:
+                            "same-origin",
+
+                        headers: {
+                            "Accept":
+                                "application/json"
+                        }
+                    }
+                );
+
+
+            const result =
+                await response.json();
+
+
+            if (
+                !response.ok
+                ||
+                !result.ok
+            ) {
+
+                throw new Error(
+                    result.message
+                    ||
+                    "Unable to load this user."
+                );
+
+            }
+
+
+            fillUserModal(
+                result.user
+            );
+
+
+            userModalLoading.hidden =
+                true;
+
+
+            userModalContent.hidden =
+                false;
+
+        }
+
+        catch (
+            error
+        ) {
+
+            userModalLoading.hidden =
+                true;
+
+
+            userModalContent.hidden =
+                false;
+
+
+            setUserModalError(
+                error.message
+                ||
+                "Unable to load this user."
+            );
+
+        }
+
+        finally {
+
+            button.disabled =
+                false;
+
+        }
+
+    }
+
+
+    function closeUserEditModal() {
+
+        if (
+            editBusy
+        ) {
+            return;
+        }
+
+
+        if (
+            userConfirm
+            &&
+            !userConfirm.hidden
+        ) {
+            return;
+        }
+
+
+        if (
+            userModal
+        ) {
+
+            userModal.hidden =
+                true;
+
+        }
+
+
+        document.body.style.overflow =
+            "";
+
+
+        activeEditButton =
+            null;
+
+
+        activeUserData =
+            null;
+
+
+        originalRole =
+            "";
+
+
+        pendingStatusAction =
+            "none";
+
+
+        setUserModalError(
+            ""
+        );
+
+    }
+
+
+    function resetUserConfirmPassword() {
+
+        if (
+            userConfirmPassword
+        ) {
+
+            userConfirmPassword.value =
+                "";
+
+
+            userConfirmPassword.type =
+                "password";
+
+        }
+
+
+        if (
+            userConfirmPasswordError
+        ) {
+
+            userConfirmPasswordError.textContent =
+                "";
+
+        }
+
+
+        if (
+            userConfirmPasswordEye
+        ) {
+
+            userConfirmPasswordEye.setAttribute(
+                "name",
+                "eye"
+            );
+
+        }
+
+
+        if (
+            userConfirmPasswordToggle
+        ) {
+
+            userConfirmPasswordToggle.setAttribute(
+                "aria-label",
+                "Show password"
+            );
+
+        }
+
+    }
+
+
+    function updateUserConfirmSaveState() {
+
+        if (
+            !userConfirmSave
+        ) {
+            return;
+        }
+
+
+        if (
+            editBusy
+        ) {
+
+            userConfirmSave.disabled =
+                true;
+
+            return;
+
+        }
+
+
+        const roleChanged =
+            (
+                editRole
+                &&
+                editRole.value
+                !==
+                originalRole
+            );
+
+
+        const requiresPassword =
+            (
+                roleChanged
+                ||
+                pendingStatusAction
+                !==
+                "none"
+            );
+
+
+        if (
+            requiresPassword
+        ) {
+
+            userConfirmSave.disabled =
+                !(
+                    userConfirmPassword
+                    &&
+                    userConfirmPassword.value.trim()
+                );
+
+            return;
+
+        }
+
+
+        userConfirmSave.disabled =
+            false;
+
+    }
+
+
+    function showUserConfirm() {
+
+        if (
+            !userConfirm
+            ||
+            !activeUserData
+            ||
+            !hasEditChanges()
+        ) {
+            return;
+        }
+
+
+        const changes =
+            [];
+
+
+        const roleChanged =
+            (
+                editRole
+                &&
+                editRole.value
+                !==
+                originalRole
+            );
+
+
+        const requiresPassword =
+            (
+                roleChanged
+                ||
+                pendingStatusAction
+                !==
+                "none"
+            );
+
+
+        if (
+            editRole
+            &&
+            editRole.value
+            !==
+            originalRole
+        ) {
+
+            changes.push(
+                (
+                    `Access role: `
+                    +
+                    `${statusLabel(originalRole)} → `
+                    +
+                    `${statusLabel(editRole.value)}`
+                )
+            );
+
+        }
+
+
+        if (
+            pendingStatusAction
+            !==
+            "none"
+        ) {
+
+            const nextStatus =
+                statusDestination(
+                    activeUserData.status,
+                    pendingStatusAction
+                );
+
+
+            changes.push(
+                (
+                    `Account status: `
+                    +
+                    `${statusLabel(activeUserData.status)} → `
+                    +
+                    `${statusLabel(nextStatus)}`
+                )
+            );
+
+        }
+
+
+        resetUserConfirmPassword();
+
+
+        if (
+            requiresPassword
+        ) {
+
+            if (
+                userConfirmTitle
+            ) {
+
+                if (
+                    roleChanged
+                    &&
+                    pendingStatusAction
+                    !==
+                    "none"
+                ) {
+
+                    userConfirmTitle.textContent =
+                        "Confirm access changes";
+
+                }
+
+                else if (
+                    roleChanged
+                ) {
+
+                    userConfirmTitle.textContent =
+                        "Confirm role change";
+
+                }
+
+                else if (
+                    pendingStatusAction
+                    ===
+                    "disable"
+                ) {
+
+                    userConfirmTitle.textContent =
+                        "Disable this account?";
+
+                }
+
+                else if (
+                    pendingStatusAction
+                    ===
+                    "reactivate"
+                ) {
+
+                    userConfirmTitle.textContent =
+                        "Reactivate this account?";
+
+                }
+
+                else if (
+                    pendingStatusAction
+                    ===
+                    "unlock"
+                ) {
+
+                    userConfirmTitle.textContent =
+                        "Unlock this account?";
+
+                }
+
+                else {
+
+                    userConfirmTitle.textContent =
+                        "Confirm access changes";
+
+                }
+
+            }
+
+
+            if (
+                userConfirmPasswordWrap
+            ) {
+
+                userConfirmPasswordWrap.hidden =
+                    false;
+
+            }
+
+
+            if (
+                userConfirmSave
+            ) {
+
+                userConfirmSave.textContent =
+                    "Confirm Changes";
+
+            }
+
+        }
+
+        else {
+
+            if (
+                userConfirmTitle
+            ) {
+
+                userConfirmTitle.textContent =
+                    "Save user changes?";
+
+            }
+
+
+            if (
+                userConfirmPasswordWrap
+            ) {
+
+                userConfirmPasswordWrap.hidden =
+                    true;
+
+            }
+
+
+            if (
+                userConfirmSave
+            ) {
+
+                userConfirmSave.textContent =
+                    "Confirm & Save";
+
+            }
+
+        }
+
+
+        if (
+            userConfirmMessage
+        ) {
+
+            userConfirmMessage.textContent =
+                (
+                    changes.join(
+                        " · "
+                    )
+                    ||
+                    "The selected access changes will be applied."
+                );
+
+        }
+
+
+        updateUserConfirmSaveState();
+
+
+        userConfirm.hidden =
+            false;
+
+
+        if (
+            requiresPassword
+            &&
+            userConfirmPassword
+        ) {
+
+            window.setTimeout(
+                () => {
+
+                    userConfirmPassword.focus();
+
+                },
+                60
+            );
+
+        }
+
+    }
+
+
+    function hideUserConfirm() {
+
+        if (
+            editBusy
+        ) {
+            return;
+        }
+
+
+        if (
+            userConfirm
+        ) {
+
+            userConfirm.hidden =
+                true;
+
+        }
+
+
+        resetUserConfirmPassword();
+
+    }
+
+
+    async function saveUserAccess() {
+
+        if (
+            !activeEditButton
+            ||
+            !activeUserData
+            ||
+            !editRole
+        ) {
+            return;
+        }
+
+
+        const updateUrl =
+            activeEditButton.dataset
+                .updateUrl;
+
+
+        if (!updateUrl) {
+            return;
+        }
+
+
+        const roleChanged =
+            (
+                editRole
+                &&
+                editRole.value
+                !==
+                originalRole
+            );
+
+
+        const requiresPassword =
+            (
+                roleChanged
+                ||
+                pendingStatusAction
+                !==
+                "none"
+            );
+
+
+        const superadminPassword =
+            requiresPassword
+                ? (
+                    userConfirmPassword
+                        ?.value
+                        ??
+                        ""
+                )
+                : "";
+
+
+        if (
+            requiresPassword
+            &&
+            !superadminPassword.trim()
+        ) {
+
+            if (
+                userConfirmPasswordError
+            ) {
+
+                userConfirmPasswordError.textContent =
+                    "Enter your SuperAdmin password.";
+
+            }
+
+
+            userConfirmPassword?.focus();
+
+            updateUserConfirmSaveState();
+
+            return;
+
+        }
+
+
+        editBusy =
+            true;
+
+
+        const confirmationLabel =
+            requiresPassword
+                ? "Confirm Changes"
+                : "Confirm & Save";
+
+
+        if (
+            userConfirmSave
+        ) {
+
+            userConfirmSave.disabled =
+                true;
+
+
+            userConfirmSave.textContent =
+                "Saving...";
+
+        }
+
+
+        if (
+            userConfirmPasswordError
+        ) {
+
+            userConfirmPasswordError.textContent =
+                "";
+
+        }
+
+
+        setUserModalError(
+            ""
+        );
+
+
+        try {
+
+            const response =
+                await fetch(
+                    updateUrl,
+                    {
+                        method:
+                            "POST",
+
+                        credentials:
+                            "same-origin",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json",
+
+                            "Accept":
+                                "application/json",
+
+                            "X-CSRFToken":
+                                getCsrfToken()
+                        },
+
+                        body:
+                            JSON.stringify({
+                                role:
+                                    editRole.value,
+
+                                status_action:
+                                    pendingStatusAction,
+
+                                superadmin_password:
+                                    superadminPassword
+                            })
+                    }
+                );
+
+
+            const result =
+                await response.json();
+
+
+            if (
+                !response.ok
+                ||
+                !result.ok
+            ) {
+
+                if (
+                    requiresPassword
+                    &&
+                    (
+                        result.code
+                        ===
+                        "invalid_superadmin_password"
+                        ||
+                        result.code
+                        ===
+                        "superadmin_password_required"
+                    )
+                ) {
+
+                    if (
+                        userConfirmPasswordError
+                    ) {
+
+                        userConfirmPasswordError.textContent =
+                            (
+                                result.message
+                                ||
+                                "Incorrect SuperAdmin password."
+                            );
+
+                    }
+
+
+                    if (
+                        userConfirmPassword
+                    ) {
+
+                        userConfirmPassword.value =
+                            "";
+
+
+                        userConfirmPassword.focus();
+
+                    }
+
+
+                    return;
+
+                }
+
+
+                throw new Error(
+                    result.message
+                    ||
+                    "Unable to save user changes."
+                );
+
+            }
+
+
+            resetUserConfirmPassword();
+
+
+            if (
+                userConfirm
+            ) {
+
+                userConfirm.hidden =
+                    true;
+
+            }
+
+
+            if (
+                userModal
+            ) {
+
+                userModal.hidden =
+                    true;
+
+            }
+
+
+            document.body.style.overflow =
+                "";
+
+
+            window.setTimeout(
+                () => {
+
+                    window.location.reload();
+
+                },
+                180
+            );
+
+        }
+
+        catch (
+            error
+        ) {
+
+            if (
+                userConfirm
+            ) {
+
+                userConfirm.hidden =
+                    true;
+
+            }
+
+
+            resetUserConfirmPassword();
+
+
+            setUserModalError(
+                error.message
+                ||
+                "Unable to save user changes."
+            );
+
+        }
+
+        finally {
+
+            editBusy =
+                false;
+
+
+            if (
+                userConfirmSave
+            ) {
+
+                userConfirmSave.textContent =
+                    confirmationLabel;
+
+            }
+
+
+            updateUserConfirmSaveState();
+
+            updateEditSaveState();
+
+        }
+
+    }
+
+
+    /* =====================================================
+       USER EDIT EVENTS
+       ===================================================== */
+
+    editButtons.forEach(
+        (
+            button
+        ) => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    openUserEditModal(
+                        button
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+    userModalCloseButtons.forEach(
+        (
+            button
+        ) => {
+
+            button.addEventListener(
+                "click",
+                closeUserEditModal
+            );
+
+        }
+    );
+
+
+    userModal?.addEventListener(
+        "click",
+        (
+            event
+        ) => {
+
+            if (
+                event.target
+                ===
+                userModal
+            ) {
+
+                closeUserEditModal();
+
+            }
+
+        }
+    );
+
+
+    editRole?.addEventListener(
+        "change",
+        () => {
+
+            updateEditSaveState();
+
+        }
+    );
+
+
+    editStatusAction?.addEventListener(
+        "click",
+        () => {
+
+            if (
+                !activeUserData
+                ||
+                !activeUserData.can_change_status
+            ) {
+                return;
+            }
+
+
+            if (
+                pendingStatusAction
+                !==
+                "none"
+            ) {
+
+                pendingStatusAction =
+                    "none";
+
+            }
+
+            else {
+
+                pendingStatusAction =
+                    actionForStatus(
+                        activeUserData.status
+                    )
+                        .action;
+
+            }
+
+
+            updateStatusControl();
+
+            updateEditSaveState();
+
+        }
+    );
+
+
+    editSaveButton?.addEventListener(
+        "click",
+        showUserConfirm
+    );
+
+
+    userConfirmCancel?.addEventListener(
+        "click",
+        hideUserConfirm
+    );
+
+
+    userConfirmSave?.addEventListener(
+        "click",
+        saveUserAccess
+    );
+
+
+
+    userConfirmPassword?.addEventListener(
+        "input",
+        () => {
+
+            if (
+                userConfirmPasswordError
+            ) {
+
+                userConfirmPasswordError.textContent =
+                    "";
+
+            }
+
+
+            updateUserConfirmSaveState();
+
+        }
+    );
+
+
+    userConfirmPassword?.addEventListener(
+        "keydown",
+        (
+            event
+        ) => {
+
+            if (
+                event.key
+                !==
+                "Enter"
+            ) {
+                return;
+            }
+
+
+            if (
+                userConfirmSave
+                &&
+                !userConfirmSave.disabled
+            ) {
+
+                event.preventDefault();
+
+                saveUserAccess();
+
+            }
+
+        }
+    );
+
+
+    userConfirmPasswordToggle?.addEventListener(
+        "click",
+        () => {
+
+            if (
+                !userConfirmPassword
+            ) {
+                return;
+            }
+
+
+            const isHidden =
+                (
+                    userConfirmPassword.type
+                    ===
+                    "password"
+                );
+
+
+            userConfirmPassword.type =
+                isHidden
+                    ? "text"
+                    : "password";
+
+
+            if (
+                userConfirmPasswordEye
+            ) {
+
+                userConfirmPasswordEye.setAttribute(
+                    "name",
+                    isHidden
+                        ? "eye-slash"
+                        : "eye"
+                );
+
+            }
+
+
+            userConfirmPasswordToggle.setAttribute(
+                "aria-label",
+                isHidden
+                    ? "Hide password"
+                    : "Show password"
+            );
+
+
+            userConfirmPassword.focus();
+
+        }
+    );
+
+
+    userConfirm?.addEventListener(
+        "click",
+        (
+            event
+        ) => {
+
+            if (
+                event.target
+                ===
+                userConfirm
+            ) {
+
+                hideUserConfirm();
+
+            }
+
+        }
+    );
+
+
+    document.addEventListener(
+        "keydown",
+        (
+            event
+        ) => {
+
+            if (
+                event.key
+                !==
+                "Escape"
+            ) {
+                return;
+            }
+
+
+            if (
+                userConfirm
+                &&
+                !userConfirm.hidden
+            ) {
+
+                hideUserConfirm();
+
+                return;
+
+            }
+
+
+            if (
+                userModal
+                &&
+                !userModal.hidden
+            ) {
+
+                closeUserEditModal();
+
+            }
+
+        }
+    );
+
+
     /* =====================================================
        INITIAL
        ===================================================== */

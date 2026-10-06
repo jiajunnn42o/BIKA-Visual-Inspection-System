@@ -287,8 +287,8 @@
 
 
             <!-- =============================================
-                 MANAGEMENT
-                 ============================================= -->
+                MANAGEMENT
+                ============================================= -->
 
             <nav
                 class="app-nav-section"
@@ -308,49 +308,14 @@
 
 
 
-                <!-- =========================================
-                     ADMINISTRATION
-                     ========================================= -->
+                <!-- =====================================================
+                    ABOUT SYSTEM
+                    PAGE NOT CREATED YET
+                    ===================================================== -->
 
                 <a
                     href="#"
                     class="app-nav-item"
-                >
-
-                    <iconsax-icon
-                        name="shield-tick"
-                        type="twotone"
-                        size="22"
-                        color="currentColor"
-                    ></iconsax-icon>
-
-                    <span>
-                        Administration
-                    </span>
-
-                </a>
-
-
-
-                <!-- =========================================
-                     ABOUT SYSTEM
-                     ========================================= -->
-
-                <a
-                    href="{{ url_for(
-                        'superadmin.system_page'
-                    ) }}"
-                    class="
-                        app-nav-item
-
-                        {% if
-                            request.endpoint
-                            ==
-                            'superadmin.system_page'
-                        %}
-                            is-active
-                        {% endif %}
-                    "
                 >
 
                     <iconsax-icon
@@ -368,10 +333,48 @@
 
 
 
+                <!-- =====================================================
+                    ADMINISTRATION - SUPERADMIN ONLY
+                    ===================================================== -->
+
+                {% if current_user.role == "superadmin" %}
+
+                    <a
+                        href="{{ url_for('superadmin.system_page') }}"
+                        class="
+                            app-nav-item
+
+                            {% if
+                                request.endpoint
+                                ==
+                                'superadmin.system_page'
+                            %}
+                                is-active
+                            {% endif %}
+                        "
+                    >
+
+                        <iconsax-icon
+                            name="shield-tick"
+                            type="twotone"
+                            size="22"
+                            color="currentColor"
+                        ></iconsax-icon>
+
+                        <span>
+                            Administration
+                        </span>
+
+                    </a>
+
+                {% endif %}
+
+
+
                 <!-- =========================================
-                     REQUEST STATUS
-                     SUPERADMIN ONLY
-                     ========================================= -->
+                    REQUEST STATUS
+                    SUPERADMIN ONLY
+                    ========================================= -->
 
                 {% if current_user.role == "superadmin" %}
 

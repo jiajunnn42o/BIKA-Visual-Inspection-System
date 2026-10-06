@@ -8,6 +8,9 @@ from datetime import (
 
 
 
+import re
+
+
 from pathlib import Path
 
 
@@ -137,6 +140,36 @@ from app.services.work_request_email_service import (
 
 )
 
+
+
+from app.services.contact_change_service import (
+
+    ContactChangeError,
+
+    ContactChangeRateLimitError,
+
+    RESEND_COOLDOWN_SECONDS,
+
+    mask_contact_value,
+
+    resend_contact_change,
+
+    send_contact_change_code,
+
+    start_contact_change,
+
+    verify_contact_change,
+
+)
+
+
+from app.utils.phone import (
+
+    InvalidPhoneNumberError,
+
+    normalize_malaysian_mobile,
+
+)
 
 
 from PIL import (
@@ -1882,6 +1915,433 @@ def update_personal_information():
 
 
 
+
+
+# =========================================================
+
+# CONTACT CHANGE HELPERS
+
+# =========================================================
+
+
+def _normalize_contact_change_value(
+    change_type,
+    raw_value,
+):
+
+    raw_value = str(
+        raw_value
+        or
+        ""
+    ).strip()
+
+    if change_type == "email":
+
+        value = raw_value.lower()
+
+        if (
+            not value
+            or
+            len(value) > 255
+            or
+            not re.fullmatch(
+                r"[^\s@]+@[^\s@]+\.[^\s@]+",
+                value,
+            )
+        ):
+            raise ContactChangeError(
+                "Please enter a valid email address."
+            )
+
+        return value
+
+    if change_type == "phone":
+
+        try:
+            return normalize_malaysian_mobile(
+                raw_value
+            )
+
+        except InvalidPhoneNumberError as exc:
+            raise ContactChangeError(
+                str(exc)
+            ) from exc
+
+    raise ContactChangeError(
+        "Invalid contact change type."
+    )
+
+
+
+def _contact_change_active_account_error():
+
+    if (
+        current_user.status
+        ==
+        UserStatus.ACTIVE.value
+    ):
+        return None
+
+    return jsonify(
+        ok=False,
+        message=(
+            "Only active accounts can change "
+            "their email address or phone number."
+        ),
+    ), 403
+
+
+# =========================================================
+
+# START EMAIL / PHONE CHANGE
+
+# =========================================================
+
+
+@account_bp.route(
+    "/contact-change/start",
+    methods=["POST"],
+)
+@login_required
+def start_account_contact_change():
+
+    inactive_response = (
+        _contact_change_active_account_error()
+    )
+
+    if inactive_response is not None:
+        return inactive_response
+
+    data = request.get_json(
+        silent=True
+    ) or {}
+
+    change_type = str(
+        data.get(
+            "type",
+            "",
+        )
+    ).strip().lower()
+
+    try:
+        pending_value = (
+            _normalize_contact_change_value(
+                change_type,
+                data.get(
+                    "value",
+                    "",
+                ),
+            )
+        )
+
+        change, code = (
+            start_contact_change(
+                current_user,
+                change_type,
+                pending_value,
+            )
+        )
+
+        db.session.commit()
+
+    except ContactChangeRateLimitError as exc:
+
+        db.session.rollback()
+
+        return jsonify(
+            ok=False,
+            message=str(exc),
+            retry_after=exc.retry_after,
+        ), 429
+
+    except ContactChangeError as exc:
+
+        db.session.rollback()
+
+        return jsonify(
+            ok=False,
+            message=str(exc),
+        ), 400
+
+    except IntegrityError:
+
+        db.session.rollback()
+
+        return jsonify(
+            ok=False,
+            message=(
+                "That email address or phone number "
+                "is already in use or already waiting "
+                "for verification."
+            ),
+        ), 409
+
+    except SQLAlchemyError:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "Unable to start account contact change."
+        )
+
+        return jsonify(
+            ok=False,
+            message=(
+                "The verification could not be started. "
+                "Please try again."
+            ),
+        ), 500
+
+    try:
+        send_contact_change_code(
+            current_user,
+            change,
+            code,
+        )
+
+    except Exception:
+
+        current_app.logger.exception(
+            (
+                "Contact verification code could not "
+                "be delivered for user %s."
+            ),
+            current_user.id,
+        )
+
+        return jsonify(
+            ok=False,
+            message=(
+                "The verification code was created, "
+                "but it could not be delivered. "
+                "Please use Resend Code shortly."
+            ),
+            retry_after=RESEND_COOLDOWN_SECONDS,
+            can_resend=True,
+            masked_value=mask_contact_value(
+                change_type,
+                pending_value,
+            ),
+        ), 502
+
+    return jsonify(
+        ok=True,
+        message="Verification code sent.",
+        type=change_type,
+        masked_value=mask_contact_value(
+            change_type,
+            pending_value,
+        ),
+        retry_after=RESEND_COOLDOWN_SECONDS,
+    )
+
+
+# =========================================================
+
+# VERIFY EMAIL / PHONE CHANGE
+
+# =========================================================
+
+
+@account_bp.route(
+    "/contact-change/verify",
+    methods=["POST"],
+)
+@login_required
+def verify_account_contact_change():
+
+    inactive_response = (
+        _contact_change_active_account_error()
+    )
+
+    if inactive_response is not None:
+        return inactive_response
+
+    data = request.get_json(
+        silent=True
+    ) or {}
+
+    change_type = str(
+        data.get(
+            "type",
+            "",
+        )
+    ).strip().lower()
+
+    code = str(
+        data.get(
+            "code",
+            "",
+        )
+    ).strip()
+
+    if not re.fullmatch(
+        r"\d{6}",
+        code,
+    ):
+        return jsonify(
+            ok=False,
+            message=(
+                "Please enter the 6-digit "
+                "verification code."
+            ),
+        ), 400
+
+    try:
+        result = verify_contact_change(
+            current_user,
+            change_type,
+            code,
+        )
+
+        db.session.commit()
+
+    except IntegrityError:
+
+        db.session.rollback()
+
+        return jsonify(
+            ok=False,
+            message=(
+                "That email address or phone number "
+                "is already in use."
+            ),
+        ), 409
+
+    except SQLAlchemyError:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "Unable to verify account contact change."
+        )
+
+        return jsonify(
+            ok=False,
+            message=(
+                "The verification could not be completed. "
+                "Please try again."
+            ),
+        ), 500
+
+    if not result.get("ok"):
+        return jsonify(**result), 400
+
+    return jsonify(**result)
+
+
+# =========================================================
+
+# RESEND EMAIL / PHONE CHANGE OTP
+
+# =========================================================
+
+
+@account_bp.route(
+    "/contact-change/resend",
+    methods=["POST"],
+)
+@login_required
+def resend_account_contact_change():
+
+    inactive_response = (
+        _contact_change_active_account_error()
+    )
+
+    if inactive_response is not None:
+        return inactive_response
+
+    data = request.get_json(
+        silent=True
+    ) or {}
+
+    change_type = str(
+        data.get(
+            "type",
+            "",
+        )
+    ).strip().lower()
+
+    try:
+        change, code = (
+            resend_contact_change(
+                current_user,
+                change_type,
+            )
+        )
+
+        db.session.commit()
+
+    except ContactChangeRateLimitError as exc:
+
+        db.session.rollback()
+
+        return jsonify(
+            ok=False,
+            message=str(exc),
+            retry_after=exc.retry_after,
+        ), 429
+
+    except ContactChangeError as exc:
+
+        db.session.rollback()
+
+        return jsonify(
+            ok=False,
+            message=str(exc),
+        ), 400
+
+    except SQLAlchemyError:
+
+        db.session.rollback()
+
+        current_app.logger.exception(
+            "Unable to regenerate account contact OTP."
+        )
+
+        return jsonify(
+            ok=False,
+            message=(
+                "A new verification code could not be created."
+            ),
+        ), 500
+
+    try:
+        send_contact_change_code(
+            current_user,
+            change,
+            code,
+        )
+
+    except Exception:
+
+        current_app.logger.exception(
+            (
+                "Resent contact verification code could "
+                "not be delivered for user %s."
+            ),
+            current_user.id,
+        )
+
+        return jsonify(
+            ok=False,
+            message=(
+                "The new verification code was created, "
+                "but it could not be delivered."
+            ),
+            retry_after=RESEND_COOLDOWN_SECONDS,
+        ), 502
+
+    return jsonify(
+        ok=True,
+        message="A new verification code was sent.",
+        type=change_type,
+        masked_value=mask_contact_value(
+            change_type,
+            change.pending_value,
+        ),
+        retry_after=RESEND_COOLDOWN_SECONDS,
+    )
 
 
 # =========================================================

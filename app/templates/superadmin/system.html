@@ -1516,6 +1516,16 @@ System | BIKA
 
                                     data-user-id="{{ item.id }}"
 
+                                    data-edit-url="{{ url_for(
+                                        'superadmin.system_user_detail',
+                                        user_id=item.id
+                                    ) }}"
+
+                                    data-update-url="{{ url_for(
+                                        'superadmin.system_update_user_access',
+                                        user_id=item.id
+                                    ) }}"
+
                                 >
 
                                     Edit
@@ -2594,6 +2604,393 @@ System | BIKA
 
 
 
+
+
+    <!-- =====================================================
+         EDIT USER MODAL
+         ===================================================== -->
+
+    <div
+        class="system-user-modal-backdrop"
+        data-system-user-modal
+        hidden
+    >
+
+        <section
+            class="system-user-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="systemUserModalTitle"
+        >
+
+            <header class="system-user-modal-header">
+                <div>
+                    <h2 id="systemUserModalTitle">Edit User</h2>
+                    <p>Manage account access and status.</p>
+                </div>
+
+                <button
+                    type="button"
+                    class="system-user-modal-close"
+                    data-system-user-modal-close
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+            </header>
+
+
+            <div
+                class="system-user-modal-loading"
+                data-system-user-modal-loading
+            >
+                Loading user information...
+            </div>
+
+
+            <div
+                class="system-user-modal-content"
+                data-system-user-modal-content
+                hidden
+            >
+
+                <div class="system-user-modal-identity">
+
+                    <div
+                        class="system-user-modal-avatar"
+                        data-system-edit-avatar
+                    >
+                        <span data-system-edit-initials></span>
+                    </div>
+
+                    <div class="system-user-modal-identity-copy">
+                        <strong data-system-edit-name>—</strong>
+                        <span data-system-edit-email>—</span>
+                        <small data-system-edit-username>—</small>
+                    </div>
+
+                </div>
+
+
+                <section class="system-user-modal-section">
+
+                    <div class="system-user-modal-section-heading">
+                        <iconsax-icon
+                            name="profile-circle"
+                            type="twotone"
+                            size="19"
+                            color="currentColor"
+                        ></iconsax-icon>
+
+                        <div>
+                            <h3>Account Information</h3>
+                            <p>Personal and work details are read-only here.</p>
+                        </div>
+                    </div>
+
+
+                    <div class="system-user-modal-info-grid">
+
+                        <div class="system-user-readonly-field">
+                            <span>Name</span>
+                            <strong data-system-edit-readonly-name>—</strong>
+                        </div>
+
+                        <div class="system-user-readonly-field">
+                            <span>Employee ID</span>
+                            <strong data-system-edit-employee-id>—</strong>
+                        </div>
+
+                        <div class="system-user-readonly-field">
+                            <span>Phone Number</span>
+                            <strong data-system-edit-phone>—</strong>
+                        </div>
+
+                        <div class="system-user-readonly-field">
+                            <span>Department</span>
+                            <strong data-system-edit-department>—</strong>
+                        </div>
+
+                        <div class="system-user-readonly-field">
+                            <span>Job Title</span>
+                            <strong data-system-edit-job-title>—</strong>
+                        </div>
+
+                        <div class="system-user-readonly-field">
+                            <span>Shift</span>
+                            <strong data-system-edit-shift>—</strong>
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <section class="system-user-modal-section">
+
+                    <div class="system-user-modal-section-heading">
+                        <iconsax-icon
+                            name="shield-tick"
+                            type="twotone"
+                            size="19"
+                            color="currentColor"
+                        ></iconsax-icon>
+
+                        <div>
+                            <h3>Access Control</h3>
+                            <p>Only access role and account status can be managed here.</p>
+                        </div>
+                    </div>
+
+
+                    <div class="system-user-access-grid">
+
+                        <label class="system-user-access-field">
+                            <span>Access Role</span>
+
+                            <div class="system-user-select-wrap">
+                                <select
+                                    data-system-edit-role
+                                    aria-label="Access role"
+                                >
+                                    <option value="user">User</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="superadmin">SuperAdmin</option>
+                                </select>
+                            </div>
+
+                            <small
+                                class="system-user-field-help"
+                                data-system-edit-role-help
+                            ></small>
+                        </label>
+
+
+                        <div class="system-user-access-field">
+                            <span>Account Status</span>
+
+                            <div class="system-user-status-control">
+                                <span
+                                    class="system-user-status-badge"
+                                    data-system-edit-status-badge
+                                >
+                                    —
+                                </span>
+
+                                <button
+                                    type="button"
+                                    class="system-user-status-action"
+                                    data-system-edit-status-action
+                                >
+                                    —
+                                </button>
+                            </div>
+
+                            <small
+                                class="system-user-field-help"
+                                data-system-edit-status-help
+                            ></small>
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="system-user-self-protection"
+                        data-system-edit-protection
+                        hidden
+                    >
+                        <iconsax-icon
+                            name="shield-tick"
+                            type="twotone"
+                            size="18"
+                            color="currentColor"
+                        ></iconsax-icon>
+
+                        <span>
+                            You cannot change your own SuperAdmin role or account status.
+                        </span>
+                    </div>
+
+                </section>
+
+
+                <div
+                    class="system-user-modal-error"
+                    data-system-user-modal-error
+                    aria-live="polite"
+                ></div>
+
+            </div>
+
+
+            <footer class="system-user-modal-footer">
+
+                <button
+                    type="button"
+                    class="system-user-modal-button system-user-modal-button-secondary"
+                    data-system-user-modal-close
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    class="system-user-modal-button system-user-modal-button-primary"
+                    data-system-user-save
+                    disabled
+                >
+                    Save Changes
+                </button>
+
+            </footer>
+
+        </section>
+
+    </div>
+
+
+    <!-- =====================================================
+         SAVE / SECURITY CONFIRMATION
+         ===================================================== -->
+
+    <div
+        class="system-user-confirm-backdrop"
+        data-system-user-confirm
+        hidden
+    >
+
+        <section
+            class="system-user-confirm"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="systemUserConfirmTitle"
+        >
+
+            <div class="system-user-confirm-icon">
+                <iconsax-icon
+                    name="shield-tick"
+                    type="twotone"
+                    size="25"
+                    color="currentColor"
+                ></iconsax-icon>
+            </div>
+
+            <h2
+                id="systemUserConfirmTitle"
+                data-system-user-confirm-title
+            >
+                Save user changes?
+            </h2>
+
+            <p
+                class="system-user-confirm-message"
+                data-system-user-confirm-message
+            >
+                The selected access changes will be applied to this account.
+            </p>
+
+            <div
+                class="system-user-confirm-password"
+                data-system-user-confirm-password-wrap
+                hidden
+            >
+
+                <div class="system-user-confirm-security-note">
+
+                    <iconsax-icon
+                        name="lock"
+                        type="twotone"
+                        size="18"
+                        color="currentColor"
+                    ></iconsax-icon>
+
+                    <div>
+                        <strong>
+                            SuperAdmin verification required
+                        </strong>
+
+                        <span>
+                            Enter your SuperAdmin password to confirm this security-sensitive change.
+                        </span>
+                    </div>
+
+                </div>
+
+                <label class="system-user-confirm-password-field">
+
+                    <span>
+                        SuperAdmin Password
+                    </span>
+
+                    <div class="system-user-confirm-password-input-wrap">
+
+                        <iconsax-icon
+                            name="lock-1"
+                            type="twotone"
+                            size="18"
+                            color="currentColor"
+                        ></iconsax-icon>
+
+                        <input
+                            type="password"
+                            autocomplete="current-password"
+                            placeholder="Enter your password"
+                            data-system-user-confirm-password
+                        >
+
+                        <button
+                            type="button"
+                            class="system-user-confirm-password-toggle"
+                            aria-label="Show password"
+                            data-system-user-confirm-password-toggle
+                        >
+
+                            <iconsax-icon
+                                name="eye"
+                                type="twotone"
+                                size="18"
+                                color="currentColor"
+                                data-system-user-confirm-password-eye
+                            ></iconsax-icon>
+
+                        </button>
+
+                    </div>
+
+                </label>
+
+                <div
+                    class="system-user-confirm-password-error"
+                    data-system-user-confirm-password-error
+                    aria-live="polite"
+                ></div>
+
+            </div>
+
+            <div class="system-user-confirm-actions">
+
+                <button
+                    type="button"
+                    class="system-user-modal-button system-user-modal-button-secondary"
+                    data-system-user-confirm-cancel
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    class="system-user-modal-button system-user-modal-button-primary"
+                    data-system-user-confirm-save
+                >
+                    Confirm &amp; Save
+                </button>
+
+            </div>
+
+        </section>
+
+    </div>
 
 
 </div>

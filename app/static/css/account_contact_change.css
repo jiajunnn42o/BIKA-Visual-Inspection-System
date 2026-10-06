@@ -1,0 +1,652 @@
+/* =========================================================
+   ACCOUNT CONTACT CHANGE
+   Email / Phone OTP verification modal
+   ========================================================= */
+
+.account-contact-label-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.account-contact-label-row > span {
+    color: var(--text-primary);
+    font-size: 12.5px;
+    font-weight: 400;
+    line-height: 1.15;
+}
+
+.account-contact-change-button {
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--bika-red, #741F2E);
+    font-family: "Inter", Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.15;
+    cursor: pointer;
+}
+
+.account-contact-change-button:hover,
+.account-contact-change-button:focus-visible {
+    color: var(--bika-red-dark, #5E1825);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.account-contact-readonly-input {
+    padding-right: 17px;
+}
+
+
+/* =========================================================
+   BACKDROP
+   ========================================================= */
+
+.account-contact-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 5200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(24, 24, 24, 0.38);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+.account-contact-modal-backdrop[hidden] {
+    display: none;
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+.account-contact-modal {
+    width: min(430px, 100%);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.58);
+    border-radius: 18px;
+    background: #FFFFFF;
+    box-shadow: 0 24px 65px rgba(0, 0, 0, 0.18);
+    color: #242424;
+}
+
+.account-contact-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 18px;
+    padding: 20px 22px 15px;
+    border-bottom: 1px solid #EEEEEE;
+}
+
+.account-contact-modal-header > div {
+    min-width: 0;
+}
+
+.account-contact-modal-header h2 {
+    margin: 0;
+    color: #242424;
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+}
+
+.account-contact-modal-header p {
+    margin: 5px 0 0;
+    color: #898989;
+    font-size: 12.5px;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.account-contact-modal-close {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #777777;
+    font-family: Arial, sans-serif;
+    font-size: 25px;
+    font-weight: 300;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.account-contact-modal-close:hover,
+.account-contact-modal-close:focus-visible {
+    color: #741F2E;
+}
+
+.account-contact-modal-body {
+    padding: 20px 22px 22px;
+}
+
+
+/* =========================================================
+   CURRENT VALUE
+   ========================================================= */
+
+.account-contact-current-box {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 17px;
+    padding: 12px 14px;
+    border: 1px solid #ECECEC;
+    border-radius: 11px;
+    background: #FAFAFA;
+}
+
+.account-contact-current-box span {
+    color: #929292;
+    font-size: 10.5px;
+    font-weight: 500;
+}
+
+.account-contact-current-box strong {
+    overflow: hidden;
+    color: #3B3B3B;
+    font-size: 13px;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   INPUT
+   ========================================================= */
+
+.account-contact-modal-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.account-contact-modal-field > span {
+    color: #3C3C3C;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* =========================================================
+   EMAIL / PHONE INPUT SHELL
+   ========================================================= */
+
+.account-contact-value-shell {
+    width: 100%;
+    height: 41px;
+
+    display: flex;
+    align-items: center;
+
+    box-sizing: border-box;
+
+    border: 1px solid #DEDEDE;
+    border-radius: 999px;
+
+    background: #FFFFFF;
+
+    overflow: hidden;
+
+    transition:
+        border-color 140ms ease,
+        box-shadow 140ms ease;
+}
+
+
+.account-contact-value-shell:focus-within {
+    border-color:
+        rgba(
+            116,
+            31,
+            46,
+            0.45
+        );
+
+    box-shadow:
+        0 0 0 3px
+        rgba(
+            116,
+            31,
+            46,
+            0.06
+        );
+}
+
+
+/* =========================================================
+   INPUT
+   ========================================================= */
+
+.account-contact-modal-input {
+    width: 100%;
+    height: 100%;
+
+    min-width: 0;
+
+    box-sizing: border-box;
+
+    padding:
+        0
+        15px;
+
+    border: 0;
+    outline: 0;
+
+    background: transparent;
+
+    color: #242424;
+
+    font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
+    font-size: 13px;
+    font-weight: 400;
+}
+
+
+.account-contact-modal-input::placeholder {
+    color: #AAAAAA;
+}
+
+
+/* =========================================================
+   MALAYSIA +60 PREFIX
+   ========================================================= */
+
+.account-contact-phone-prefix {
+    height: 100%;
+
+    display: inline-flex;
+    align-items: center;
+
+    flex: 0 0 auto;
+
+    padding-left: 16px;
+    padding-right: 12px;
+
+    color: #242424;
+
+    font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
+    font-size: 14px;
+
+    font-weight: 700;
+
+    line-height: 1;
+}
+
+
+.account-contact-phone-prefix[hidden] {
+    display: none;
+}
+
+
+/* Divider after +60 */
+
+.account-contact-phone-divider {
+    width: 1px;
+    height: 21px;
+
+    flex: 0 0 1px;
+
+    background: #D8D8D8;
+}
+
+
+.account-contact-phone-divider[hidden] {
+    display: none;
+}
+
+
+/* Phone mode:
+   input starts closer to divider */
+
+.account-contact-value-shell.is-phone
+.account-contact-modal-input {
+    padding-left: 12px;
+}
+
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme="dark"]
+.account-contact-value-shell {
+    border-color:
+        rgba(
+            255,
+            255,
+            255,
+            0.12
+        );
+
+    background: #2A2A2D;
+}
+
+
+html[data-theme="dark"]
+.account-contact-phone-prefix {
+    color: #FFFFFF;
+}
+
+
+html[data-theme="dark"]
+.account-contact-phone-divider {
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.18
+        );
+}
+
+.account-contact-modal-input::placeholder {
+    color: #AAAAAA;
+}
+
+.account-contact-code-input {
+    text-align: center;
+    letter-spacing: 0.30em;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   OTP STEP
+   ========================================================= */
+
+.account-contact-otp-icon {
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    margin: 1px auto 12px;
+    border-radius: 50%;
+    background: rgba(116, 31, 46, 0.07);
+    color: #741F2E;
+}
+
+.account-contact-otp-icon iconsax-icon {
+    width: 24px !important;
+    height: 24px !important;
+}
+
+[data-contact-step="verify"] > h3 {
+    margin: 0;
+    color: #242424;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: center;
+}
+
+.account-contact-code-message {
+    max-width: 330px;
+    margin: 7px auto 18px;
+    color: #898989;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.account-contact-code-field {
+    max-width: 260px;
+    margin: 0 auto;
+}
+
+
+/* =========================================================
+   ERROR / RESEND
+   ========================================================= */
+
+.account-contact-error {
+    min-height: 17px;
+    margin-top: 6px;
+    color: #B54858;
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.35;
+}
+
+.account-contact-resend-row {
+    min-height: 23px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 7px;
+    color: #969696;
+    font-size: 11px;
+}
+
+.account-contact-resend-button {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #741F2E;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.account-contact-resend-button:disabled {
+    color: #AAAAAA;
+    cursor: default;
+}
+
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.account-contact-modal-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.account-contact-secondary-button,
+.account-contact-primary-button {
+    height: 36px;
+    min-width: 104px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 17px;
+    border-radius: 999px;
+    font-family: "Inter", Arial, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.account-contact-secondary-button {
+    border: 1px solid #D9D9D9;
+    background: #FFFFFF;
+    color: #565656;
+}
+
+.account-contact-primary-button {
+    border: 1px solid #741F2E;
+    background: #741F2E;
+    color: #FFFFFF;
+}
+
+.account-contact-primary-button:hover:not(:disabled) {
+    border-color: #5E1825;
+    background: #5E1825;
+}
+
+.account-contact-secondary-button:hover:not(:disabled) {
+    border-color: #C7C7C7;
+    background: #FAFAFA;
+}
+
+.account-contact-secondary-button:disabled,
+.account-contact-primary-button:disabled {
+    opacity: 0.58;
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   SMALL SUCCESS TOAST
+   ========================================================= */
+
+.account-contact-toast {
+    position: fixed;
+    top: 82px;
+    right: 30px;
+    z-index: 5600;
+    max-width: min(360px, calc(100vw - 40px));
+    padding: 11px 14px;
+    border: 1px solid rgba(128, 163, 119, 0.28);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.10);
+    color: #3E3E3E;
+    font-size: 12.5px;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.account-contact-toast.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme="dark"] .account-contact-change-button {
+    color: #FFFFFF;
+}
+
+html[data-theme="dark"] .account-contact-modal {
+    border-color: rgba(255, 255, 255, 0.10);
+    background: #242426;
+    color: #FFFFFF;
+}
+
+html[data-theme="dark"] .account-contact-modal-header {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+html[data-theme="dark"] .account-contact-modal-header h2,
+html[data-theme="dark"] [data-contact-step="verify"] > h3,
+html[data-theme="dark"] .account-contact-modal-field > span {
+    color: #F2F2F2;
+}
+
+html[data-theme="dark"] .account-contact-modal-header p,
+html[data-theme="dark"] .account-contact-code-message,
+html[data-theme="dark"] .account-contact-resend-row {
+    color: #A9A9A9;
+}
+
+html[data-theme="dark"] .account-contact-modal-close {
+    color: #D7D7D7;
+}
+
+html[data-theme="dark"] .account-contact-current-box {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+html[data-theme="dark"] .account-contact-current-box strong {
+    color: #EEEEEE;
+}
+
+html[data-theme="dark"] .account-contact-modal-input {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.055);
+    color: #F2F2F2;
+}
+
+html[data-theme="dark"] .account-contact-otp-icon {
+    background: rgba(255, 255, 255, 0.07);
+    color: #FFFFFF;
+}
+
+html[data-theme="dark"] .account-contact-secondary-button {
+    border-color: rgba(255, 255, 255, 0.13);
+    background: rgba(255, 255, 255, 0.05);
+    color: #EEEEEE;
+}
+
+html[data-theme="dark"] .account-contact-primary-button {
+    border-color: #741F2E;
+    background: #741F2E;
+    color: #FFFFFF;
+}
+
+html[data-theme="dark"] .account-contact-toast {
+    border-color: rgba(128, 163, 119, 0.24);
+    background: rgba(37, 37, 39, 0.97);
+    color: #F2F2F2;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 560px) {
+    .account-contact-modal-backdrop {
+        padding: 14px;
+    }
+
+    .account-contact-modal {
+        border-radius: 16px;
+    }
+
+    .account-contact-modal-header,
+    .account-contact-modal-body {
+        padding-left: 17px;
+        padding-right: 17px;
+    }
+
+    .account-contact-modal-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .account-contact-secondary-button,
+    .account-contact-primary-button {
+        width: 100%;
+        min-width: 0;
+    }
+}

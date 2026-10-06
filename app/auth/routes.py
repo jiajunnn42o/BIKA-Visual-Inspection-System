@@ -785,53 +785,59 @@ def _notify_superadmins_of_registration(
 # LOGIN IDENTIFIER HELPER
 # =========================================================
 
-def _find_user_by_login_identifier(
-    raw_identifier,
-):
+def _find_user_by_login_identifier(raw_identifier):
     """
-    Support exactly three login identifiers:
-
+    Login by:
     1. Email
     2. Username
     3. Verified Malaysian phone number
 
-    Phone authentication is only allowed after
-    phone_verified_at has been recorded.
+    Email and username lookup are handled separately
+    to avoid ambiguous account matches.
     """
 
-    raw_identifier = (
-        raw_identifier
-        .strip()
-    )
+    raw_identifier = str(
+        raw_identifier or ""
+    ).strip()
 
     normalized_identifier = (
-        raw_identifier
-        .lower()
+        raw_identifier.lower()
     )
 
-    # -----------------------------------------------------
-    # EMAIL / USERNAME
-    # -----------------------------------------------------
+    # =====================================================
+    # EMAIL
+    # =====================================================
+
+    if "@" in normalized_identifier:
+
+        return db.session.scalar(
+            db.select(User)
+            .where(
+                db.func.lower(User.email)
+                == normalized_identifier
+            )
+            .limit(1)
+        )
+
+    # =====================================================
+    # USERNAME
+    # =====================================================
 
     user = db.session.scalar(
         db.select(User)
         .where(
-            or_(
-                User.email
-                == normalized_identifier,
-
-                User.username
-                == normalized_identifier,
-            )
+            db.func.lower(User.username)
+            == normalized_identifier
         )
+        .limit(1)
     )
 
     if user is not None:
         return user
 
-    # -----------------------------------------------------
-    # MALAYSIAN PHONE
-    # -----------------------------------------------------
+    # =====================================================
+    # PHONE
+    # =====================================================
 
     try:
 
@@ -854,8 +860,8 @@ def _find_user_by_login_identifier(
             User.phone_verified_at
             .is_not(None),
         )
+        .limit(1)
     )
-
 
 # =========================================================
 # REJECTED REGISTRATION RE-APPLICATION HELPERS

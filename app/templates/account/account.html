@@ -1,125 +1,244 @@
 {% extends "base.html" %}
 
 
+
+
+
 {% block title %}
+
 My Account | BIKA
+
 {% endblock %}
+
+
+
 
 
 {% block extra_css %}
 
+
+
 <link
+
     rel="stylesheet"
+
     href="{{ url_for(
+
         'static',
+
         filename='css/account.css'
+
     ) }}"
+
 >
 
+
+<link
+
+    rel="stylesheet"
+
+    href="{{ url_for(
+
+        'static',
+
+        filename='css/account_contact_change.css'
+
+    ) }}"
+
+>
+
+
+
 {% endblock %}
+
+
+
 
 
 {% block content %}
 
 
+
+
+
 <div
+
     class="account-page"
+
     data-account-page
+
 >
 
 
+
+
+
     <!-- =====================================================
+
          PAGE HEADING
+
          ===================================================== -->
+
+
 
     <header class="account-page-heading">
 
+
+
         <h1>
+
             My Account
+
         </h1>
 
+
+
         <p>
+
             Manage your profile, security and preferences
+
         </p>
+
+
 
     </header>
 
 
 
+
+
+
+
     <!-- =====================================================
+
          FLASH
+
          ===================================================== -->
+
+
 
     {% with messages = get_flashed_messages(with_categories=true) %}
 
+
+
         {% if messages %}
 
+
+
             <div
+
                 class="account-flash-stack"
+
                 data-account-flash-stack
+
             >
+
+
 
                 {% for category, message in messages %}
 
+
+
                     <div
+
                         class="account-flash account-flash-{{ category }}"
+
                         data-account-flash
+
                     >
+
                         {{ message }}
+
                     </div>
+
+
 
                 {% endfor %}
 
+
+
             </div>
 
+
+
         {% endif %}
+
+
 
     {% endwith %}
 
 
 
+
+
+
+
     <!-- =====================================================
+
          TOP GRID
+
          ===================================================== -->
+
+
 
     <section class="account-top-grid">
 
 
+
+
+
         <!-- =================================================
+
              PROFILE
+
              ================================================= -->
 
+
+
         <article class="account-profile-card">
+
+
+
 
 
             <div class="account-profile-hero">
 
 
+
+
+
                 <div class="account-profile-avatar-wrap">
+
+
 
                     <div class="account-profile-avatar">
 
                         {% if current_user.profile_photo %}
 
                             <img
-                                src="{{ url_for(
-                                    'static',
-                                    filename=current_user.profile_photo
-                                ) }}"
+
+                                src="{{ url_for('static', filename=current_user.profile_photo) }}"
+
                                 alt="{{ current_user.full_name }}"
+
                                 data-profile-avatar-image
+
                             >
 
                         {% elif current_user.first_name %}
 
                             <span data-profile-avatar-fallback>
+
                                 {{ current_user.first_name[0]|upper }}
+
                             </span>
 
                         {% else %}
 
                             <span data-profile-avatar-fallback>
+
                                 U
+
                             </span>
 
                         {% endif %}
@@ -127,140 +246,276 @@ My Account | BIKA
                     </div>
 
 
+
+
+
                     <input
+
                         type="file"
+
                         id="profilePhotoInput"
+
                         class="account-photo-input"
+
                         accept="image/jpeg,image/png,image/webp"
+
                     >
+
+
+
 
 
                     <button
+
                         type="button"
+
                         class="account-avatar-edit"
+
                         id="profilePhotoButton"
+
                         aria-label="Change profile photo"
+
                         title="Change profile photo"
+
                     >
 
                         <iconsax-icon
+
                             name="edit-2"
+
                             type="bold"
+
                             size="15"
+
                             color="currentColor"
+
                         ></iconsax-icon>
 
                     </button>
 
+
+
                 </div>
+
+
+
+
 
 
 
                 <div class="account-profile-identity">
 
+
+
                     <h2>
+
                         {{ user.full_name }}
+
                     </h2>
 
+
+
                     <p>
+
                         @ {{ user.username }}
+
                     </p>
+
+
+
 
 
                     <div class="account-role-pill">
 
+
+
                         <iconsax-icon
+
                             name="shield"
+
                             type="twotone"
+
                             size="18"
+
                             color="currentColor"
+
                         ></iconsax-icon>
 
+
+
                         <span>
+
                             {{ role_label }}
+
                         </span>
+
+
 
                     </div>
 
+
+
                 </div>
+
+
+
 
 
             </div>
 
 
 
+
+
+
+
             <div class="account-profile-body">
+
+
+
 
 
                 <dl class="account-profile-facts">
 
 
+
+
+
                     <div>
 
+
+
                         <dt>
+
                             Access role
+
                         </dt>
 
+
+
                         <dd>
+
                             {{ role_label }}
+
                         </dd>
+
+
 
                     </div>
 
 
+
+
+
                     <div>
 
+
+
                         <dt>
+
                             Job title
+
                         </dt>
 
+
+
                         <dd>
+
                             {{ user.job_title or '—' }}
+
                         </dd>
+
+
 
                     </div>
 
 
+
+
+
                     <div>
 
+
+
                         <dt>
+
                             Member since
+
                         </dt>
 
+
+
                         <dd>
+
                             {{ member_since }}
+
                         </dd>
+
+
 
                     </div>
 
 
+
+
+
                     <div>
 
+
+
                         <dt>
+
                             Last login
+
                         </dt>
+
+
 
                         <dd>
+
                             {{ last_login }}
+
                         </dd>
+
+
 
                     </div>
 
 
+
+
+
                     <div>
 
+
+
                         <dt>
+
                             Status
+
                         </dt>
+
+
 
                         <dd class="account-status-active">
+
                             {{ status_label }}
+
                         </dd>
 
+
+
                     </div>
+
+
+
 
 
                 </dl>
+
+
+
+
 
 
 
@@ -268,1184 +523,2606 @@ My Account | BIKA
 
 
 
+
+
+
+
                 <div class="account-session-heading">
 
+
+
                     <h3>
+
                         Active Sessions
+
                     </h3>
 
+
+
                     <p>
+
                         Devices currently signed in to your account
+
                     </p>
 
+
+
                 </div>
+
+
+
+
 
 
 
                 <div class="account-session-list">
 
 
+
+
+
                     {% for session_item in active_sessions %}
+
+
 
                         <div class="account-session-item">
 
 
+
+
+
                             <div class="account-session-icon">
 
+
+
                                 <iconsax-icon
+
                                     name="{{ session_item.icon }}"
+
                                     type="twotone"
+
                                     size="26"
+
                                     color="currentColor"
+
                                 ></iconsax-icon>
 
+
+
                             </div>
+
+
+
 
 
                             <div class="account-session-copy">
 
+
+
                                 <strong>
+
                                     {{ session_item.device }}
+
                                 </strong>
 
+
+
                                 <span>
+
                                     {{ session_item.meta }}
+
                                 </span>
+
+
 
                             </div>
 
 
+
+
+
                             {% if session_item.is_current %}
 
+
+
                                 <span class="account-this-device">
+
                                     This Device
+
                                 </span>
+
+
 
                             {% else %}
 
+
+
                                 <button
+
                                     type="button"
+
                                     class="account-session-signout"
+
                                 >
+
                                     Sign Out
+
                                 </button>
+
+
 
                             {% endif %}
 
 
+
+
+
                         </div>
 
+
+
                     {% endfor %}
+
+
+
 
 
                 </div>
 
 
+
+
+
             </div>
+
+
+
 
 
         </article>
 
 
 
+
+
+
+
         <!-- =================================================
+
              RIGHT STACK
+
              ================================================= -->
+
+
 
         <div class="account-right-stack">
 
 
+
+
+
             <!-- =============================================
+
                  PERSONAL INFORMATION
+
                  ============================================= -->
+
+
 
             <article class="account-card account-personal-card">
 
 
+
+
+
                 <form
+
                     method="POST"
+
                     action="{{ url_for(
+
                         'account.update_personal_information'
+
                     ) }}"
+
                     class="account-card-form"
+
                     data-personal-form
+
                 >
+
+
+
 
 
                     {{ personal_form.hidden_tag() }}
 
 
 
+
+
+
+
                     <div class="account-card-header">
+
+
+
 
 
                         <div>
 
+
+
                             <h2>
+
                                 Personal Information
+
                             </h2>
 
+
+
                             <p>
+
                                 Your access role is assigned by a SuperAdmin and cannot be changed here
+
                             </p>
+
+
 
                         </div>
 
 
 
+
+
+
+
                         <button
+
                             type="submit"
+
                             class="account-primary-button"
+
                             data-personal-save-button
+
                         >
+
                             Save Changes
+
                         </button>
+
+
+
 
 
                     </div>
 
 
 
+
+
+
+
                     <div
+
                         class="
+
                             account-personal-grid
+
                             account-personal-grid-top
+
                         "
+
                     >
 
 
+
+
+
                         <label class="account-field">
 
+
+
                             <span>
+
                                 First name
+
                             </span>
+
+
 
                             {{ personal_form.first_name(
+
                                 class="account-input",
+
                                 autocomplete="given-name"
+
                             ) }}
 
+
+
                         </label>
+
+
+
+
 
 
 
                         <label class="account-field">
 
+
+
                             <span>
+
                                 Last Name
+
                             </span>
 
+
+
                             {{ personal_form.last_name(
+
                                 class="account-input",
+
                                 autocomplete="family-name"
+
                             ) }}
 
+
+
                         </label>
+
+
+
+
 
 
 
                         <label
+
                             class="
+
                                 account-field
+
                                 account-username-field
+
                             "
+
                         >
+
+
+
 
 
                             <span class="account-field-title-row">
 
+
+
                                 <span>
+
                                     Username
+
                                 </span>
 
 
+
+
+
                                 <span
+
                                     class="account-username-status"
+
                                     data-username-status
+
                                     aria-live="polite"
+
                                 ></span>
 
+
+
                             </span>
+
+
+
+
 
 
 
                             {{ personal_form.username(
+
                                 class="account-input",
+
                                 autocomplete="username",
+
                                 data_username_input="",
+
                                 data_username_check_url=url_for(
+
                                     'account.check_username_availability'
+
                                 )
+
                             ) }}
+
+
+
 
 
                         </label>
 
 
+
+
+
                     </div>
+
+
+
+
 
 
 
                     <div
+
                         class="
+
                             account-personal-grid
+
                             account-personal-grid-bottom
+
                         "
+
                     >
 
 
-                        <label
+
+
+
+                        <div
+
                             class="
+
                                 account-field
+
                                 account-field-email
+
                             "
+
                         >
 
-                            <span>
-                                Email
-                            </span>
+
+
+                            <div class="account-contact-label-row">
+
+                                <span>
+
+                                    Email
+
+                                </span>
+
+
+
+                                <button
+
+                                    type="button"
+
+                                    class="account-contact-change-button"
+
+                                    data-contact-change="email"
+
+                                >
+
+                                    Change
+
+                                </button>
+
+                            </div>
+
 
 
                             <input
+
                                 type="email"
-                                class="account-input"
+
+                                class="account-input account-contact-readonly-input"
+
                                 value="{{ user.email }}"
+
                                 readonly
+
                                 aria-readonly="true"
+
+                                data-current-email
+
                             >
 
-                        </label>
+
+
+                        </div>
 
 
 
-                        <label
+
+
+
+
+                        <div
+
                             class="
+
                                 account-field
+
                                 account-field-phone
+
                             "
+
                         >
 
-                            <span>
-                                Phone Number
-                            </span>
+
+
+                            <div class="account-contact-label-row">
+
+                                <span>
+
+                                    Phone Number
+
+                                </span>
+
+
+
+                                <button
+
+                                    type="button"
+
+                                    class="account-contact-change-button"
+
+                                    data-contact-change="phone"
+
+                                >
+
+                                    Change
+
+                                </button>
+
+                            </div>
+
 
 
                             <input
+
                                 type="text"
-                                class="account-input"
+
+                                class="account-input account-contact-readonly-input"
+
                                 value="{{ user.phone_number }}"
+
                                 readonly
+
                                 aria-readonly="true"
+
+                                data-current-phone
+
                             >
 
-                        </label>
+
+
+                        </div>
+
+
+
 
 
                     </div>
+
+
+
+
 
 
 
                     <div class="account-reverification-note">
 
+
+
                         <iconsax-icon
+
                             name="info-circle"
+
                             type="twotone"
+
                             size="20"
+
                             color="currentColor"
+
                         ></iconsax-icon>
 
 
+
+
+
                         <span>
-                            Changes to your email or phone number require re-verification.
+
+                            Changing your email or phone number requires OTP verification.
+
                         </span>
 
+
+
                     </div>
+
+
+
 
 
                 </form>
 
 
+
+
+
             </article>
 
 
 
+
+
+
+
             <!-- =============================================
+
                  WORK INFORMATION
+
                  ============================================= -->
 
+
+
             <article
+
                 id="work-information"
+
                 class="account-card account-work-card"
+
             >
+
+
+
 
 
                 {% if pending_work_request %}
 
+
+
                     <!-- =========================================
+
                         PENDING STATE
+
                         ========================================= -->
+
+
 
                     <div class="account-card-header account-work-header">
 
+
+
                         <div>
 
+
+
                             <h2>
+
                                 Work Information
+
                             </h2>
 
+
+
                             <p>
+
                                 Your requested changes are waiting for SuperAdmin approval.
+
                             </p>
+
+
 
                         </div>
 
 
+
+
+
                         <button
+
                             type="button"
+
                             class="account-pending-button"
+
                             disabled
+
                         >
+
+
 
                             <span class="account-pending-dot"></span>
 
+
+
                             Pending Review
+
+
 
                         </button>
 
+
+
                     </div>
+
+
+
 
 
                     <!-- CURRENT OFFICIAL INFORMATION -->
 
+
+
                     <div class="account-work-grid">
 
+
+
                         <div class="account-field">
 
+
+
                             <span>
+
                                 Employee ID
+
                             </span>
 
+
+
                             <div class="account-readonly-pill">
+
                                 {{ user.employee_id or '—' }}
+
                             </div>
+
+
 
                         </div>
 
 
+
+
+
                         <div class="account-field">
 
+
+
                             <span>
+
                                 Department
+
                             </span>
 
+
+
                             <div class="account-readonly-pill">
+
                                 {{ user.department or '—' }}
+
                             </div>
+
+
 
                         </div>
 
 
+
+
+
                         <div class="account-field">
 
+
+
                             <span>
+
                                 Shift
+
                             </span>
 
+
+
                             <div class="account-readonly-pill">
+
                                 {{ user.shift or '—' }}
+
                             </div>
+
+
 
                         </div>
 
 
+
+
+
                         <div class="account-field">
 
+
+
                             <span>
+
                                 Job Title
+
                             </span>
 
+
+
                             <div class="account-readonly-pill">
+
                                 {{ user.job_title or '—' }}
+
                             </div>
 
+
+
                         </div>
+
+
+
 
 
                         <div class="account-field">
 
+
+
                             <span>
+
                                 Access Role
+
                             </span>
 
+
+
                             <div class="account-readonly-pill">
+
                                 {{ role_label }}
+
                             </div>
 
+
+
                         </div>
+
+
 
                     </div>
+
+
+
 
 
                     <!-- PENDING REQUEST DETAILS -->
 
+
+
                     <div class="account-pending-request">
+
+
 
                         <div class="account-pending-request-head">
 
+
+
                             <div>
 
+
+
                                 <strong>
+
                                     Pending Changes
+
                                 </strong>
 
+
+
                                 <span>
+
                                     Submitted {{ pending_submitted_at }}
+
                                 </span>
+
+
 
                             </div>
 
+
+
                             <iconsax-icon
+
                                 name="clock"
+
                                 type="twotone"
+
                                 size="20"
+
                                 color="currentColor"
+
                             ></iconsax-icon>
 
+
+
                         </div>
+
+
+
 
 
                         <div class="account-pending-change-list">
 
+
+
                             {% for label, old_value, new_value in pending_changes %}
+
+
 
                                 <div class="account-pending-change-row">
 
+
+
                                     <span class="account-pending-change-label">
+
                                         {{ label }}
+
                                     </span>
+
+
+
 
 
                                     <div class="account-pending-change-values">
 
+
+
                                         <span class="account-pending-old">
+
                                             {{ old_value or '—' }}
+
                                         </span>
+
+
 
                                         <span class="account-pending-arrow">
+
                                             →
+
                                         </span>
 
+
+
                                         <span class="account-pending-new">
+
                                             {{ new_value or '—' }}
+
                                         </span>
+
+
 
                                     </div>
 
+
+
                                 </div>
+
+
 
                             {% endfor %}
 
+
+
                         </div>
+
+
+
 
 
                         <p class="account-pending-note">
 
+
+
                             Your current work information will remain unchanged until this request is approved.
 
+
+
                         </p>
+
+
 
                     </div>
 
 
+
+
+
                 {% else %}
 
+
+
                     <!-- =========================================
+
                         EDITABLE STATE
+
                         ========================================= -->
 
+
+
                     <form
+
                         method="POST"
+
                         action="{{ url_for(
+
                             'account.submit_work_information_request'
+
                         ) }}"
+
                         class="account-card-form"
+
                         data-work-information-form
+
                     >
 
 
+
+
+
                         <input
+
                             type="hidden"
+
                             name="csrf_token"
+
                             value="{{ csrf_token() }}"
+
                         >
+
+
+
 
 
                         <div class="account-card-header account-work-header">
 
+
+
                             <div>
 
+
+
                                 <h2>
+
                                     Work Information
+
                                 </h2>
+
+
 
                                 {% if work_requires_approval %}
 
+
+
                                     <p>
+
                                         Changes require SuperAdmin approval before they take effect.
+
                                     </p>
+
+
 
                                 {% else %}
 
+
+
                                     <p>
+
                                         Update your work information.
+
                                     </p>
 
+
+
                                 {% endif %}
+
+
 
                             </div>
 
 
+
+
+
                             <button
+
                                 type="submit"
+
                                 class="account-primary-button"
+
                                 data-work-save-button
+
                             >
+
                                 Save Changes
+
                             </button>
 
+
+
                         </div>
+
+
+
 
 
                         <div class="account-work-grid">
 
 
+
+
+
                             <!-- EMPLOYEE ID -->
+
+
 
                             <label class="account-field">
 
+
+
                                 <span class="account-field-title-row">
 
+
+
                                     <span>
+
                                         Employee ID
+
                                     </span>
 
 
+
+
+
                                     <span
+
                                         class="account-employee-id-status"
+
                                         data-employee-id-status
+
                                         aria-live="polite"
+
                                     ></span>
+
+
 
                                 </span>
 
 
+
+
+
                                 <input
+
                                     type="text"
+
                                     name="employee_id"
+
                                     class="account-input"
+
                                     value="{{ user.employee_id or '' }}"
+
                                     maxlength="80"
+
                                     autocomplete="off"
+
                                     required
+
                                     data-employee-id-input
+
                                     data-check-url="{{ url_for(
+
                                         'account.check_employee_id_availability'
+
                                     ) }}"
+
                                 >
 
+
+
                             </label>
+
+
+
 
 
                             <!-- DEPARTMENT -->
 
+
+
                             <label class="account-field">
 
+
+
                                 <span>
+
                                     Department
+
                                 </span>
 
+
+
                                 <select
+
                                     name="department"
+
                                     class="account-input account-work-select"
+
                                     required
+
                                 >
+
+
 
                                     {% for value, label in work_department_choices %}
 
+
+
                                         <option
+
                                             value="{{ value }}"
+
                                             {% if value == (user.department or '') %}
+
                                                 selected
+
                                             {% endif %}
+
                                         >
+
                                             {{ label }}
+
                                         </option>
+
+
 
                                     {% endfor %}
 
+
+
                                 </select>
 
+
+
                             </label>
+
+
+
 
 
                             <!-- SHIFT -->
 
+
+
                             <label class="account-field">
 
+
+
                                 <span>
+
                                     Shift
+
                                 </span>
 
+
+
                                 <select
+
                                     name="shift"
+
                                     class="account-input account-work-select"
+
                                     required
+
                                 >
+
+
 
                                     {% for value, label in work_shift_choices %}
 
+
+
                                         <option
+
                                             value="{{ value }}"
+
                                             {% if value == (user.shift or '') %}
+
                                                 selected
+
                                             {% endif %}
+
                                         >
+
                                             {{ label }}
+
                                         </option>
+
+
 
                                     {% endfor %}
 
+
+
                                 </select>
 
+
+
                             </label>
+
+
+
 
 
                             <!-- JOB TITLE -->
 
+
+
                             <label class="account-field">
 
+
+
                                 <span>
+
                                     Job Title
+
                                 </span>
 
+
+
                                 <select
+
                                     name="job_title"
+
                                     class="account-input account-work-select"
+
                                     required
+
                                 >
+
+
 
                                     {% for value, label in work_job_title_choices %}
 
+
+
                                         <option
+
                                             value="{{ value }}"
+
                                             {% if value == (user.job_title or '') %}
+
                                                 selected
+
                                             {% endif %}
+
                                         >
+
                                             {{ label }}
+
                                         </option>
+
+
 
                                     {% endfor %}
 
+
+
                                 </select>
+
+
 
                             </label>
 
 
+
+
+
                             <!-- ACCESS ROLE -->
+
+
 
                             <div class="account-field">
 
+
+
                                 <span>
+
                                     Access Role
+
                                 </span>
 
+
+
                                 <div class="account-readonly-pill">
+
                                     {{ role_label }}
+
                                 </div>
 
+
+
                             </div>
+
+
+
 
 
                         </div>
 
 
+
+
+
                         {% if work_requires_approval %}
+
+
 
                             <div class="account-work-review-note">
 
+
+
                                 <iconsax-icon
+
                                     name="info-circle"
+
                                     type="twotone"
+
                                     size="19"
+
                                     color="currentColor"
+
                                 ></iconsax-icon>
 
+
+
                                 <span>
+
                                     Saving these changes will submit them for SuperAdmin review.
+
                                     Your current information will remain active until approval.
+
                                 </span>
+
+
 
                             </div>
 
+
+
                         {% endif %}
+
+
+
 
 
                     </form>
 
 
+
+
+
                 {% endif %}
+
+
+
 
 
             </article>
 
 
+
+
+
         </div>
+
+
+
 
 
     </section>
 
 
 
+
+
+
+
     <!-- =====================================================
+
          BOTTOM GRID
+
          ===================================================== -->
+
+
 
     <section class="account-bottom-grid">
 
 
+
+
+
         <!-- =================================================
+
              PASSWORD
+
              ================================================= -->
+
+
 
         <article class="account-card account-security-card">
 
 
+
+
+
             <form
+
                 method="POST"
+
                 action="{{ url_for(
+
                     'account.change_password'
+
                 ) }}"
+
                 class="account-card-form"
+
             >
+
+
+
 
 
                 {{ password_form.hidden_tag() }}
 
 
 
+
+
+
+
                 <div
+
                     class="
+
                         account-card-header
+
                         account-security-header
+
                     "
+
                 >
+
+
+
 
 
                     <div>
 
+
+
                         <h2>
+
                             Password &amp; Security
+
                         </h2>
 
+
+
                         <p>
+
                             Keep your account secure with a strong password.
+
                         </p>
+
+
 
                     </div>
 
 
 
+
+
+
+
                     <button
+
                         type="submit"
+
                         class="account-primary-button"
+
                     >
+
                         Save Changes
+
                     </button>
 
 
+
+
+
                 </div>
+
+
+
+
 
 
 
                 <div class="account-password-grid">
 
 
+
+
+
                     <!-- CURRENT -->
+
+
 
                     <label class="account-field">
 
+
+
                         <span>
+
                             Current Password
+
                         </span>
+
+
+
 
 
                         <div class="account-password-input-wrap">
 
 
+
+
+
                             {{ password_form.current_password(
+
                                 class="account-input",
+
                                 placeholder="Enter current password",
+
                                 autocomplete="current-password",
+
                                 data_password_input="current"
+
                             ) }}
 
 
+
+
+
                             <button
+
                                 type="button"
+
                                 class="account-password-toggle"
+
                                 data-password-toggle="current"
+
                                 aria-label="Show current password"
+
                                 aria-pressed="false"
+
                             >
 
+
+
                                 <iconsax-icon
+
                                     class="
+
                                         account-password-eye
+
                                         account-eye-show
+
                                     "
+
                                     name="eye"
+
                                     type="twotone"
+
                                     size="19"
+
                                     color="currentColor"
+
                                 ></iconsax-icon>
+
+
+
 
 
                                 <iconsax-icon
+
                                     class="
+
                                         account-password-eye
+
                                         account-eye-hide
+
                                     "
+
                                     name="eye-slash"
+
                                     type="twotone"
+
                                     size="19"
+
                                     color="currentColor"
+
                                 ></iconsax-icon>
+
+
 
                             </button>
+
+
+
 
 
                         </div>
 
 
+
+
+
                     </label>
+
+
+
+
 
 
 
                     <!-- NEW -->
 
+
+
                     <label class="account-field">
 
+
+
                         <span>
+
                             New Password
+
                         </span>
+
+
+
 
 
                         <div class="account-password-input-wrap">
 
 
+
+
+
                             {{ password_form.new_password(
+
                                 class="account-input",
+
                                 placeholder="Enter new password",
+
                                 autocomplete="new-password",
+
                                 data_password_input="new"
+
                             ) }}
 
 
+
+
+
                             <button
+
                                 type="button"
+
                                 class="account-password-toggle"
+
                                 data-password-toggle="new"
+
                                 aria-label="Show new password"
+
                                 aria-pressed="false"
+
                             >
 
+
+
                                 <iconsax-icon
+
                                     class="
+
                                         account-password-eye
+
                                         account-eye-show
+
                                     "
+
                                     name="eye"
+
                                     type="twotone"
+
                                     size="19"
+
                                     color="currentColor"
+
                                 ></iconsax-icon>
+
+
+
 
 
                                 <iconsax-icon
+
                                     class="
+
                                         account-password-eye
+
                                         account-eye-hide
+
                                     "
+
                                     name="eye-slash"
+
                                     type="twotone"
+
                                     size="19"
+
                                     color="currentColor"
+
                                 ></iconsax-icon>
+
+
 
                             </button>
+
+
+
 
 
                         </div>
 
 
+
+
+
                     </label>
+
+
+
+
 
 
 
                     <!-- CONFIRM -->
 
+
+
                     <label class="account-field">
 
+
+
                         <span>
+
                             Confirm Password
+
                         </span>
+
+
+
 
 
                         <div class="account-password-input-wrap">
 
 
+
+
+
                             {{ password_form.confirm_password(
+
                                 class="account-input",
+
                                 placeholder="Confirm new password",
+
                                 autocomplete="new-password",
+
                                 data_password_input="confirm"
+
                             ) }}
 
 
+
+
+
                             <button
+
                                 type="button"
+
                                 class="account-password-toggle"
+
                                 data-password-toggle="confirm"
+
                                 aria-label="Show confirm password"
+
                                 aria-pressed="false"
+
                             >
 
+
+
                                 <iconsax-icon
+
                                     class="
+
                                         account-password-eye
+
                                         account-eye-show
+
                                     "
+
                                     name="eye"
+
                                     type="twotone"
+
                                     size="19"
+
                                     color="currentColor"
+
                                 ></iconsax-icon>
+
+
+
 
 
                                 <iconsax-icon
+
                                     class="
+
                                         account-password-eye
+
                                         account-eye-hide
+
                                     "
+
                                     name="eye-slash"
+
                                     type="twotone"
+
                                     size="19"
+
                                     color="currentColor"
+
                                 ></iconsax-icon>
+
+
 
                             </button>
+
+
+
 
 
                         </div>
 
 
+
+
+
                     </label>
 
 
+
+
+
                 </div>
+
+
+
 
 
             </form>
 
 
+
+
+
         </article>
+
+
+
+
 
 
 
         <!-- =================================================
+
             NOTIFICATION
+
             ================================================= -->
 
+
+
         <article
+
             class="
+
                 account-card
+
                 account-notification-card
+
             "
+
         >
 
 
+
+
+
             <div
+
                 class="
+
                     account-card-header
+
                     account-notification-header
+
                 "
+
             >
+
+
+
 
 
                 <div>
 
+
+
                     <h2>
+
                         Notification
+
                     </h2>
 
+
+
                     <p>
+
                         Customize your experience.
+
                     </p>
+
+
 
                 </div>
 
 
+
+
+
             </div>
+
+
+
+
 
 
 
             <div
+
                 class="account-notification-list"
+
                 data-notification-preferences
+
                 data-save-url="{{ url_for(
+
                     'account.update_notification_preferences'
+
                 ) }}"
+
             >
 
 
+
+
+
                 <!-- =============================================
+
                     EMAIL NOTIFICATIONS
+
                     ============================================= -->
+
+
 
                 <label class="account-notification-row">
 
 
+
+
+
                     <div class="account-notification-label">
 
+
+
                         <iconsax-icon
+
                             name="sms"
+
                             type="twotone"
+
                             size="23"
+
                             color="currentColor"
+
                         ></iconsax-icon>
 
 
+
+
+
                         <span>
+
                             Email Notifications
+
                         </span>
+
+
 
                     </div>
 
 
 
+
+
+
+
                     <input
+
                         type="checkbox"
+
                         class="account-toggle-input"
+
+
 
                         data-notification-preference="email_notifications"
 
+
+
                         {% if notification_preferences.email_notifications %}
+
                             checked
+
                         {% endif %}
+
                     >
 
 
+
+
+
                     <span
+
                         class="account-toggle"
+
                         aria-hidden="true"
+
                     ></span>
+
+
+
 
 
                 </label>
 
 
 
+
+
+
+
                 <!-- =============================================
+
                     IN-APP ALERTS
+
                     ============================================= -->
+
+
 
                 <label class="account-notification-row">
 
 
+
+
+
                     <div class="account-notification-label">
 
+
+
                         <iconsax-icon
+
                             name="notification"
+
                             type="twotone"
+
                             size="23"
+
                             color="currentColor"
+
                         ></iconsax-icon>
 
 
+
+
+
                         <span>
+
                             In-app alerts
+
                         </span>
+
+
 
                     </div>
 
 
 
+
+
+
+
                     <input
+
                         type="checkbox"
+
                         class="account-toggle-input"
+
+
 
                         data-notification-preference="in_app_alerts"
 
+
+
                         {% if notification_preferences.in_app_alerts %}
+
                             checked
+
                         {% endif %}
+
                     >
 
 
+
+
+
                     <span
+
                         class="account-toggle"
+
                         aria-hidden="true"
+
                     ></span>
 
 
+
+
+
                 </label>
+
+
+
 
 
             </div>
 
 
+
+
+
         </article>
+
+
+
 
 
     </section>
 
 
+
+
+
 </div>
 
+
+
 <!-- =========================================================
+
      PROFILE PHOTO CROP MODAL
+
      ========================================================= -->
 
+
+
 <div
+
     class="profile-crop-backdrop"
+
     id="profileCropBackdrop"
+
     hidden
+
 >
+
     <section
+
         class="profile-crop-modal"
+
         role="dialog"
+
         aria-modal="true"
+
         aria-labelledby="profileCropTitle"
+
     >
+
+
 
         <header class="profile-crop-header">
 
+
+
             <div>
+
                 <h2 id="profileCropTitle">
+
                     Crop Profile Photo
+
                 </h2>
 
+
+
                 <p>
+
                     Adjust your photo inside the square.
+
                 </p>
+
             </div>
 
 
+
+
+
+            <button
+
+                type="button"
+
+                class="profile-crop-close"
+
+                id="profileCropClose"
+
+                aria-label="Close"
+
+            >
+
+                ×
+
+            </button>
+
+
+
+        </header>
+
+
+
+
+
+        <div class="profile-crop-body">
+
+
+
+            <div
+
+                class="profile-crop-viewport"
+
+                id="profileCropViewport"
+
+            >
+
+                <img
+
+                    id="profileCropImage"
+
+                    class="profile-crop-image"
+
+                    alt="Profile photo crop preview"
+
+                    draggable="false"
+
+                >
+
+
+
+                <div
+
+                    class="profile-crop-grid"
+
+                    aria-hidden="true"
+
+                ></div>
+
+            </div>
+
+
+
+
+
+            <div class="profile-crop-controls">
+
+
+
+                <span class="profile-crop-zoom-symbol">
+
+                    −
+
+                </span>
+
+
+
+                <input
+
+                    type="range"
+
+                    id="profileCropZoom"
+
+                    class="profile-crop-zoom"
+
+                    min="100"
+
+                    max="300"
+
+                    value="100"
+
+                    step="1"
+
+                    aria-label="Photo zoom"
+
+                >
+
+
+
+                <span class="profile-crop-zoom-symbol">
+
+                    +
+
+                </span>
+
+
+
+            </div>
+
+
+
+
+
+            <p class="profile-crop-help">
+
+                Drag the photo to reposition it.
+
+            </p>
+
+
+
+        </div>
+
+
+
+
+
+        <footer class="profile-crop-footer">
+
+
+
+            <button
+
+                type="button"
+
+                class="profile-crop-button profile-crop-button-secondary"
+
+                id="profileCropCancel"
+
+            >
+
+                Cancel
+
+            </button>
+
+
+
+
+
+            <button
+
+                type="button"
+
+                class="profile-crop-button profile-crop-button-primary"
+
+                id="profileCropSave"
+
+            >
+
+                Save Photo
+
+            </button>
+
+
+
+        </footer>
+
+
+
+    </section>
+
+</div>
+
+<!-- =========================================================
+     EMAIL / PHONE CHANGE VERIFICATION MODAL
+     ========================================================= -->
+
+<div
+    class="account-contact-modal-backdrop"
+    data-contact-modal
+    data-start-url="{{ url_for('account.start_account_contact_change') }}"
+    data-verify-url="{{ url_for('account.verify_account_contact_change') }}"
+    data-resend-url="{{ url_for('account.resend_account_contact_change') }}"
+    hidden
+>
+
+    <section
+        class="account-contact-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="accountContactModalTitle"
+    >
+
+        <header class="account-contact-modal-header">
+
+            <div>
+                <h2 id="accountContactModalTitle" data-contact-title>
+                    Change Email Address
+                </h2>
+
+                <p data-contact-subtitle>
+                    Enter your new email address.
+                </p>
+            </div>
+
             <button
                 type="button"
-                class="profile-crop-close"
-                id="profileCropClose"
+                class="account-contact-modal-close"
+                data-contact-close
                 aria-label="Close"
             >
                 ×
@@ -1453,126 +3130,258 @@ My Account | BIKA
 
         </header>
 
+        <div class="account-contact-modal-body">
 
-        <div class="profile-crop-body">
+            <div data-contact-step="entry">
 
-            <div
-                class="profile-crop-viewport"
-                id="profileCropViewport"
-            >
-                <img
-                    id="profileCropImage"
-                    class="profile-crop-image"
-                    alt="Profile photo crop preview"
-                    draggable="false"
-                >
+                <div class="account-contact-current-box">
+                    <span data-contact-current-label>
+                        Current Email
+                    </span>
+
+                    <strong data-contact-current-value></strong>
+                </div>
+
+                <label class="account-contact-modal-field">
+
+                    <span data-contact-new-label>
+                        New Email
+                    </span>
+
+
+                    <div
+                        class="account-contact-value-shell"
+                        data-contact-value-shell
+                    >
+
+                        <span
+                            class="account-contact-phone-prefix"
+                            data-contact-phone-prefix
+                            hidden
+                        >
+                            +60
+                        </span>
+
+
+                        <span
+                            class="account-contact-phone-divider"
+                            data-contact-phone-divider
+                            hidden
+                            aria-hidden="true"
+                        ></span>
+
+
+                        <input
+                            type="email"
+                            class="account-contact-modal-input"
+                            autocomplete="email"
+                            data-contact-value
+                        >
+
+                    </div>
+
+                </label>
 
                 <div
-                    class="profile-crop-grid"
-                    aria-hidden="true"
+                    class="account-contact-error"
+                    data-contact-entry-error
+                    aria-live="polite"
                 ></div>
-            </div>
 
+                <div class="account-contact-modal-actions">
+                    <button
+                        type="button"
+                        class="account-contact-secondary-button"
+                        data-contact-close
+                    >
+                        Cancel
+                    </button>
 
-            <div class="profile-crop-controls">
-
-                <span class="profile-crop-zoom-symbol">
-                    −
-                </span>
-
-                <input
-                    type="range"
-                    id="profileCropZoom"
-                    class="profile-crop-zoom"
-                    min="100"
-                    max="300"
-                    value="100"
-                    step="1"
-                    aria-label="Photo zoom"
-                >
-
-                <span class="profile-crop-zoom-symbol">
-                    +
-                </span>
+                    <button
+                        type="button"
+                        class="account-contact-primary-button"
+                        data-contact-send
+                    >
+                        Send Code
+                    </button>
+                </div>
 
             </div>
 
+            <div data-contact-step="verify" hidden>
 
-            <p class="profile-crop-help">
-                Drag the photo to reposition it.
-            </p>
+                <div class="account-contact-otp-icon">
+                    <iconsax-icon
+                        name="shield-tick"
+                        type="twotone"
+                        size="24"
+                        color="currentColor"
+                    ></iconsax-icon>
+                </div>
+
+                <h3>
+                    Enter verification code
+                </h3>
+
+                <p
+                    class="account-contact-code-message"
+                    data-contact-code-message
+                ></p>
+
+                <label class="account-contact-modal-field account-contact-code-field">
+                    <span>
+                        Verification Code
+                    </span>
+
+                    <input
+                        type="text"
+                        inputmode="numeric"
+                        pattern="[0-9]*"
+                        maxlength="6"
+                        autocomplete="one-time-code"
+                        class="account-contact-modal-input account-contact-code-input"
+                        placeholder="000000"
+                        data-contact-code
+                    >
+                </label>
+
+                <div
+                    class="account-contact-error"
+                    data-contact-verify-error
+                    aria-live="polite"
+                ></div>
+
+                <div class="account-contact-resend-row">
+                    <span data-contact-countdown></span>
+
+                    <button
+                        type="button"
+                        class="account-contact-resend-button"
+                        data-contact-resend
+                        disabled
+                    >
+                        Resend Code
+                    </button>
+                </div>
+
+                <div class="account-contact-modal-actions">
+                    <button
+                        type="button"
+                        class="account-contact-secondary-button"
+                        data-contact-close
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        type="button"
+                        class="account-contact-primary-button"
+                        data-contact-verify
+                    >
+                        Verify &amp; Update
+                    </button>
+                </div>
+
+            </div>
 
         </div>
 
-
-        <footer class="profile-crop-footer">
-
-            <button
-                type="button"
-                class="profile-crop-button profile-crop-button-secondary"
-                id="profileCropCancel"
-            >
-                Cancel
-            </button>
-
-
-            <button
-                type="button"
-                class="profile-crop-button profile-crop-button-primary"
-                id="profileCropSave"
-            >
-                Save Photo
-            </button>
-
-        </footer>
-
     </section>
+
 </div>
+
+
+
+
 
 
 {% endblock %}
 
 
 
+
+
+
+
 {% block extra_js %}
 
+
+
 <script
+
     src="{{ url_for(
+
         'static',
+
         filename='js/account.js'
+
     ) }}"
+
 ></script>
 
 
+
+
+
 <script
+
     src="{{ url_for(
+
         'static',
+
         filename='js/notification_preferences.js'
+
     ) }}"
+
 ></script>
 
 
-<!-- =====================================================
-     PROFILE PHOTO CROP
-     ===================================================== -->
 
 <script
+
     src="{{ url_for(
+
         'static',
+
         filename='js/profile_photo_crop.js'
+
     ) }}"
+
 ></script>
+
+
+<script
+
+    src="{{ url_for(
+
+        'static',
+
+        filename='js/account_contact_change.js'
+
+    ) }}"
+
+></script>
+
+
+
 
 
 {% if not pending_work_request %}
 
 <script
+
     src="{{ url_for(
+
         'static',
+
         filename='js/work-information.js'
+
     ) }}"
+
 ></script>
 
 {% endif %}
+
+
 
 {% endblock %}
