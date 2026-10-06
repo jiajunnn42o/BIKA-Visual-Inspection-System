@@ -97,20 +97,29 @@ My Account | BIKA
 
                 <div class="account-profile-avatar-wrap">
 
-
                     <div class="account-profile-avatar">
 
-                        {% if profile_photo_url %}
+                        {% if current_user.profile_photo %}
 
                             <img
-                                src="{{ profile_photo_url }}"
-                                alt="{{ user.full_name }}"
+                                src="{{ url_for(
+                                    'static',
+                                    filename=current_user.profile_photo
+                                ) }}"
+                                alt="{{ current_user.full_name }}"
+                                data-profile-avatar-image
                             >
+
+                        {% elif current_user.first_name %}
+
+                            <span data-profile-avatar-fallback>
+                                {{ current_user.first_name[0]|upper }}
+                            </span>
 
                         {% else %}
 
-                            <span>
-                                {{ user.first_name[0]|upper if user.first_name else 'U' }}
+                            <span data-profile-avatar-fallback>
+                                U
                             </span>
 
                         {% endif %}
@@ -118,51 +127,30 @@ My Account | BIKA
                     </div>
 
 
-
-                    <form
-                        method="POST"
-                        action="{{ url_for(
-                            'account.update_profile_photo'
-                        ) }}"
-                        enctype="multipart/form-data"
-                        class="account-photo-form"
+                    <input
+                        type="file"
+                        id="profilePhotoInput"
+                        class="account-photo-input"
+                        accept="image/jpeg,image/png,image/webp"
                     >
 
-                        <input
-                            type="hidden"
-                            name="csrf_token"
-                            value="{{ csrf_token() }}"
-                        >
 
+                    <button
+                        type="button"
+                        class="account-avatar-edit"
+                        id="profilePhotoButton"
+                        aria-label="Change profile photo"
+                        title="Change profile photo"
+                    >
 
-                        <input
-                            id="accountProfilePhotoInput"
-                            type="file"
-                            name="profile_photo"
-                            accept="image/png,image/jpeg,image/webp"
-                            class="account-photo-input"
-                            data-profile-photo-input
-                        >
+                        <iconsax-icon
+                            name="edit-2"
+                            type="bold"
+                            size="15"
+                            color="currentColor"
+                        ></iconsax-icon>
 
-
-                        <label
-                            for="accountProfilePhotoInput"
-                            class="account-avatar-edit"
-                            aria-label="Change profile photo"
-                            title="Change profile photo"
-                        >
-
-                            <iconsax-icon
-                                name="edit-2"
-                                type="bold"
-                                size="18"
-                                color="currentColor"
-                            ></iconsax-icon>
-
-                        </label>
-
-                    </form>
-
+                    </button>
 
                 </div>
 
@@ -1425,6 +1413,122 @@ My Account | BIKA
 
 </div>
 
+<!-- =========================================================
+     PROFILE PHOTO CROP MODAL
+     ========================================================= -->
+
+<div
+    class="profile-crop-backdrop"
+    id="profileCropBackdrop"
+    hidden
+>
+    <section
+        class="profile-crop-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profileCropTitle"
+    >
+
+        <header class="profile-crop-header">
+
+            <div>
+                <h2 id="profileCropTitle">
+                    Crop Profile Photo
+                </h2>
+
+                <p>
+                    Adjust your photo inside the square.
+                </p>
+            </div>
+
+
+            <button
+                type="button"
+                class="profile-crop-close"
+                id="profileCropClose"
+                aria-label="Close"
+            >
+                ×
+            </button>
+
+        </header>
+
+
+        <div class="profile-crop-body">
+
+            <div
+                class="profile-crop-viewport"
+                id="profileCropViewport"
+            >
+                <img
+                    id="profileCropImage"
+                    class="profile-crop-image"
+                    alt="Profile photo crop preview"
+                    draggable="false"
+                >
+
+                <div
+                    class="profile-crop-grid"
+                    aria-hidden="true"
+                ></div>
+            </div>
+
+
+            <div class="profile-crop-controls">
+
+                <span class="profile-crop-zoom-symbol">
+                    −
+                </span>
+
+                <input
+                    type="range"
+                    id="profileCropZoom"
+                    class="profile-crop-zoom"
+                    min="100"
+                    max="300"
+                    value="100"
+                    step="1"
+                    aria-label="Photo zoom"
+                >
+
+                <span class="profile-crop-zoom-symbol">
+                    +
+                </span>
+
+            </div>
+
+
+            <p class="profile-crop-help">
+                Drag the photo to reposition it.
+            </p>
+
+        </div>
+
+
+        <footer class="profile-crop-footer">
+
+            <button
+                type="button"
+                class="profile-crop-button profile-crop-button-secondary"
+                id="profileCropCancel"
+            >
+                Cancel
+            </button>
+
+
+            <button
+                type="button"
+                class="profile-crop-button profile-crop-button-primary"
+                id="profileCropSave"
+            >
+                Save Photo
+            </button>
+
+        </footer>
+
+    </section>
+</div>
+
 
 {% endblock %}
 
@@ -1448,13 +1552,27 @@ My Account | BIKA
 ></script>
 
 
+<!-- =====================================================
+     PROFILE PHOTO CROP
+     ===================================================== -->
+
+<script
+    src="{{ url_for(
+        'static',
+        filename='js/profile_photo_crop.js'
+    ) }}"
+></script>
+
+
 {% if not pending_work_request %}
+
 <script
     src="{{ url_for(
         'static',
         filename='js/work-information.js'
     ) }}"
 ></script>
+
 {% endif %}
 
 {% endblock %}

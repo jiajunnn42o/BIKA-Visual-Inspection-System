@@ -1,0 +1,4025 @@
+/* =========================================================
+
+   BIKA SYSTEM PAGE
+
+   ========================================================= */
+
+
+
+.system-page {
+
+    --sys-brand: #741F2E;
+
+    --sys-brand-dark: #5E1825;
+
+
+
+    --sys-text: #242424;
+
+    --sys-muted: #898989;
+
+    --sys-light: #A4A4A4;
+
+
+
+    --sys-border:
+
+        rgba(
+
+            225,
+
+            225,
+
+            225,
+
+            0.80
+
+        );
+
+
+
+    --sys-surface:
+
+        rgba(
+
+            255,
+
+            255,
+
+            255,
+
+            0.86
+
+        );
+
+
+
+    --sys-shadow:
+
+        0 4px 16px
+
+        #E8E8E8;
+
+
+
+    width: 100%;
+
+
+
+    color:
+
+        var(--sys-text);
+
+}
+
+
+
+
+
+/* =========================================================
+
+   HEADER
+
+   ========================================================= */
+
+
+
+.system-page-header {
+
+    margin-bottom: 20px;
+
+}
+
+
+
+
+
+.system-page-header h1 {
+
+    margin: 0;
+
+
+
+    color:
+
+        var(--sys-text);
+
+
+
+    font-size: 27px;
+
+    font-weight: 500;
+
+
+
+    line-height: 1.08;
+
+
+
+    letter-spacing:
+
+        -0.025em;
+
+}
+
+
+
+
+
+.system-page-header p {
+
+    margin:
+
+        4px
+
+        0
+
+        0;
+
+
+
+    color:
+
+        var(--sys-muted);
+
+
+
+    font-size: 14px;
+
+    font-weight: 400;
+
+
+
+    line-height: 1.35;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   STAT GRID
+
+   ========================================================= */
+
+
+
+.system-stat-grid {
+
+    display: grid;
+
+
+
+    grid-template-columns:
+
+        repeat(
+
+            5,
+
+            minmax(
+
+                0,
+
+                1fr
+
+            )
+
+        );
+
+
+
+    gap: 14px;
+
+
+
+    margin-bottom: 12px;
+
+}
+
+
+
+
+
+.system-stat-card {
+
+    min-width: 0;
+
+    height: 82px;
+
+
+
+    display: flex;
+
+    align-items: center;
+
+
+
+    gap: 13px;
+
+
+
+    padding:
+
+        11px
+
+        14px;
+
+
+
+    border:
+
+        1px solid
+
+        rgba(
+
+            255,
+
+            255,
+
+            255,
+
+            0.62
+
+        );
+
+
+
+    border-radius: 10px;
+
+
+
+    background:
+
+        var(--sys-surface);
+
+
+
+    box-shadow:
+
+        var(--sys-shadow);
+
+}
+
+
+
+
+
+/* =========================================================
+
+   STAT ICON
+
+   ========================================================= */
+
+
+
+.system-stat-icon {
+
+    width: 50px;
+
+    height: 50px;
+
+
+
+    flex:
+
+        0
+
+        0
+
+        50px;
+
+
+
+    display: grid;
+
+    place-items: center;
+
+
+
+    border-radius: 50%;
+
+}
+
+
+
+
+
+.system-stat-icon iconsax-icon {
+
+    width: 28px !important;
+
+    height: 28px !important;
+
+}
+
+
+
+
+
+.system-stat-icon-purple {
+
+    color: #74638A;
+
+
+
+    background:
+
+        #E0DAEA;
+
+}
+
+
+
+
+
+.system-stat-icon-green {
+
+    color: #54794C;
+
+
+
+    background:
+
+        #DDE8D7;
+
+}
+
+
+
+
+
+.system-stat-icon-orange {
+
+    color: #B27A36;
+
+
+
+    background:
+
+        #F5E5CF;
+
+}
+
+
+
+
+
+.system-stat-icon-red {
+
+    color: #A14B59;
+
+
+
+    background:
+
+        #ECD9DD;
+
+}
+
+
+
+
+
+.system-stat-icon-blue {
+
+    color: #4F6FA8;
+
+
+
+    background:
+
+        #DAE2F3;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   STAT COPY
+
+   ========================================================= */
+
+
+
+.system-stat-content {
+
+    min-width: 0;
+
+
+
+    display: flex;
+
+    flex-direction: column;
+
+}
+
+
+
+
+
+.system-stat-label {
+
+    color:
+
+        #666666;
+
+
+
+    font-size: 12.5px;
+
+    font-weight: 500;
+
+
+
+    line-height: 1.1;
+
+}
+
+
+
+
+
+.system-stat-content strong {
+
+    margin-top: 1px;
+
+
+
+    color:
+
+        #333333;
+
+
+
+    font-size: 26px;
+
+    font-weight: 500;
+
+
+
+    line-height: 1;
+
+}
+
+
+
+
+
+.system-stat-content small {
+
+    margin-top: 3px;
+
+
+
+    overflow: hidden;
+
+
+
+    color:
+
+        #767676;
+
+
+
+    font-size: 10.5px;
+
+    font-weight: 400;
+
+
+
+    line-height: 1.15;
+
+
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   USER CARD
+
+   ========================================================= */
+
+
+
+.system-users-card {
+
+    width: 100%;
+
+
+
+    height: auto;
+
+    min-height: 0;
+
+
+
+    margin-bottom: 10px;
+
+
+
+    padding:
+
+        10px
+
+        20px
+
+        10px;
+
+
+
+    border:
+
+        1px solid
+
+        rgba(
+
+            255,
+
+            255,
+
+            255,
+
+            0.58
+
+        );
+
+
+
+    border-radius: 18px;
+
+
+
+    background:
+
+        var(--sys-surface);
+
+
+
+    box-shadow:
+
+        var(--sys-shadow);
+
+}
+
+
+
+
+
+/* =========================================================
+
+   TOOLBAR
+
+   ========================================================= */
+
+
+
+.system-users-toolbar {
+
+    min-height: 40px;
+
+
+
+    display: flex;
+
+    align-items: center;
+
+
+
+    gap: 8px;
+
+
+
+    margin-bottom: 4px;
+
+}
+
+
+
+
+
+.system-search {
+
+    width: 206px;
+
+    height: 28px;
+
+
+
+    display: flex;
+
+    align-items: center;
+
+
+
+    gap: 7px;
+
+
+
+    padding:
+
+        0
+
+        11px;
+
+
+
+    border:
+
+        1px solid
+
+        #E6E6E6;
+
+
+
+    border-radius: 999px;
+
+
+
+    background:
+
+        #FFFFFF;
+
+
+
+    color:
+
+        #7E7E7E;
+
+}
+
+
+
+
+
+.system-search iconsax-icon {
+
+    width: 15px !important;
+
+    height: 15px !important;
+
+}
+
+
+
+
+
+.system-search input {
+
+    width: 100%;
+
+
+
+    min-width: 0;
+
+
+
+    padding: 0;
+
+
+
+    border: 0;
+
+    outline: 0;
+
+
+
+    background: transparent;
+
+
+
+    color:
+
+        var(--sys-text);
+
+
+
+    font-family:
+
+        "Inter",
+
+        Arial,
+
+        sans-serif;
+
+
+
+    font-size: 10.5px;
+
+}
+
+
+
+
+
+.system-search input::placeholder {
+
+    color:
+
+        #969696;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   FILTERS
+
+   ========================================================= */
+
+
+
+.system-toolbar-filters {
+
+    display: flex;
+
+    align-items: center;
+
+
+
+    gap: 8px;
+
+}
+
+
+
+
+
+.system-filter {
+
+    position: relative;
+
+}
+
+
+
+
+
+.system-filter select {
+
+    height: 28px;
+
+
+
+    padding:
+
+        0
+
+        29px
+
+        0
+
+        13px;
+
+
+
+    border:
+
+        1px solid
+
+        #E6E6E6;
+
+
+
+    outline: 0;
+
+
+
+    border-radius: 999px;
+
+
+
+    background:
+
+        #FFFFFF;
+
+
+
+    color:
+
+        #555555;
+
+
+
+    font-family:
+
+        "Inter",
+
+        Arial,
+
+        sans-serif;
+
+
+
+    font-size: 10.5px;
+
+    font-weight: 400;
+
+
+
+    cursor: pointer;
+
+
+
+    appearance: none;
+
+    -webkit-appearance: none;
+
+
+
+    background-image:
+
+        linear-gradient(
+
+            45deg,
+
+            transparent 50%,
+
+            #8A8A8A 50%
+
+        ),
+
+        linear-gradient(
+
+            135deg,
+
+            #8A8A8A 50%,
+
+            transparent 50%
+
+        );
+
+
+
+    background-position:
+
+        calc(100% - 14px)
+
+        11px,
+
+
+
+        calc(100% - 10px)
+
+        11px;
+
+
+
+    background-size:
+
+        4px
+
+        4px,
+
+
+
+        4px
+
+        4px;
+
+
+
+    background-repeat:
+
+        no-repeat;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   EXPORT
+
+   ========================================================= */
+
+
+
+.system-export-button {
+
+    height: 28px;
+
+
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+
+
+    gap: 7px;
+
+
+
+    margin-left: auto;
+
+
+
+    padding:
+
+        0
+
+        15px;
+
+
+
+    border:
+
+        1px solid
+
+        #E2E2E2;
+
+
+
+    border-radius: 999px;
+
+
+
+    background:
+
+        #FFFFFF;
+
+
+
+    color:
+
+        #3F3F3F;
+
+
+
+    font-family:
+
+        "Inter",
+
+        Arial,
+
+        sans-serif;
+
+
+
+    font-size: 10.5px;
+
+    font-weight: 500;
+
+
+
+    cursor: pointer;
+
+}
+
+
+
+
+
+.system-export-button svg {
+
+    width: 15px;
+
+    height: 15px;
+
+
+
+    fill: none;
+
+
+
+    stroke:
+
+        currentColor;
+
+
+
+    stroke-width: 1.6;
+
+
+
+    stroke-linecap: round;
+
+    stroke-linejoin: round;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   TABLE
+
+   ========================================================= */
+
+
+
+.system-table-wrap {
+
+    width: 100%;
+
+
+
+    overflow-x: auto;
+
+}
+
+
+
+
+
+.system-table {
+
+    width: 100%;
+
+
+
+    border-collapse: collapse;
+
+
+
+    table-layout: fixed;
+
+}
+
+
+
+
+
+.system-table th,
+
+.system-table td {
+
+    text-align: left;
+
+
+
+    vertical-align: middle;
+
+
+
+    white-space: nowrap;
+
+}
+
+
+
+
+
+.system-table thead th {
+
+    height: 31px;
+
+
+
+    padding:
+
+        0
+
+        3px;
+
+
+
+    border-bottom:
+
+        1px solid
+
+        #EAEAEA;
+
+
+
+    color:
+
+        #858585;
+
+
+
+    font-size: 11.5px;
+
+    font-weight: 500;
+
+}
+
+
+
+
+
+.system-table tbody td {
+
+    height: 54px;
+
+
+
+    padding:
+
+        0
+
+        3px;
+
+
+
+    color:
+
+        #3A3A3A;
+
+
+
+    font-size: 11.5px;
+
+
+
+    border-bottom:
+
+        0;
+
+}
+
+
+
+
+
+/* widths */
+
+
+
+.system-table th:nth-child(1) {
+
+    width: 20%;
+
+}
+
+
+
+.system-table th:nth-child(2) {
+
+    width: 12.5%;
+
+}
+
+
+
+.system-table th:nth-child(3) {
+
+    width: 12%;
+
+}
+
+
+
+.system-table th:nth-child(4) {
+
+    width: 20%;
+
+}
+
+
+
+.system-table th:nth-child(5) {
+
+    width: 16%;
+
+}
+
+
+
+.system-table th:nth-child(6) {
+
+    width: 15%;
+
+}
+
+
+
+.system-table th:nth-child(7) {
+
+    width: 7%;
+
+}
+
+
+
+
+
+/* =========================================================
+   SORT
+   Same visual and interaction style as Registration Requests
+   ========================================================= */
+
+.system-sort-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+
+
+.system-sort-button {
+    width: 24px;
+    height: 24px;
+
+    display: grid;
+    place-items: center;
+
+    padding: 0;
+
+    border: 0;
+    outline: 0;
+
+    background:
+        transparent !important;
+
+    color:
+        var(--sys-muted);
+
+    cursor: pointer;
+}
+
+
+.system-sort-button
+iconsax-icon {
+    width: 15px !important;
+    height: 15px !important;
+
+    color:
+        currentColor !important;
+
+    transform:
+        rotate(
+            var(
+                --system-sort-rotation,
+                0deg
+            )
+        );
+
+    transition:
+        transform
+        260ms
+        cubic-bezier(
+            0.22,
+            1,
+            0.36,
+            1
+        );
+}
+
+
+.system-sort-button:hover,
+.system-sort-button.is-active {
+    color:
+        var(--sys-brand);
+
+    background:
+        transparent !important;
+}
+
+
+html[data-theme="dark"]
+.system-sort-button {
+    color:
+        #A8A8A8;
+}
+
+
+html[data-theme="dark"]
+.system-sort-button:hover,
+
+html[data-theme="dark"]
+.system-sort-button.is-active {
+    color:
+        #FFFFFF;
+}
+
+
+
+/* =========================================================
+
+   USER CELL
+
+   ========================================================= */
+
+
+
+.system-user-cell {
+
+    display: flex;
+
+    align-items: center;
+
+
+
+    gap: 11px;
+
+}
+
+
+
+
+
+.system-avatar {
+
+    width: 39px;
+
+    height: 39px;
+
+
+
+    flex:
+
+        0
+
+        0
+
+        39px;
+
+
+
+    display: grid;
+
+    place-items: center;
+
+
+
+    overflow: hidden;
+
+
+
+    border-radius: 50%;
+
+
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+}
+
+
+
+
+
+.system-avatar img {
+
+    width: 100%;
+
+    height: 100%;
+
+
+
+    object-fit: cover;
+
+}
+
+
+
+
+
+.system-avatar-green {
+
+    color: #56764F;
+
+    background: #E0EBDD;
+
+}
+
+
+
+
+
+.system-avatar-teal {
+
+    color: #3B736C;
+
+    background: #D8EBE8;
+
+}
+
+
+
+
+
+.system-avatar-blue {
+
+    color: #334B7B;
+
+    background: #E0E5F0;
+
+}
+
+
+
+
+
+.system-avatar-orange {
+
+    color: #845B28;
+
+    background: #F3E4CF;
+
+}
+
+
+
+
+
+.system-avatar-red {
+
+    color: #88434F;
+
+    background: #EDDCDF;
+
+}
+
+
+
+
+
+.system-user-copy {
+
+    min-width: 0;
+
+
+
+    display: flex;
+
+    flex-direction: column;
+
+
+
+    gap: 2px;
+
+}
+
+
+
+
+
+.system-user-copy strong {
+
+    overflow: hidden;
+
+
+
+    color:
+
+        #3C3C3C;
+
+
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+
+
+    text-overflow: ellipsis;
+
+}
+
+
+
+
+
+.system-user-copy small {
+
+    overflow: hidden;
+
+
+
+    color:
+
+        #969696;
+
+
+
+    font-size: 10.5px;
+
+
+
+    text-overflow: ellipsis;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   ROLE
+
+   ========================================================= */
+
+
+
+.system-role-pill {
+
+    min-width: 68px;
+
+    height: 26px;
+
+
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+
+
+    padding:
+
+        0
+
+        13px;
+
+
+
+    border-radius: 999px;
+
+
+
+    font-size: 11.5px;
+
+    font-weight: 600;
+
+}
+
+
+
+
+
+.system-role-user {
+
+    color: #454545;
+
+
+
+    background:
+
+        #F2E2CB;
+
+}
+
+
+
+
+
+.system-role-admin {
+
+    color: #454545;
+
+
+
+    background:
+
+        #F0E0E4;
+
+}
+
+
+
+
+
+.system-role-superadmin {
+
+    color: #454545;
+
+
+
+    background:
+
+        #DFE4EE;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   STATUS
+
+   ========================================================= */
+
+
+
+.system-status-cell {
+
+    display: inline-flex;
+
+    align-items: center;
+
+
+
+    gap: 7px;
+
+
+
+    font-size: 11.5px;
+
+}
+
+
+
+
+
+.system-status-cell strong {
+
+    font-weight: 600;
+
+}
+
+
+
+
+
+.system-status-dot {
+
+    width: 6px;
+
+    height: 6px;
+
+
+
+    flex:
+
+        0
+
+        0
+
+        6px;
+
+
+
+    border-radius: 50%;
+
+}
+
+
+
+
+
+.system-status-active {
+
+    color: #57774F;
+
+}
+
+
+
+.system-status-active
+
+.system-status-dot {
+
+    background: #81A875;
+
+}
+
+
+
+
+
+.system-status-inactive {
+
+    color: #A56E2E;
+
+}
+
+
+
+.system-status-inactive
+
+.system-status-dot {
+
+    background: #D79A4D;
+
+}
+
+
+
+
+
+.system-status-locked {
+
+    color: #913443;
+
+}
+
+
+
+.system-status-locked
+
+.system-status-dot {
+
+    background: #C85D4D;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   TWO LINE CELLS
+
+   ========================================================= */
+
+
+
+.system-two-line-cell {
+
+    display: flex;
+
+    flex-direction: column;
+
+
+
+    gap: 2px;
+
+}
+
+
+
+
+
+.system-two-line-cell strong {
+
+    display: inline-flex;
+
+    align-items: center;
+
+
+
+    gap: 7px;
+
+
+
+    color:
+
+        #3B3B3B;
+
+
+
+    font-size: 11.5px;
+
+    font-weight: 600;
+
+}
+
+
+
+
+
+.system-two-line-cell small {
+
+    padding-left: 14px;
+
+
+
+    color:
+
+        #969696;
+
+
+
+    font-size: 10px;
+
+}
+
+
+
+
+
+.system-mini-dot {
+
+    width: 6px;
+
+    height: 6px;
+
+
+
+    flex:
+
+        0
+
+        0
+
+        6px;
+
+
+
+    border-radius: 50%;
+
+}
+
+
+
+
+
+.system-mini-dot-green {
+
+    background: #83A97A;
+
+}
+
+
+
+.system-mini-dot-orange {
+
+    background: #D89A50;
+
+}
+
+
+
+.system-mini-dot-red {
+
+    background: #C75B4D;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   SECURITY
+
+   ========================================================= */
+
+
+
+.system-security {
+
+    display: flex;
+
+    align-items: center;
+
+
+
+    gap: 9px;
+
+}
+
+
+
+
+
+.system-security iconsax-icon {
+
+    width: 24px !important;
+
+    height: 24px !important;
+
+}
+
+
+
+
+
+.system-security > div {
+
+    display: flex;
+
+    flex-direction: column;
+
+
+
+    gap: 2px;
+
+}
+
+
+
+
+
+.system-security strong {
+
+    font-size: 11.5px;
+
+    font-weight: 600;
+
+}
+
+
+
+
+
+.system-security small {
+
+    color:
+
+        #999999;
+
+
+
+    font-size: 10px;
+
+}
+
+
+
+
+
+.system-security-normal {
+
+    color: #638457;
+
+}
+
+
+
+
+
+.system-security-protected {
+
+    color: #355F9E;
+
+}
+
+
+
+
+
+.system-security-inactive {
+
+    color: #B37B35;
+
+}
+
+
+
+
+
+.system-security-locked {
+
+    color: #B65146;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   EDIT
+
+   ========================================================= */
+
+
+
+.system-action-column {
+
+    text-align: center !important;
+
+}
+
+
+
+
+
+.system-edit-button {
+
+    width: 52px;
+
+    height: 27px;
+
+
+
+    border:
+
+        1px solid
+
+        var(--sys-brand);
+
+
+
+    border-radius: 999px;
+
+
+
+    background:
+
+        transparent;
+
+
+
+    color:
+
+        var(--sys-brand);
+
+
+
+    font-family:
+
+        "Inter",
+
+        Arial,
+
+        sans-serif;
+
+
+
+    font-size: 10.5px;
+
+    font-weight: 500;
+
+
+
+    cursor: pointer;
+
+}
+
+
+
+
+
+.system-edit-button:hover {
+
+    background:
+
+        var(--sys-brand);
+
+
+
+    color:
+
+        #FFFFFF;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   FOOTER
+
+   ========================================================= */
+
+
+
+.system-table-footer {
+
+    height: 35px;
+
+
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+
+
+    color:
+
+        #777777;
+
+
+
+    font-size: 10.5px;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   PAGINATION
+
+   ========================================================= */
+
+
+
+.system-pagination {
+
+    display: flex;
+
+    align-items: center;
+
+
+
+    gap: 7px;
+
+}
+
+
+
+
+
+.system-page-numbers {
+
+    display: flex;
+
+    align-items: center;
+
+
+
+    gap: 7px;
+
+}
+
+
+
+
+
+.system-page-button,
+
+.system-page-number {
+
+    width: 29px;
+
+    height: 29px;
+
+
+
+    display: grid;
+
+    place-items: center;
+
+
+
+    padding: 0;
+
+
+
+    border:
+
+        1px solid
+
+        #E6E6E6;
+
+
+
+    border-radius: 50%;
+
+
+
+    background:
+
+        #FFFFFF;
+
+
+
+    color:
+
+        #333333;
+
+
+
+    font-family:
+
+        "Inter",
+
+        Arial,
+
+        sans-serif;
+
+
+
+    font-size: 11px;
+
+
+
+    cursor: pointer;
+
+}
+
+
+
+
+
+.system-page-number.is-active {
+
+    border-color:
+
+        #333333;
+
+
+
+    font-weight: 600;
+
+}
+
+
+
+
+
+.system-page-button:disabled {
+
+    color: #D0D0D0;
+
+
+
+    cursor: default;
+
+}
+
+
+
+
+
+.system-page-ellipsis {
+
+    color:
+
+        #808080;
+
+
+
+    font-size: 11px;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   BOTTOM
+
+   ========================================================= */
+
+
+
+.system-bottom-grid {
+
+    display: grid;
+
+
+
+    grid-template-columns:
+
+        1fr
+
+        1fr;
+
+
+
+    gap: 12px;
+
+}
+
+
+
+
+
+.system-bottom-card {
+
+    min-height: 196px;
+
+
+
+    padding:
+
+        14px
+
+        20px;
+
+
+
+    border:
+
+        1px solid
+
+        rgba(
+
+            255,
+
+            255,
+
+            255,
+
+            0.58
+
+        );
+
+
+
+    border-radius: 14px;
+
+
+
+    background:
+
+        var(--sys-surface);
+
+
+
+    box-shadow:
+
+        var(--sys-shadow);
+
+}
+
+
+
+
+
+/* =========================================================
+
+   CARD TITLE
+
+   ========================================================= */
+
+
+
+.system-card-title {
+
+    display: flex;
+
+    align-items: center;
+
+
+
+    gap: 8px;
+
+
+
+    margin-bottom: 8px;
+
+
+
+    color:
+
+        #464646;
+
+}
+
+
+
+
+
+.system-card-title iconsax-icon {
+
+    width: 18px !important;
+
+    height: 18px !important;
+
+}
+
+
+
+
+
+.system-card-title h2 {
+
+    margin: 0;
+
+
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   PERMISSIONS
+
+   ========================================================= */
+
+
+
+.system-permissions-table {
+
+    width: 100%;
+
+
+
+    border-collapse: collapse;
+
+}
+
+
+
+
+
+.system-permissions-table th {
+
+    height: 25px;
+
+
+
+    color:
+
+        #777777;
+
+
+
+    font-size: 10.5px;
+
+    font-weight: 500;
+
+
+
+    text-align: left;
+
+
+
+    border-bottom:
+
+        1px solid
+
+        #E4E4E4;
+
+}
+
+
+
+
+
+.system-permissions-table th:not(:first-child),
+
+.system-permissions-table td:not(:first-child) {
+
+    width: 18%;
+
+
+
+    text-align: center;
+
+}
+
+
+
+
+
+.system-permissions-table td {
+
+    height: 25px;
+
+
+
+    color:
+
+        #444444;
+
+
+
+    font-size: 10.5px;
+
+}
+
+
+
+
+
+.system-permissions-table
+
+.is-enabled {
+
+    color: #333333;
+
+
+
+    font-size: 14px;
+
+}
+
+
+
+
+
+.system-permissions-table
+
+.is-disabled {
+
+    color: #D6D6D6;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   CONFIG
+
+   ========================================================= */
+
+
+
+.system-config-grid {
+
+    display: grid;
+
+
+
+    grid-template-columns:
+
+        1fr
+
+        1fr;
+
+
+
+    gap:
+
+        10px
+
+        38px;
+
+}
+
+
+
+
+
+.system-config-field {
+
+    display: flex;
+
+    flex-direction: column;
+
+
+
+    gap: 4px;
+
+}
+
+
+
+
+
+.system-config-field > span {
+
+    color:
+
+        #727272;
+
+
+
+    font-size: 10.5px;
+
+}
+
+
+
+
+
+.system-config-field input {
+
+    width: 100%;
+
+    height: 30px;
+
+
+
+    padding:
+
+        0
+
+        15px;
+
+
+
+    border:
+
+        1px solid
+
+        #E6E6E6;
+
+
+
+    outline: 0;
+
+
+
+    border-radius: 999px;
+
+
+
+    background:
+
+        #FFFFFF;
+
+
+
+    color:
+
+        #363636;
+
+
+
+    font-family:
+
+        "Inter",
+
+        Arial,
+
+        sans-serif;
+
+
+
+    font-size: 11.5px;
+
+}
+
+
+
+
+
+.system-save-button {
+
+    height: 30px;
+
+
+
+    margin-top: 8px;
+
+
+
+    padding:
+
+        0
+
+        21px;
+
+
+
+    border: 0;
+
+
+
+    border-radius: 999px;
+
+
+
+    background:
+
+        var(--sys-brand);
+
+
+
+    color:
+
+        #FFFFFF;
+
+
+
+    font-family:
+
+        "Inter",
+
+        Arial,
+
+        sans-serif;
+
+
+
+    font-size: 10.5px;
+
+    font-weight: 500;
+
+
+
+    cursor: pointer;
+
+}
+
+
+
+
+
+.system-save-button:hover {
+
+    background:
+
+        var(--sys-brand-dark);
+
+}
+
+
+
+
+
+/* =========================================================
+
+   DARK MODE
+
+   ========================================================= */
+
+
+
+html[data-theme="dark"]
+
+.system-page {
+
+    --sys-text: #F3F3F3;
+
+    --sys-muted: #AFAFAF;
+
+
+
+    --sys-border:
+
+        rgba(
+
+            255,
+
+            255,
+
+            255,
+
+            0.09
+
+        );
+
+
+
+    --sys-surface:
+
+        rgba(
+
+            31,
+
+            31,
+
+            34,
+
+            0.90
+
+        );
+
+
+
+    --sys-shadow:
+
+        0 4px 16px
+
+        rgba(
+
+            0,
+
+            0,
+
+            0,
+
+            0.26
+
+        );
+
+}
+
+
+
+
+
+html[data-theme="dark"]
+
+.system-page-header h1,
+
+html[data-theme="dark"]
+
+.system-stat-content strong,
+
+html[data-theme="dark"]
+
+.system-user-copy strong,
+
+html[data-theme="dark"]
+
+.system-table tbody td,
+
+html[data-theme="dark"]
+
+.system-two-line-cell strong,
+
+html[data-theme="dark"]
+
+.system-card-title,
+
+html[data-theme="dark"]
+
+.system-permissions-table td {
+
+    color: #F2F2F2;
+
+}
+
+
+
+
+
+html[data-theme="dark"]
+
+.system-search,
+
+html[data-theme="dark"]
+
+.system-filter select,
+
+html[data-theme="dark"]
+
+.system-export-button,
+
+html[data-theme="dark"]
+
+.system-config-field input,
+
+html[data-theme="dark"]
+
+.system-page-button,
+
+html[data-theme="dark"]
+
+.system-page-number {
+
+    border-color:
+
+        rgba(
+
+            255,
+
+            255,
+
+            255,
+
+            0.09
+
+        );
+
+
+
+    background:
+
+        rgba(
+
+            255,
+
+            255,
+
+            255,
+
+            0.05
+
+        );
+
+
+
+    color: #F1F1F1;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   RESPONSIVE
+
+   ========================================================= */
+
+
+
+@media (
+
+    max-width: 1200px
+
+) {
+
+
+
+    .system-stat-grid {
+
+        grid-template-columns:
+
+            repeat(
+
+                3,
+
+                minmax(
+
+                    0,
+
+                    1fr
+
+                )
+
+            );
+
+    }
+
+
+
+
+
+    .system-bottom-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+
+}
+
+
+
+
+
+@media (
+
+    max-width: 760px
+
+) {
+
+
+
+    .system-stat-grid {
+
+        grid-template-columns:
+
+            1fr
+
+            1fr;
+
+    }
+
+
+
+
+
+    .system-users-toolbar {
+
+        align-items: stretch;
+
+
+
+        flex-direction: column;
+
+    }
+
+
+
+
+
+    .system-search {
+
+        width: 100%;
+
+    }
+
+
+
+
+
+    .system-toolbar-filters {
+
+        display: grid;
+
+
+
+        grid-template-columns:
+
+            1fr
+
+            1fr
+
+            1fr;
+
+    }
+
+
+
+
+
+    .system-filter select {
+
+        width: 100%;
+
+    }
+
+
+
+
+
+    .system-export-button {
+
+        margin-left: 0;
+
+
+
+        align-self: flex-start;
+
+    }
+
+
+
+
+
+    .system-config-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+
+
+}
+
+
+
+/* =========================================================
+
+   SYSTEM CONFIGURATION INFO TOOLTIP
+
+   ========================================================= */
+
+
+
+.system-config-label-row {
+
+    display: flex;
+
+    align-items: center;
+
+
+
+    gap: 5px;
+
+
+
+    margin-bottom: 6px;
+
+}
+
+
+
+
+
+/* Remove margin from the original label
+
+   because spacing is now handled by label-row */
+
+.system-config-label-row label {
+
+    margin: 0;
+
+
+
+    color: #6F6F6F;
+
+
+
+    font-size: 12px;
+
+
+
+    font-weight: 500;
+
+
+
+    line-height: 1.2;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   CONFIG INFO ICON
+
+   ========================================================= */
+
+
+
+.config-info {
+
+    position: relative;
+
+
+
+    width: 17px;
+
+    height: 17px;
+
+
+
+    flex: 0 0 17px;
+
+
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+
+
+    padding: 0;
+
+
+
+    border: 0;
+
+    border-radius: 50%;
+
+
+
+    background: transparent;
+
+
+
+    color: #9A9A9A;
+
+
+
+    cursor: help;
+
+
+
+    outline: none;
+
+
+
+    transition:
+
+        color 150ms ease,
+
+        transform 150ms ease;
+
+}
+
+
+
+
+
+.config-info-icon {
+
+    width: 17px;
+
+    height: 17px;
+
+
+
+    display: block;
+
+}
+
+
+
+
+
+/* Hover */
+
+
+
+.config-info:hover,
+
+.config-info:focus,
+
+.config-info:focus-visible {
+
+    color: #741F2E;
+
+
+
+    transform: translateY(-1px);
+
+}
+
+
+
+
+
+/* Dark mode */
+
+
+
+html[data-theme="dark"]
+
+.config-info {
+
+    color:
+
+        rgba(
+
+            255,
+
+            255,
+
+            255,
+
+            0.55
+
+        );
+
+}
+
+
+
+
+
+html[data-theme="dark"]
+
+.config-info:hover,
+
+
+
+html[data-theme="dark"]
+
+.config-info:focus,
+
+
+
+html[data-theme="dark"]
+
+.config-info:focus-visible {
+
+    color: #FFFFFF;
+
+}
+
+
+
+/* =========================================================
+
+   TOOLTIP
+
+   ========================================================= */
+
+
+
+.config-tooltip {
+
+    position: absolute;
+
+
+
+    z-index: 50;
+
+
+
+    left: 50%;
+
+    bottom: calc(100% + 9px);
+
+
+
+    width: max-content;
+
+    max-width: 240px;
+
+
+
+    padding:
+
+        8px
+
+        10px;
+
+
+
+    box-sizing: border-box;
+
+
+
+    border:
+
+        1px solid
+
+        rgba(
+
+            0,
+
+            0,
+
+            0,
+
+            0.08
+
+        );
+
+
+
+    border-radius: 8px;
+
+
+
+    background: #FFFFFF;
+
+
+
+    box-shadow:
+
+        0 6px 18px
+
+        rgba(
+
+            0,
+
+            0,
+
+            0,
+
+            0.10
+
+        );
+
+
+
+    color: #4B4B4B;
+
+
+
+    font-family:
+
+        "Inter",
+
+        Arial,
+
+        sans-serif;
+
+
+
+    font-size: 11px;
+
+
+
+    font-weight: 400;
+
+
+
+    line-height: 1.4;
+
+
+
+    text-align: left;
+
+
+
+    white-space: normal;
+
+
+
+    opacity: 0;
+
+
+
+    visibility: hidden;
+
+
+
+    pointer-events: none;
+
+
+
+    transform:
+
+        translateX(-50%)
+
+        translateY(3px);
+
+
+
+    transition:
+
+        opacity 140ms ease,
+
+        transform 140ms ease,
+
+        visibility 140ms ease;
+
+}
+
+
+
+
+
+/* Small tooltip arrow */
+
+.config-tooltip::after {
+
+    content: "";
+
+
+
+    position: absolute;
+
+
+
+    left: 50%;
+
+    top: 100%;
+
+
+
+    transform:
+
+        translateX(-50%);
+
+
+
+    border-width:
+
+        5px
+
+        5px
+
+        0
+
+        5px;
+
+
+
+    border-style: solid;
+
+
+
+    border-color:
+
+        #FFFFFF
+
+        transparent
+
+        transparent
+
+        transparent;
+
+}
+
+
+
+
+
+/* Show tooltip */
+
+.config-info:hover
+
+.config-tooltip,
+
+
+
+.config-info:focus
+
+.config-tooltip,
+
+
+
+.config-info:focus-visible
+
+.config-tooltip {
+
+    opacity: 1;
+
+
+
+    visibility: visible;
+
+
+
+    transform:
+
+        translateX(-50%)
+
+        translateY(0);
+
+}
+
+
+
+
+
+/* =========================================================
+
+   DARK MODE
+
+   ========================================================= */
+
+
+
+html[data-theme="dark"]
+
+.system-config-label-row label {
+
+    color:
+
+        rgba(
+
+            255,
+
+            255,
+
+            255,
+
+            0.68
+
+        );
+
+}
+
+
+
+html[data-theme="dark"]
+
+.config-tooltip {
+
+    border-color:
+
+        rgba(
+
+            255,
+
+            255,
+
+            255,
+
+            0.10
+
+        );
+
+
+
+    background: #28282A;
+
+
+
+    color: #F0F0F0;
+
+
+
+    box-shadow:
+
+        0 8px 22px
+
+        rgba(
+
+            0,
+
+            0,
+
+            0,
+
+            0.26
+
+        );
+
+}
+
+
+
+
+
+html[data-theme="dark"]
+
+.config-tooltip::after {
+
+    border-color:
+
+        #28282A
+
+        transparent
+
+        transparent
+
+        transparent;
+
+}
+
+
+
+/* =========================================================
+
+   SYSTEM USER MANAGEMENT
+
+   FORCE TABLE CONTENT +2PX
+
+   ========================================================= */
+
+
+
+
+
+/* =========================================================
+
+   TABLE HEADER
+
+   User / Role / Status / Last Active / ...
+
+   ========================================================= */
+
+
+
+.system-page .system-users-card table thead th,
+
+.system-page .system-users-card .system-table thead th {
+
+    font-size: 13.5px !important;
+
+    font-weight: 500;
+
+
+
+    padding-top: 10px;
+
+    padding-bottom: 10px;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   ALL TABLE BODY CELLS
+
+   ========================================================= */
+
+
+
+.system-page .system-users-card table tbody td,
+
+.system-page .system-users-card .system-table tbody td {
+
+    font-size: 14px !important;
+
+
+
+    padding-top: 11px;
+
+    padding-bottom: 11px;
+
+
+
+    vertical-align: middle;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   USER NAME
+
+   Jia Jun Wong
+
+   Li Wei Lee
+
+   ========================================================= */
+
+
+
+.system-page .system-users-card table tbody td:first-child strong,
+
+.system-page .system-users-card table tbody td:first-child b,
+
+.system-page .system-users-card .system-table tbody td:first-child strong {
+
+    font-size: 15px !important;
+
+    font-weight: 600;
+
+    line-height: 1.25;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   USER EMAIL
+
+   ========================================================= */
+
+
+
+.system-page .system-users-card table tbody td:first-child small,
+
+.system-page .system-users-card table tbody td:first-child span:not(:first-child),
+
+.system-page .system-users-card .system-table tbody td:first-child small {
+
+    font-size: 12.5px !important;
+
+    line-height: 1.35;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   ROLE
+
+   Superadmin / Admin
+
+   ========================================================= */
+
+
+
+.system-page .system-users-card table tbody td:nth-child(2),
+
+.system-page .system-users-card table tbody td:nth-child(2) \*,
+
+.system-page .system-users-card .system-table tbody td:nth-child(2),
+
+.system-page .system-users-card .system-table tbody td:nth-child(2) \* {
+
+    font-size: 13.5px !important;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   STATUS
+
+   Active
+
+   ========================================================= */
+
+
+
+.system-page .system-users-card table tbody td:nth-child(3),
+
+.system-page .system-users-card table tbody td:nth-child(3) \*,
+
+.system-page .system-users-card .system-table tbody td:nth-child(3),
+
+.system-page .system-users-card .system-table tbody td:nth-child(3) \* {
+
+    font-size: 13.5px !important;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   LAST ACTIVE
+
+   54 min ago
+
+   2026-10-06 06:20
+
+   ========================================================= */
+
+
+
+.system-page .system-users-card table tbody td:nth-child(4),
+
+.system-page .system-users-card .system-table tbody td:nth-child(4) {
+
+    font-size: 14px !important;
+
+}
+
+
+
+
+
+.system-page .system-users-card table tbody td:nth-child(4) strong,
+
+.system-page .system-users-card table tbody td:nth-child(4) b,
+
+.system-page .system-users-card .system-table tbody td:nth-child(4) strong {
+
+    font-size: 14px !important;
+
+}
+
+
+
+
+
+.system-page .system-users-card table tbody td:nth-child(4) small,
+
+.system-page .system-users-card table tbody td:nth-child(4) span,
+
+.system-page .system-users-card .system-table tbody td:nth-child(4) small {
+
+    font-size: 12.5px !important;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   LAST LOGIN
+
+   ========================================================= */
+
+
+
+.system-page .system-users-card table tbody td:nth-child(5),
+
+.system-page .system-users-card .system-table tbody td:nth-child(5) {
+
+    font-size: 14px !important;
+
+}
+
+
+
+
+
+.system-page .system-users-card table tbody td:nth-child(5) strong,
+
+.system-page .system-users-card table tbody td:nth-child(5) b,
+
+.system-page .system-users-card .system-table tbody td:nth-child(5) strong {
+
+    font-size: 14px !important;
+
+}
+
+
+
+
+
+.system-page .system-users-card table tbody td:nth-child(5) small,
+
+.system-page .system-users-card table tbody td:nth-child(5) span,
+
+.system-page .system-users-card .system-table tbody td:nth-child(5) small {
+
+    font-size: 12.5px !important;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   SECURITY
+
+   Protected
+
+   High Privilege
+
+
+
+   Normal
+
+   No issues
+
+   ========================================================= */
+
+
+
+.system-page .system-users-card table tbody td:nth-child(6),
+
+.system-page .system-users-card .system-table tbody td:nth-child(6) {
+
+    font-size: 14px !important;
+
+}
+
+
+
+
+
+.system-page .system-users-card table tbody td:nth-child(6) strong,
+
+.system-page .system-users-card table tbody td:nth-child(6) b,
+
+.system-page .system-users-card .system-table tbody td:nth-child(6) strong {
+
+    font-size: 14px !important;
+
+}
+
+
+
+
+
+.system-page .system-users-card table tbody td:nth-child(6) small,
+
+.system-page .system-users-card table tbody td:nth-child(6) span,
+
+.system-page .system-users-card .system-table tbody td:nth-child(6) small {
+
+    font-size: 12.5px !important;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   ACTION / EDIT
+
+   ========================================================= */
+
+
+
+.system-page .system-users-card table tbody td:nth-child(7) button,
+
+.system-page .system-users-card table tbody td:last-child button,
+
+.system-page .system-users-card .system-table tbody td:last-child button {
+
+    min-width: 58px;
+
+    height: 31px;
+
+
+
+    padding:
+
+        0
+
+        14px;
+
+
+
+    font-size: 12.5px !important;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   ROLE PILLS / BADGES
+
+   ========================================================= */
+
+
+
+.system-page .system-users-card table tbody td:nth-child(2) span,
+
+.system-page .system-users-card table tbody td:nth-child(2) div {
+
+    font-size: 13px !important;
+
+}
+
+
+
+
+
+/* =========================================================
+
+   TABLE ROW HEIGHT
+
+   ========================================================= */
+
+
+
+.system-page .system-users-card table tbody tr,
+
+.system-page .system-users-card .system-table tbody tr {
+
+    min-height: 62px;
+
+}

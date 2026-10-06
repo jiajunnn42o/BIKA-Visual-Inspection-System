@@ -2328,3 +2328,490 @@ html[data-theme="dark"]
             0.18
         );
 }
+
+/* =========================================================
+   PROFILE PHOTO CROP
+   ========================================================= */
+
+.profile-crop-backdrop {
+    position: fixed;
+    inset: 0;
+
+    z-index: 5000;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 24px;
+
+    background: rgba(24, 24, 24, 0.38);
+
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+
+.profile-crop-backdrop[hidden] {
+    display: none;
+}
+
+
+/* =========================================================
+   MODAL
+   ========================================================= */
+
+.profile-crop-modal {
+    width: min(440px, 100%);
+
+    overflow: hidden;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.55);
+
+    border-radius: 20px;
+
+    background: #FFFFFF;
+
+    box-shadow:
+        0 24px 65px
+        rgba(0, 0, 0, 0.18);
+
+    color: #242424;
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.profile-crop-header {
+    display: flex;
+
+    align-items: flex-start;
+    justify-content: space-between;
+
+    gap: 18px;
+
+    padding:
+        20px
+        22px
+        15px;
+
+    border-bottom:
+        1px solid
+        #EEEEEE;
+}
+
+
+.profile-crop-header h2 {
+    margin: 0;
+
+    font-size: 20px;
+    font-weight: 600;
+
+    line-height: 1.2;
+}
+
+
+.profile-crop-header p {
+    margin:
+        5px
+        0
+        0;
+
+    color: #898989;
+
+    font-size: 12.5px;
+    font-weight: 400;
+}
+
+
+/* =========================================================
+   CLOSE
+   ========================================================= */
+
+.profile-crop-close {
+    width: 30px;
+    height: 30px;
+
+    display: grid;
+    place-items: center;
+
+    flex: 0 0 30px;
+
+    padding: 0;
+
+    border: 0;
+
+    background: transparent;
+
+    color: #777777;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 25px;
+    font-weight: 300;
+
+    line-height: 1;
+
+    cursor: pointer;
+}
+
+
+.profile-crop-close:hover {
+    color: #741F2E;
+}
+
+
+/* =========================================================
+   BODY
+   ========================================================= */
+
+.profile-crop-body {
+    padding:
+        20px
+        22px
+        16px;
+}
+
+
+/* =========================================================
+   SQUARE CROP AREA
+   ========================================================= */
+
+.profile-crop-viewport {
+    position: relative;
+
+    width: 320px;
+    height: 320px;
+
+    max-width: 100%;
+
+    margin:
+        0
+        auto;
+
+    overflow: hidden;
+
+    border-radius: 14px;
+
+    background: #ECECEC;
+
+    cursor: grab;
+
+    touch-action: none;
+
+    user-select: none;
+}
+
+
+.profile-crop-viewport.is-dragging {
+    cursor: grabbing;
+}
+
+
+.profile-crop-image {
+    position: absolute;
+
+    top: 0;
+    left: 0;
+
+    max-width: none;
+    max-height: none;
+
+    pointer-events: none;
+
+    user-select: none;
+
+    transform-origin:
+        top
+        left;
+}
+
+
+/* =========================================================
+   CROP GRID
+   ========================================================= */
+
+.profile-crop-grid {
+    position: absolute;
+    inset: 0;
+
+    z-index: 2;
+
+    pointer-events: none;
+
+    border:
+        1px solid
+        rgba(255, 255, 255, 0.72);
+
+    box-shadow:
+        inset 0 0 0 1px
+        rgba(0, 0, 0, 0.08);
+}
+
+
+.profile-crop-grid::before,
+.profile-crop-grid::after {
+    content: "";
+
+    position: absolute;
+
+    background:
+        rgba(255, 255, 255, 0.48);
+}
+
+
+.profile-crop-grid::before {
+    top: 0;
+    bottom: 0;
+
+    left: 33.333%;
+
+    width: 1px;
+
+    box-shadow:
+        calc(320px / 3)
+        0
+        0
+        rgba(255, 255, 255, 0.48);
+}
+
+
+.profile-crop-grid::after {
+    left: 0;
+    right: 0;
+
+    top: 33.333%;
+
+    height: 1px;
+
+    box-shadow:
+        0
+        calc(320px / 3)
+        0
+        rgba(255, 255, 255, 0.48);
+}
+
+
+/* =========================================================
+   ZOOM
+   ========================================================= */
+
+.profile-crop-controls {
+    display: grid;
+
+    grid-template-columns:
+        18px
+        minmax(0, 1fr)
+        18px;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-top: 17px;
+}
+
+
+.profile-crop-zoom-symbol {
+    color: #797979;
+
+    font-size: 17px;
+    font-weight: 500;
+
+    text-align: center;
+}
+
+
+.profile-crop-zoom {
+    width: 100%;
+
+    accent-color: #741F2E;
+
+    cursor: pointer;
+}
+
+
+.profile-crop-help {
+    margin:
+        7px
+        0
+        0;
+
+    color: #9A9A9A;
+
+    font-size: 11px;
+
+    text-align: center;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.profile-crop-footer {
+    display: flex;
+
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 10px;
+
+    padding:
+        14px
+        22px
+        20px;
+}
+
+
+.profile-crop-button {
+    height: 36px;
+
+    padding:
+        0
+        18px;
+
+    border-radius: 999px;
+
+    font-family:
+        "Inter",
+        sans-serif;
+
+    font-size: 12.5px;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+.profile-crop-button-secondary {
+    border:
+        1px solid
+        #D9D9D9;
+
+    background: #FFFFFF;
+
+    color: #555555;
+}
+
+
+.profile-crop-button-primary {
+    border:
+        1px solid
+        #741F2E;
+
+    background: #741F2E;
+
+    color: #FFFFFF;
+}
+
+
+.profile-crop-button-primary:hover {
+    background: #5E1825;
+
+    border-color: #5E1825;
+}
+
+
+.profile-crop-button:disabled {
+    opacity: 0.58;
+
+    cursor: not-allowed;
+}
+
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme="dark"]
+.profile-crop-modal {
+    border-color:
+        rgba(255, 255, 255, 0.10);
+
+    background: #242426;
+
+    color: #FFFFFF;
+}
+
+
+html[data-theme="dark"]
+.profile-crop-header {
+    border-bottom-color:
+        rgba(255, 255, 255, 0.08);
+}
+
+
+html[data-theme="dark"]
+.profile-crop-header p,
+
+html[data-theme="dark"]
+.profile-crop-help {
+    color: #AFAFAF;
+}
+
+
+html[data-theme="dark"]
+.profile-crop-close {
+    color: #D4D4D4;
+}
+
+
+html[data-theme="dark"]
+.profile-crop-viewport {
+    background: #171719;
+}
+
+
+html[data-theme="dark"]
+.profile-crop-button-secondary {
+    border-color:
+        rgba(255, 255, 255, 0.14);
+
+    background: #303033;
+
+    color: #EEEEEE;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 520px) {
+
+    .profile-crop-backdrop {
+        padding: 14px;
+    }
+
+
+    .profile-crop-modal {
+        border-radius: 17px;
+    }
+
+
+    .profile-crop-header,
+    .profile-crop-body,
+    .profile-crop-footer {
+        padding-left: 17px;
+        padding-right: 17px;
+    }
+
+
+    .profile-crop-viewport {
+        width: min(
+            320px,
+            calc(100vw - 62px)
+        );
+
+        height: min(
+            320px,
+            calc(100vw - 62px)
+        );
+    }
+
+}

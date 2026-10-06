@@ -1940,3 +1940,253 @@ html[data-theme="dark"]
     display: block;
     object-fit: cover;
 }
+
+/* =========================================================
+   GLOBAL DARK MODE ICON COLOR
+   All UI icons become white in Dark Mode
+   ========================================================= */
+
+
+/* =========================================================
+   1. ICONSAX
+   ========================================================= */
+
+html[data-theme="dark"] iconsax-icon {
+    color: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   2. SIDEBAR ICONS
+   ========================================================= */
+
+html[data-theme="dark"] .app-sidebar iconsax-icon,
+html[data-theme="dark"] .app-sidebar svg {
+    color: #FFFFFF !important;
+    stroke: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   3. SIDEBAR NAVIGATION
+   ========================================================= */
+
+html[data-theme="dark"] .app-nav-link iconsax-icon,
+html[data-theme="dark"] .app-nav-link svg,
+html[data-theme="dark"] .app-sidebar-nav-link iconsax-icon,
+html[data-theme="dark"] .app-sidebar-nav-link svg,
+html[data-theme="dark"] .sidebar-nav-link iconsax-icon,
+html[data-theme="dark"] .sidebar-nav-link svg {
+    color: #FFFFFF !important;
+    stroke: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   4. TOP BAR
+   Theme / Notification / other top-right icons
+   ========================================================= */
+
+html[data-theme="dark"] .app-topbar-icon-button,
+html[data-theme="dark"] .app-topbar-icon-button iconsax-icon,
+html[data-theme="dark"] .app-topbar-icon-button svg {
+    color: #FFFFFF !important;
+    stroke: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   5. NOTIFICATION ICONS
+   ========================================================= */
+
+html[data-theme="dark"] .app-notification-button,
+html[data-theme="dark"] .app-notification-button iconsax-icon,
+html[data-theme="dark"] .app-notification-button svg,
+html[data-theme="dark"] .app-notification-item-icon,
+html[data-theme="dark"] .app-notification-item-icon iconsax-icon,
+html[data-theme="dark"] .app-notification-item-icon svg,
+html[data-theme="dark"] .app-notification-empty-icon,
+html[data-theme="dark"] .app-notification-empty-icon iconsax-icon,
+html[data-theme="dark"] .app-notification-empty-icon svg {
+    color: #FFFFFF !important;
+    stroke: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   6. EMPTY STATE ICONS
+   Registration / Request Status / general empty screens
+   ========================================================= */
+
+html[data-theme="dark"] .rr-empty-icon,
+html[data-theme="dark"] .rr-empty-icon iconsax-icon,
+html[data-theme="dark"] .rr-empty-icon svg,
+
+html[data-theme="dark"] .wir-empty-icon,
+html[data-theme="dark"] .wir-empty-icon iconsax-icon,
+html[data-theme="dark"] .wir-empty-icon svg,
+
+html[data-theme="dark"] .empty-state-icon,
+html[data-theme="dark"] .empty-state-icon iconsax-icon,
+html[data-theme="dark"] .empty-state-icon svg,
+
+html[data-theme="dark"] .empty-icon,
+html[data-theme="dark"] .empty-icon iconsax-icon,
+html[data-theme="dark"] .empty-icon svg {
+    color: #FFFFFF !important;
+    stroke: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   7. ACCOUNT PAGE ICONS
+   ========================================================= */
+
+html[data-theme="dark"] .account-page iconsax-icon {
+    color: #FFFFFF !important;
+}
+
+
+html[data-theme="dark"] .account-page button svg,
+html[data-theme="dark"] .account-page .account-session-icon svg,
+html[data-theme="dark"] .account-page .account-notification-label svg {
+    color: #FFFFFF !important;
+    stroke: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   8. REGISTRATION REQUEST ICONS
+   ========================================================= */
+
+html[data-theme="dark"] .rr-page iconsax-icon {
+    color: #FFFFFF !important;
+}
+
+
+html[data-theme="dark"] .rr-page button svg,
+html[data-theme="dark"] .rr-page .rr-section-title svg,
+html[data-theme="dark"] .rr-page .rr-search svg {
+    color: #FFFFFF !important;
+    stroke: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   9. WORK INFORMATION REQUEST ICONS
+   ========================================================= */
+
+html[data-theme="dark"] [data-work-requests-page] iconsax-icon {
+    color: #FFFFFF !important;
+}
+
+
+html[data-theme="dark"] [data-work-requests-page] button svg,
+html[data-theme="dark"] [data-work-requests-page] .rr-section-title svg {
+    color: #FFFFFF !important;
+    stroke: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   10. BUTTON ICONS
+   ========================================================= */
+
+html[data-theme="dark"] button iconsax-icon {
+    color: #FFFFFF !important;
+}
+
+
+html[data-theme="dark"] button svg {
+    color: #FFFFFF !important;
+    stroke: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   11. LINKS / ACTION ICONS
+   ========================================================= */
+
+html[data-theme="dark"] a iconsax-icon {
+    color: #FFFFFF !important;
+}
+
+
+html[data-theme="dark"] a svg {
+    color: #FFFFFF !important;
+    stroke: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   12. SVG CHILDREN
+   Fix manually-created outline SVG icons
+   ========================================================= */
+
+html[data-theme="dark"] button svg path,
+html[data-theme="dark"] button svg circle,
+html[data-theme="dark"] button svg rect,
+html[data-theme="dark"] button svg line,
+html[data-theme="dark"] button svg polyline,
+html[data-theme="dark"] button svg polygon,
+
+html[data-theme="dark"] .rr-empty-icon svg path,
+html[data-theme="dark"] .rr-empty-icon svg circle,
+html[data-theme="dark"] .rr-empty-icon svg rect,
+html[data-theme="dark"] .rr-empty-icon svg line,
+html[data-theme="dark"] .rr-empty-icon svg polyline,
+
+html[data-theme="dark"] .wir-empty-icon svg path,
+html[data-theme="dark"] .wir-empty-icon svg circle,
+html[data-theme="dark"] .wir-empty-icon svg rect,
+html[data-theme="dark"] .wir-empty-icon svg line,
+html[data-theme="dark"] .wir-empty-icon svg polyline,
+
+html[data-theme="dark"] .app-sidebar svg path,
+html[data-theme="dark"] .app-sidebar svg circle,
+html[data-theme="dark"] .app-sidebar svg rect,
+html[data-theme="dark"] .app-sidebar svg line,
+html[data-theme="dark"] .app-sidebar svg polyline {
+    stroke: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   13. CURRENTCOLOR FILLED ICONS
+   Only fill elements already designed as filled/currentColor.
+   Do NOT blindly fill every SVG path.
+   ========================================================= */
+
+html[data-theme="dark"] svg [fill="currentColor"],
+html[data-theme="dark"] svg [fill="currentcolor"] {
+    fill: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   14. KEEP ICON BACKGROUNDS SUBTLE
+   Icon itself = white
+   Background does NOT become solid white
+   ========================================================= */
+
+html[data-theme="dark"] .rr-empty-icon,
+html[data-theme="dark"] .wir-empty-icon,
+html[data-theme="dark"] .app-notification-item-icon,
+html[data-theme="dark"] .app-notification-empty-icon,
+html[data-theme="dark"] .account-session-icon {
+    color: #FFFFFF !important;
+}
+
+
+/* =========================================================
+   15. ACTIVE / HOVER STATES
+   Still keep icon white
+   ========================================================= */
+
+html[data-theme="dark"] .app-nav-link:hover iconsax-icon,
+html[data-theme="dark"] .app-nav-link.is-active iconsax-icon,
+html[data-theme="dark"] .app-sidebar a:hover iconsax-icon,
+html[data-theme="dark"] .app-sidebar a.is-active iconsax-icon,
+html[data-theme="dark"] button:hover iconsax-icon {
+    color: #FFFFFF !important;
+}

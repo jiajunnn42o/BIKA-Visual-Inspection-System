@@ -4721,3 +4721,135 @@ html[data-theme="dark"]
     color:
         #A4C49D;
 }
+
+/* =========================================================
+   REGISTRATION EMPTY STATE
+   ========================================================= */
+
+.empty-state {
+    min-height: 300px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    padding:
+        20px
+        20px
+        55px;   /* 让整组内容稍微往上 */
+}
+
+
+.empty-state-icon-circle {
+    width: 48px;
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background:
+        rgba(
+            116,
+            31,
+            46,
+            0.06
+        );
+
+    margin-bottom: 16px;
+
+    box-sizing: border-box;
+}
+
+
+.empty-state-icon-svg {
+    width: 23px;
+    height: 23px;
+
+    display: block;
+
+    color: #741F2E;
+}
+
+
+.empty-state-title {
+    margin:
+        0
+        0
+        9px;
+
+    font-family:
+        "Inter",
+        sans-serif;
+
+    font-size: 18px;
+
+    font-weight: 700;
+
+    line-height: 1.3;
+
+    color: #242424;
+}
+
+
+.empty-state-description {
+    margin: 0;
+
+    font-family:
+        "Inter",
+        sans-serif;
+
+    font-size: 14px;
+
+    font-weight: 400;   /* 原本太粗，改细 */
+
+    line-height: 1.5;
+
+    color: #969696;
+}
+
+
+/* =========================================================
+   DARK MODE
+   ========================================================= */
+
+html[data-theme="dark"]
+.empty-state-icon-circle {
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.07
+        );
+}
+
+
+html[data-theme="dark"]
+.empty-state-icon-svg {
+    color: #FFFFFF;
+}
+
+
+html[data-theme="dark"]
+.empty-state-title {
+    color: #FFFFFF;
+}
+
+
+html[data-theme="dark"]
+.empty-state-description {
+    color:
+        rgba(
+            255,
+            255,
+            255,
+            0.60
+        );
+}

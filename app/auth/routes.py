@@ -20,7 +20,10 @@ from itsdangerous import (
     URLSafeTimedSerializer,
 )
 
-from sqlalchemy import or_
+from sqlalchemy import (
+    delete,
+    or_,
+)
 
 from sqlalchemy.exc import (
     IntegrityError,
@@ -48,6 +51,11 @@ from app.models import (
     User,
     UserRole,
     UserStatus,
+)
+
+from app.workflow_models import (
+    Notification,
+    UserNotificationPreference,
 )
 
 from app.services.email_service import (
@@ -559,20 +567,31 @@ def _notify_superadmins_of_registration(
     user,
 ):
     """
-    Notify active SuperAdmins only after
-    BOTH email and phone verification
-    have completed.
+    Notify active SuperAdmins only after BOTH email and
+    phone verification have completed.
+
+    Channels respect each SuperAdmin's saved preferences:
+
+        email_notifications
+        in_app_alerts
+
+    The in-app notification links directly to the exact
+    registration request and opens its Review modal.
     """
 
     superadmins = (
         db.session.scalars(
-            db.select(User)
+            db.select(
+                User
+            )
             .where(
                 User.role
-                == UserRole.SUPERADMIN.value,
+                ==
+                UserRole.SUPERADMIN.value,
 
                 User.status
-                == UserStatus.ACTIVE.value,
+                ==
+                UserStatus.ACTIVE.value,
             )
             .order_by(
                 User.id.asc()
@@ -581,32 +600,184 @@ def _notify_superadmins_of_registration(
         .all()
     )
 
-    try:
-
-        result = (
-            send_new_registration_to_superadmins(
-                applicant=user,
-                superadmins=superadmins,
-            )
-        )
+    if not superadmins:
 
         current_app.logger.info(
             (
-                f"Registration {user.id} "
-                f"completed identity verification. "
-                f"SuperAdmin notifications: "
-                f"{result['sent']} sent, "
-                f"{result['failed']} failed."
+                "Registration %s completed identity "
+                "verification, but there are no active "
+                "SuperAdmins to notify."
+            ),
+            user.id,
+        )
+
+        return
+
+    email_recipients = []
+    in_app_recipients = []
+
+    # -----------------------------------------------------
+    # READ EACH SUPERADMIN'S PREFERENCE
+    # -----------------------------------------------------
+
+    for superadmin in superadmins:
+
+        preferences = (
+            db.session.get(
+                UserNotificationPreference,
+                superadmin.id,
             )
         )
 
-    except Exception:
-
-        current_app.logger.exception(
-            (
-                "Unable to notify SuperAdmins "
-                "about verified registration."
+        # No preference row means the defaults are ON.
+        email_enabled = (
+            True
+            if preferences is None
+            else bool(
+                preferences.email_notifications
             )
+        )
+
+        in_app_enabled = (
+            True
+            if preferences is None
+            else bool(
+                preferences.in_app_alerts
+            )
+        )
+
+        if email_enabled:
+            email_recipients.append(
+                superadmin
+            )
+
+        if in_app_enabled:
+            in_app_recipients.append(
+                superadmin
+            )
+
+    # -----------------------------------------------------
+    # CREATE IN-APP NOTIFICATIONS
+    # -----------------------------------------------------
+
+    review_link = (
+        url_for(
+            "superadmin.pending_registrations",
+            status="pending",
+            review=user.id,
+        )
+    )
+
+    now = datetime.now(
+        timezone.utc
+    )
+
+    for superadmin in in_app_recipients:
+
+        db.session.add(
+            Notification(
+                recipient_user_id=(
+                    superadmin.id
+                ),
+                actor_user_id=(
+                    user.id
+                ),
+                notification_type=(
+                    "registration_request_submitted"
+                ),
+                title=(
+                    "New Registration Request"
+                ),
+                message=(
+                    f"{user.full_name} completed registration "
+                    "verification and is waiting for your review."
+                ),
+                link=(
+                    review_link
+                ),
+                payload_json={
+                    "user_id": user.id,
+                    "registration_status": "pending",
+                },
+                is_read=False,
+                read_at=None,
+                created_at=(
+                    now
+                ),
+            )
+        )
+
+    if in_app_recipients:
+
+        try:
+
+            db.session.commit()
+
+        except SQLAlchemyError:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "Unable to create in-app registration "
+                    "notifications for applicant %s."
+                ),
+                user.id,
+            )
+
+    # -----------------------------------------------------
+    # SEND EMAIL NOTIFICATIONS
+    # -----------------------------------------------------
+
+    if email_recipients:
+
+        try:
+
+            result = (
+                send_new_registration_to_superadmins(
+                    applicant=user,
+                    superadmins=(
+                        email_recipients
+                    ),
+                )
+            )
+
+            current_app.logger.info(
+                (
+                    "Registration %s completed identity "
+                    "verification. SuperAdmin email: %s sent, "
+                    "%s failed. In-app notifications: %s."
+                ),
+                user.id,
+                result["sent"],
+                result["failed"],
+                len(
+                    in_app_recipients
+                ),
+            )
+
+        except Exception:
+
+            current_app.logger.exception(
+                (
+                    "Unable to email SuperAdmins about "
+                    "verified registration %s."
+                ),
+                user.id,
+            )
+
+    else:
+
+        current_app.logger.info(
+            (
+                "Registration %s completed verification. "
+                "All active SuperAdmins have email "
+                "notifications disabled. In-app notifications: %s."
+            ),
+            user.id,
+            len(
+                in_app_recipients
+            ),
         )
 
 
@@ -687,6 +858,294 @@ def _find_user_by_login_identifier(
 
 
 # =========================================================
+# REJECTED REGISTRATION RE-APPLICATION HELPERS
+# =========================================================
+
+def _find_rejected_registration_by_email(
+    email,
+):
+    """
+    Find the rejected account that owns the submitted email.
+
+    Re-applications reuse the original User row instead of
+    inserting another row with duplicate unique values.
+    """
+
+    email = (
+        str(
+            email
+            or
+            ""
+        )
+        .strip()
+        .lower()
+    )
+
+    if not email:
+        return None
+
+    return db.session.scalar(
+        db.select(
+            User
+        )
+        .where(
+            db.func.lower(
+                User.email
+            )
+            ==
+            email,
+
+            User.status
+            ==
+            UserStatus.REJECTED.value,
+        )
+        .limit(1)
+    )
+
+
+def _registration_unique_conflict(
+    *,
+    username,
+    email,
+    phone_number,
+    employee_id,
+    exclude_user_id=None,
+):
+    """
+    Final server-side uniqueness protection.
+
+    A rejected applicant may reuse values that already belong
+    to their own old row, but values belonging to another row
+    are still rejected.
+    """
+
+    username = (
+        str(
+            username
+            or
+            ""
+        )
+        .strip()
+        .lower()
+    )
+
+    email = (
+        str(
+            email
+            or
+            ""
+        )
+        .strip()
+        .lower()
+    )
+
+    phone_number = (
+        str(
+            phone_number
+            or
+            ""
+        )
+        .strip()
+    )
+
+    employee_id = (
+        str(
+            employee_id
+            or
+            ""
+        )
+        .strip()
+        .upper()
+    )
+
+
+    def another_user_exists(
+        condition,
+    ):
+
+        query = (
+            db.select(
+                User.id
+            )
+            .where(
+                condition
+            )
+        )
+
+        if (
+            exclude_user_id
+            is not None
+        ):
+
+            query = query.where(
+                User.id
+                !=
+                exclude_user_id
+            )
+
+        existing_id = (
+            db.session.scalar(
+                query.limit(1)
+            )
+        )
+
+        return (
+            existing_id
+            is not None
+        )
+
+
+    if another_user_exists(
+        db.func.lower(
+            User.username
+        )
+        ==
+        username
+    ):
+
+        return (
+            "This username is already in use."
+        )
+
+
+    if another_user_exists(
+        db.func.lower(
+            User.email
+        )
+        ==
+        email
+    ):
+
+        return (
+            "This email address is already registered."
+        )
+
+
+    if another_user_exists(
+        User.phone_number
+        ==
+        phone_number
+    ):
+
+        return (
+            "This phone number is already registered."
+        )
+
+
+    if another_user_exists(
+        db.func.upper(
+            User.employee_id
+        )
+        ==
+        employee_id
+    ):
+
+        return (
+            "This employee ID is already registered."
+        )
+
+
+    return None
+
+
+def _prepare_rejected_registration_for_reapplication(
+    *,
+    user,
+    first_name,
+    last_name,
+    username,
+    email,
+    phone_number,
+    employee_id,
+    password,
+):
+    """
+    Turn one rejected registration back into a fresh pending
+    application while keeping the same User primary key.
+
+    Identity verification is intentionally reset so the
+    applicant must verify Email -> Phone again.
+    """
+
+    user.first_name = (
+        first_name
+    )
+
+    user.last_name = (
+        last_name
+    )
+
+    user.username = (
+        username
+    )
+
+    user.email = (
+        email
+    )
+
+    user.phone_number = (
+        phone_number
+    )
+
+    user.employee_id = (
+        employee_id
+    )
+
+    user.set_password(
+        password
+    )
+
+
+    # Employment data is assigned again by SuperAdmin.
+    user.job_title = None
+    user.department = None
+    user.shift = None
+
+    # Public registration always restarts as a normal user.
+    user.role = (
+        UserRole.USER.value
+    )
+
+    user.status = (
+        UserStatus.PENDING.value
+    )
+
+
+    # Force both verification stages to run again.
+    user.email_verified_at = None
+    user.phone_verified_at = None
+
+
+    # Reset old decision state.
+    user.approved_at = None
+    user.approved_by = None
+
+    user.rejected_at = None
+    user.rejected_by = None
+    user.rejection_reason = None
+
+
+    # Reset failed-login lock state.
+    user.failed_login_attempts = 0
+    user.locked_at = None
+
+
+    # A previous phone-verification row may still exist from
+    # the rejected attempt. Remove it so the normal Email ->
+    # Phone flow creates and sends a genuinely fresh phone OTP.
+    db.session.execute(
+        delete(
+            PhoneVerification
+        )
+        .where(
+            PhoneVerification.user_id
+            ==
+            user.id
+        )
+    )
+
+
+# =========================================================
 # REGISTER
 # =========================================================
 
@@ -702,6 +1161,10 @@ def register():
 
         role = user
         status = pending
+
+    A rejected applicant may register again with the same
+    email. In that case the existing rejected User row is
+    reused instead of creating a duplicate row.
 
     Final approval happens only after:
 
@@ -723,6 +1186,38 @@ def register():
     form = RegistrationForm()
 
     if form.validate_on_submit():
+
+        # -------------------------------------------------
+        # NORMALIZE VALUES
+        # -------------------------------------------------
+
+        first_name = (
+            form.first_name.data
+            .strip()
+        )
+
+        last_name = (
+            form.last_name.data
+            .strip()
+        )
+
+        username = (
+            form.username.data
+            .strip()
+            .lower()
+        )
+
+        email = (
+            form.email.data
+            .strip()
+            .lower()
+        )
+
+        employee_id = (
+            form.employee_id.data
+            .strip()
+            .upper()
+        )
 
         # -------------------------------------------------
         # NORMALIZE MALAYSIAN PHONE
@@ -749,67 +1244,126 @@ def register():
             )
 
         # -------------------------------------------------
-        # CREATE ACCOUNT
+        # CHECK FOR REJECTED APPLICATION USING THIS EMAIL
         # -------------------------------------------------
 
-        user = User(
-            first_name=(
-                form.first_name.data
-                .strip()
-            ),
-
-            last_name=(
-                form.last_name.data
-                .strip()
-            ),
-
-            username=(
-                form.username.data
-                .strip()
-                .lower()
-            ),
-
-            email=(
-                form.email.data
-                .strip()
-                .lower()
-            ),
-
-            phone_number=(
-                phone_number
-            ),
-
-            employee_id=(
-                form.employee_id.data
-                .strip()
-                .upper()
-            ),
-
-            role=(
-                UserRole.USER.value
-            ),
-
-            status=(
-                UserStatus.PENDING.value
-            ),
+        rejected_user = (
+            _find_rejected_registration_by_email(
+                email
+            )
         )
 
-        user.set_password(
-            form.password.data
+        exclude_user_id = (
+            rejected_user.id
+            if rejected_user
+            else None
         )
 
         # -------------------------------------------------
-        # CREATE ACCOUNT + EMAIL OTP
+        # FINAL UNIQUE CHECK
+        #
+        # Own values from the rejected row are allowed.
+        # Values owned by any other account remain blocked.
         # -------------------------------------------------
 
-        try:
+        uniqueness_error = (
+            _registration_unique_conflict(
+                username=username,
+                email=email,
+                phone_number=phone_number,
+                employee_id=employee_id,
+                exclude_user_id=(
+                    exclude_user_id
+                ),
+            )
+        )
+
+        if uniqueness_error:
+
+            flash(
+                uniqueness_error,
+                "error",
+            )
+
+            return render_template(
+                "auth/register.html",
+                form=form,
+            )
+
+        # -------------------------------------------------
+        # RE-APPLICATION OR BRAND-NEW USER
+        # -------------------------------------------------
+
+        if rejected_user:
+
+            user = (
+                rejected_user
+            )
+
+            _prepare_rejected_registration_for_reapplication(
+                user=user,
+                first_name=first_name,
+                last_name=last_name,
+                username=username,
+                email=email,
+                phone_number=phone_number,
+                employee_id=employee_id,
+                password=form.password.data,
+            )
+
+        else:
+
+            user = User(
+                first_name=(
+                    first_name
+                ),
+
+                last_name=(
+                    last_name
+                ),
+
+                username=(
+                    username
+                ),
+
+                email=(
+                    email
+                ),
+
+                phone_number=(
+                    phone_number
+                ),
+
+                employee_id=(
+                    employee_id
+                ),
+
+                role=(
+                    UserRole.USER.value
+                ),
+
+                status=(
+                    UserStatus.PENDING.value
+                ),
+            )
+
+            user.set_password(
+                form.password.data
+            )
 
             db.session.add(
                 user
             )
 
-            # We need an ID before the verification
-            # record can reference the new user.
+        # -------------------------------------------------
+        # SAVE ACCOUNT + CREATE FRESH EMAIL OTP
+        # -------------------------------------------------
+
+        try:
+
+            # A new user needs an ID before the verification
+            # record can reference it. For a rejected user this
+            # simply flushes the refreshed account state.
             db.session.flush()
 
             verification_code = (
@@ -846,7 +1400,8 @@ def register():
             current_app.logger.exception(
                 (
                     "Database error while "
-                    "creating registration."
+                    "creating or resubmitting "
+                    "registration."
                 )
             )
 
@@ -863,8 +1418,34 @@ def register():
                 form=form,
             )
 
+        except Exception:
+
+            db.session.rollback()
+
+            current_app.logger.exception(
+                (
+                    "Unable to prepare a fresh "
+                    "email verification code "
+                    "for registration."
+                )
+            )
+
+            flash(
+                (
+                    "Your registration could not "
+                    "be prepared for email "
+                    "verification. Please try again."
+                ),
+                "error",
+            )
+
+            return render_template(
+                "auth/register.html",
+                form=form,
+            )
+
         # -------------------------------------------------
-        # EMAIL VERIFICATION TOKEN
+        # EMAIL VERIFICATION BROWSER TOKEN
         # -------------------------------------------------
 
         verification_token = (
@@ -874,7 +1455,7 @@ def register():
         )
 
         # -------------------------------------------------
-        # EMAIL OTP
+        # SEND FRESH EMAIL OTP
         # -------------------------------------------------
 
         try:
@@ -895,7 +1476,7 @@ def register():
 
             flash(
                 (
-                    "Your account was created, "
+                    "Your registration was saved, "
                     "but the verification email "
                     "could not be sent. "
                     "Please request another code."

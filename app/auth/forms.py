@@ -16,7 +16,10 @@ from wtforms.validators import (
 )
 
 from app.extensions import db
-from app.models import User
+from app.models import (
+    User,
+    UserStatus,
+)
 
 from app.utils.phone import (
     InvalidPhoneNumberError,
@@ -97,30 +100,133 @@ class RegistrationForm(FlaskForm):
 
     submit = SubmitField("Create Account")
 
-    def validate_email(self, field):
-        email = field.data.strip().lower()
+    def _rejected_email_owner(self):
+        """
+        Return the rejected account that currently owns
+        the email entered in this registration form.
 
-        user = db.session.scalar(
-            db.select(User).where(
-                User.email == email
+        A rejected applicant may submit a fresh
+        registration using the same account row.
+        """
+
+        email = (
+            str(
+                self.email.data
+                or
+                ""
             )
+            .strip()
+            .lower()
         )
 
-        if user:
+        if not email:
+            return None
+
+        return db.session.scalar(
+            db.select(
+                User
+            )
+            .where(
+                db.func.lower(
+                    User.email
+                )
+                ==
+                email,
+
+                User.status
+                ==
+                UserStatus.REJECTED.value,
+            )
+            .limit(1)
+        )
+
+    def _belongs_to_rejected_owner(
+        self,
+        user,
+    ):
+        """
+        True only when the conflicting value belongs
+        to the same rejected account identified by
+        the email currently entered in the form.
+        """
+
+        if user is None:
+            return False
+
+        rejected_owner = (
+            self._rejected_email_owner()
+        )
+
+        return (
+            rejected_owner is not None
+            and
+            rejected_owner.id
+            ==
+            user.id
+        )
+
+    def validate_email(self, field):
+        email = (
+            field.data
+            .strip()
+            .lower()
+        )
+
+        user = db.session.scalar(
+            db.select(
+                User
+            )
+            .where(
+                db.func.lower(
+                    User.email
+                )
+                ==
+                email
+            )
+            .limit(1)
+        )
+
+        if (
+            user
+            and
+            user.status
+            !=
+            UserStatus.REJECTED.value
+        ):
+
             raise ValidationError(
                 "This email address is already registered."
             )
 
     def validate_username(self, field):
-        username = field.data.strip().lower()
-
-        user = db.session.scalar(
-            db.select(User).where(
-                User.username == username
-            )
+        username = (
+            field.data
+            .strip()
+            .lower()
         )
 
-        if user:
+        user = db.session.scalar(
+            db.select(
+                User
+            )
+            .where(
+                db.func.lower(
+                    User.username
+                )
+                ==
+                username
+            )
+            .limit(1)
+        )
+
+        if (
+            user
+            and
+            not self._belongs_to_rejected_owner(
+                user
+            )
+        ):
+
             raise ValidationError(
                 "This username is already in use."
             )
@@ -130,6 +236,7 @@ class RegistrationForm(FlaskForm):
         field,
     ):
         try:
+
             normalized_phone = (
                 normalize_malaysian_mobile(
                     field.data
@@ -137,37 +244,70 @@ class RegistrationForm(FlaskForm):
             )
 
         except InvalidPhoneNumberError as exc:
+
             raise ValidationError(
                 str(exc)
             )
 
         user = db.session.scalar(
-            db.select(User).where(
-                User.phone_number
-                == normalized_phone
+            db.select(
+                User
             )
+            .where(
+                User.phone_number
+                ==
+                normalized_phone
+            )
+            .limit(1)
         )
 
-        if user:
+        if (
+            user
+            and
+            not self._belongs_to_rejected_owner(
+                user
+            )
+        ):
+
             raise ValidationError(
                 "This phone number is already registered."
             )
 
-    def validate_employee_id(self, field):
-        employee_id = field.data.strip().upper()
-
-        user = db.session.scalar(
-            db.select(User).where(
-                User.employee_id == employee_id
-            )
+    def validate_employee_id(
+        self,
+        field,
+    ):
+        employee_id = (
+            field.data
+            .strip()
+            .upper()
         )
 
-        if user:
+        user = db.session.scalar(
+            db.select(
+                User
+            )
+            .where(
+                db.func.upper(
+                    User.employee_id
+                )
+                ==
+                employee_id
+            )
+            .limit(1)
+        )
+
+        if (
+            user
+            and
+            not self._belongs_to_rejected_owner(
+                user
+            )
+        ):
+
             raise ValidationError(
                 "This employee ID is already registered."
             )
-
-from wtforms import BooleanField
 
 
 class LoginForm(FlaskForm):

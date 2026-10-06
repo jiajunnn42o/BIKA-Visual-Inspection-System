@@ -10,3 +10,5 @@ superadmin_bp = Blueprint(
 
 from app.superadmin import routes
 from app.superadmin import work_requests
+
+from app.superadmin import system

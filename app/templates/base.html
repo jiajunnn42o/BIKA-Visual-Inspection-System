@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html
     lang="en"
     data-theme="light"
@@ -94,7 +95,7 @@
 
 
     <!-- =====================================================
-         ICONSAX / VUESAX
+         ICONSAX
          ===================================================== -->
 
     <script
@@ -125,6 +126,7 @@
             filename='css/notifications.css'
         ) }}"
     >
+
 
     {% block extra_css %}
     {% endblock %}
@@ -207,7 +209,6 @@
                         color="currentColor"
                     ></iconsax-icon>
 
-
                     <span>
                         Dashboard
                     </span>
@@ -229,7 +230,6 @@
                         size="22"
                         color="currentColor"
                     ></iconsax-icon>
-
 
                     <span>
                         Inspection
@@ -253,7 +253,6 @@
                         color="currentColor"
                     ></iconsax-icon>
 
-
                     <span>
                         Reports
                     </span>
@@ -275,7 +274,6 @@
                         size="22"
                         color="currentColor"
                     ></iconsax-icon>
-
 
                     <span>
                         Data Analytics
@@ -310,7 +308,9 @@
 
 
 
-                <!-- ADMINISTRATION -->
+                <!-- =========================================
+                     ADMINISTRATION
+                     ========================================= -->
 
                 <a
                     href="#"
@@ -324,7 +324,6 @@
                         color="currentColor"
                     ></iconsax-icon>
 
-
                     <span>
                         Administration
                     </span>
@@ -333,11 +332,25 @@
 
 
 
-                <!-- ABOUT SYSTEM -->
+                <!-- =========================================
+                     ABOUT SYSTEM
+                     ========================================= -->
 
                 <a
-                    href="#"
-                    class="app-nav-item"
+                    href="{{ url_for(
+                        'superadmin.system_page'
+                    ) }}"
+                    class="
+                        app-nav-item
+
+                        {% if
+                            request.endpoint
+                            ==
+                            'superadmin.system_page'
+                        %}
+                            is-active
+                        {% endif %}
+                    "
                 >
 
                     <iconsax-icon
@@ -347,7 +360,6 @@
                         color="currentColor"
                     ></iconsax-icon>
 
-
                     <span>
                         About System
                     </span>
@@ -356,9 +368,28 @@
 
 
 
-                <!-- REQUEST STATUS - SUPERADMIN ONLY -->
+                <!-- =========================================
+                     REQUEST STATUS
+                     SUPERADMIN ONLY
+                     ========================================= -->
 
                 {% if current_user.role == "superadmin" %}
+
+
+                    {% set request_status_endpoints = [
+
+                        'superadmin.pending_registrations',
+
+                        'superadmin.review_registration',
+
+                        'superadmin.work_information_requests',
+
+                        'superadmin.approve_work_information_request',
+
+                        'superadmin.reject_work_information_request'
+
+                    ] %}
+
 
                     <a
                         href="{{ url_for(
@@ -369,10 +400,8 @@
 
                             {% if
                                 request.endpoint
-                                and
-                                request.endpoint.startswith(
-                                    'superadmin.'
-                                )
+                                in
+                                request_status_endpoints
                             %}
                                 is-active
                             {% endif %}
@@ -392,6 +421,7 @@
                         </span>
 
                     </a>
+
 
                 {% endif %}
 
@@ -423,13 +453,18 @@
 
 
                 <a
-                    href="{{ url_for('account.index') }}"
+                    href="{{ url_for(
+                        'account.index'
+                    ) }}"
                     class="
                         app-nav-item
+
                         {% if
                             request.endpoint
                             and
-                            request.endpoint.startswith('account.')
+                            request.endpoint.startswith(
+                                'account.'
+                            )
                         %}
                             is-active
                         {% endif %}
@@ -462,20 +497,28 @@
             <div class="app-sidebar-user">
 
 
-                <!-- AVATAR -->
+                <!-- =========================================
+                     AVATAR
+                     ========================================= -->
 
                 <div class="app-sidebar-avatar">
+
 
                     {% if current_user.profile_photo %}
 
                         <img
-                            src="{{ url_for('static', filename=current_user.profile_photo) }}"
+                            src="{{ url_for(
+                                'static',
+                                filename=current_user.profile_photo
+                            ) }}"
                             alt="{{ current_user.full_name }}"
                         >
+
 
                     {% elif current_user.first_name %}
 
                         {{ current_user.first_name[0]|upper }}
+
 
                     {% else %}
 
@@ -483,11 +526,14 @@
 
                     {% endif %}
 
+
                 </div>
 
 
 
-                <!-- USER INFORMATION -->
+                <!-- =========================================
+                     USER INFORMATION
+                     ========================================= -->
 
                 <div class="app-sidebar-user-copy">
 
@@ -505,6 +551,7 @@
                         {% endif %}
 
                     </strong>
+
 
 
                     <span>
@@ -532,10 +579,6 @@
 
                 <!-- =========================================
                      LOGOUT BUTTON
-
-                     IMPORTANT:
-                     Opens confirmation modal only.
-                     Actual logout is POST.
                      ========================================= -->
 
                 <button
@@ -545,12 +588,14 @@
                     aria-label="Log out"
                     title="Log out"
                 >
+
                     <iconsax-icon
                         name="logout-01"
                         type="twotone"
                         size="20"
                         color="currentColor"
                     ></iconsax-icon>
+
                 </button>
 
 
@@ -575,7 +620,9 @@
             <header class="app-topbar">
 
 
-                <!-- THEME SWITCH -->
+                <!-- =========================================
+                     THEME SWITCH
+                     ========================================= -->
 
                 <div
                     class="app-theme-switch"
@@ -631,29 +678,34 @@
 
 
 
-                <!-- =====================================
-                    NOTIFICATION
-                    ===================================== -->
+                <!-- =========================================
+                     NOTIFICATION
+                     ========================================= -->
 
                 <div
                     class="app-notification"
                     data-notification-root
+
                     data-notification-api="{{ url_for(
                         'notifications.latest_notifications'
                     ) }}"
+
                     data-notification-read-all-url="{{ url_for(
                         'notifications.mark_all_notifications_read'
                     ) }}"
                 >
 
 
-                    <!-- =================================
-                        BELL
-                        ================================= -->
+                    <!-- =====================================
+                         BELL
+                         ===================================== -->
 
                     <button
                         type="button"
-                        class="app-topbar-icon-button app-notification-button"
+                        class="
+                            app-topbar-icon-button
+                            app-notification-button
+                        "
                         aria-label="Notifications"
                         aria-haspopup="true"
                         aria-expanded="false"
@@ -679,9 +731,10 @@
                     </button>
 
 
-                    <!-- =================================
-                        DROPDOWN
-                        ================================= -->
+
+                    <!-- =====================================
+                         DROPDOWN
+                         ===================================== -->
 
                     <div
                         class="app-notification-dropdown"
@@ -690,7 +743,9 @@
                     >
 
 
-                        <!-- HEADER -->
+                        <!-- =================================
+                             HEADER
+                             ================================= -->
 
                         <div class="app-notification-head">
 
@@ -723,14 +778,19 @@
                         </div>
 
 
-                        <!-- LOADING -->
+
+                        <!-- =================================
+                             LOADING
+                             ================================= -->
 
                         <div
                             class="app-notification-loading"
                             data-notification-loading
                         >
 
-                            <span class="app-notification-spinner"></span>
+                            <span
+                                class="app-notification-spinner"
+                            ></span>
 
                             <span>
                                 Loading notifications...
@@ -739,7 +799,10 @@
                         </div>
 
 
-                        <!-- LIST -->
+
+                        <!-- =================================
+                             LIST
+                             ================================= -->
 
                         <div
                             class="app-notification-list"
@@ -748,7 +811,10 @@
                         ></div>
 
 
-                        <!-- EMPTY -->
+
+                        <!-- =================================
+                             EMPTY
+                             ================================= -->
 
                         <div
                             class="app-notification-empty"
@@ -756,12 +822,15 @@
                             hidden
                         >
 
+
                             <div class="app-notification-empty-icon">
+
 
                                 <svg
                                     viewBox="0 0 24 24"
                                     aria-hidden="true"
                                 >
+
                                     <path
                                         d="
                                             M6 16
@@ -779,6 +848,7 @@
                                         "
                                     />
 
+
                                     <path
                                         d="
                                             M10 19
@@ -790,7 +860,9 @@
                                             14 19
                                         "
                                     />
+
                                 </svg>
+
 
                             </div>
 
@@ -803,6 +875,7 @@
                             <span>
                                 New updates will appear here.
                             </span>
+
 
                         </div>
 
@@ -924,7 +997,6 @@
 
                 <!-- =========================================
                      ACTUAL LOGOUT
-                     POST REQUEST
                      ========================================= -->
 
                 <form
@@ -978,12 +1050,14 @@
     ) }}"
 ></script>
 
+
 <script
     src="{{ url_for(
         'static',
         filename='js/notifications.js'
     ) }}"
 ></script>
+
 
 {% block extra_js %}
 {% endblock %}

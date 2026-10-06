@@ -1,0 +1,2647 @@
+{% extends "base.html" %}
+
+
+
+
+
+{% block title %}
+
+System | BIKA
+
+{% endblock %}
+
+
+
+
+
+{% block extra_css %}
+
+
+
+<link
+
+    rel="stylesheet"
+
+    href="{{ url_for(
+
+        'static',
+
+        filename='css/system.css'
+
+    ) }}"
+
+>
+
+
+
+{% endblock %}
+
+
+
+
+
+{% block content %}
+
+
+
+
+
+<div
+
+    class="system-page"
+
+    data-system-page
+
+>
+
+
+
+
+
+    <!-- =====================================================
+
+         HEADER
+
+         ===================================================== -->
+
+
+
+    <header class="system-page-header">
+
+
+
+        <div>
+
+
+
+            <h1>
+
+                System
+
+            </h1>
+
+
+
+            <p>
+
+                Users, roles and platform configuration — all in one place
+
+            </p>
+
+
+
+        </div>
+
+
+
+    </header>
+
+
+
+
+
+
+
+    <!-- =====================================================
+
+         SUMMARY CARDS
+
+         ===================================================== -->
+
+
+
+    <section class="system-stat-grid">
+
+
+
+
+
+        <!-- TOTAL USERS -->
+
+
+
+        <article class="system-stat-card">
+
+
+
+            <div
+
+                class="
+
+                    system-stat-icon
+
+                    system-stat-icon-purple
+
+                "
+
+            >
+
+
+
+                <iconsax-icon
+
+                    name="profile-2user"
+
+                    type="twotone"
+
+                    size="28"
+
+                    color="currentColor"
+
+                ></iconsax-icon>
+
+
+
+            </div>
+
+
+
+
+
+            <div class="system-stat-content">
+
+
+
+                <span class="system-stat-label">
+
+                    Total Users
+
+                </span>
+
+
+
+                <strong>
+
+                    {{ system_stats.total_users }}
+
+                </strong>
+
+
+
+                <small>
+
+                    All registered users
+
+                </small>
+
+
+
+            </div>
+
+
+
+        </article>
+
+
+
+
+
+
+
+        <!-- ACTIVE USERS -->
+
+
+
+        <article class="system-stat-card">
+
+
+
+            <div
+
+                class="
+
+                    system-stat-icon
+
+                    system-stat-icon-green
+
+                "
+
+            >
+
+
+
+                <iconsax-icon
+
+                    name="user-tick"
+
+                    type="twotone"
+
+                    size="28"
+
+                    color="currentColor"
+
+                ></iconsax-icon>
+
+
+
+            </div>
+
+
+
+
+
+            <div class="system-stat-content">
+
+
+
+                <span class="system-stat-label">
+
+                    Active Users
+
+                </span>
+
+
+
+                <strong>
+
+                    {{ system_stats.active_users }}
+
+                </strong>
+
+
+
+                <small>
+
+                    Currently active
+
+                </small>
+
+
+
+            </div>
+
+
+
+        </article>
+
+
+
+
+
+
+
+        <!-- INACTIVE USERS -->
+
+
+
+        <article class="system-stat-card">
+
+
+
+            <div
+
+                class="
+
+                    system-stat-icon
+
+                    system-stat-icon-orange
+
+                "
+
+            >
+
+
+
+                <iconsax-icon
+
+                    name="clock"
+
+                    type="twotone"
+
+                    size="28"
+
+                    color="currentColor"
+
+                ></iconsax-icon>
+
+
+
+            </div>
+
+
+
+
+
+            <div class="system-stat-content">
+
+
+
+                <span class="system-stat-label">
+
+                    Inactive Users
+
+                </span>
+
+
+
+                <strong>
+
+                    {{ system_stats.inactive_users }}
+
+                </strong>
+
+
+
+                <small>
+
+                    No activity &gt; 30 days
+
+                </small>
+
+
+
+            </div>
+
+
+
+        </article>
+
+
+
+
+
+
+
+        <!-- LOCKED ACCOUNTS -->
+
+
+
+        <article class="system-stat-card">
+
+
+
+            <div
+
+                class="
+
+                    system-stat-icon
+
+                    system-stat-icon-red
+
+                "
+
+            >
+
+
+
+                <iconsax-icon
+
+                    name="lock"
+
+                    type="twotone"
+
+                    size="28"
+
+                    color="currentColor"
+
+                ></iconsax-icon>
+
+
+
+            </div>
+
+
+
+
+
+            <div class="system-stat-content">
+
+
+
+                <span class="system-stat-label">
+
+                    Locked Accounts
+
+                </span>
+
+
+
+                <strong>
+
+                    {{ system_stats.locked_accounts }}
+
+                </strong>
+
+
+
+                <small>
+
+                    Locked due to security
+
+                </small>
+
+
+
+            </div>
+
+
+
+        </article>
+
+
+
+
+
+
+
+        <!-- SUPER ADMINS -->
+
+
+
+        <article class="system-stat-card">
+
+
+
+            <div
+
+                class="
+
+                    system-stat-icon
+
+                    system-stat-icon-blue
+
+                "
+
+            >
+
+
+
+                <iconsax-icon
+
+                    name="clock"
+
+                    type="twotone"
+
+                    size="28"
+
+                    color="currentColor"
+
+                ></iconsax-icon>
+
+
+
+            </div>
+
+
+
+
+
+            <div class="system-stat-content">
+
+
+
+                <span class="system-stat-label">
+
+                    Super Admins
+
+                </span>
+
+
+
+                <strong>
+
+                    {{ system_stats.superadmins }}
+
+                </strong>
+
+
+
+                <small>
+
+                    Full system access
+
+                </small>
+
+
+
+            </div>
+
+
+
+        </article>
+
+
+
+
+
+    </section>
+
+
+
+
+
+
+
+    <!-- =====================================================
+
+         USER MANAGEMENT
+
+         ===================================================== -->
+
+
+
+    <section class="system-users-card">
+
+
+
+
+
+        <!-- TOOLBAR -->
+
+
+
+        <div class="system-users-toolbar">
+
+
+
+
+
+            <label class="system-search">
+
+
+
+                <iconsax-icon
+
+                    name="search-normal"
+
+                    type="twotone"
+
+                    size="17"
+
+                    color="currentColor"
+
+                ></iconsax-icon>
+
+
+
+
+
+                <input
+
+                    type="search"
+
+                    placeholder="Search name or email..."
+
+                    autocomplete="off"
+
+                    data-system-search
+
+                >
+
+
+
+            </label>
+
+
+
+
+
+
+
+            <div class="system-toolbar-filters">
+
+
+
+
+
+                <!-- ROLE -->
+
+
+
+                <label class="system-filter">
+
+
+
+                    <select
+
+                        aria-label="Filter by role"
+
+                        data-system-role-filter
+
+                    >
+
+
+
+                        <option value="all">
+
+                            Role: All
+
+                        </option>
+
+
+
+                        <option value="user">
+
+                            Role: User
+
+                        </option>
+
+
+
+                        <option value="admin">
+
+                            Role: Admin
+
+                        </option>
+
+
+
+                        <option value="superadmin">
+
+                            Role: Superadmin
+
+                        </option>
+
+
+
+                    </select>
+
+
+
+                </label>
+
+
+
+
+
+                <!-- STATUS -->
+
+
+
+                <label class="system-filter">
+
+
+
+                    <select
+
+                        aria-label="Filter by status"
+
+                        data-system-status-filter
+
+                    >
+
+
+
+                        <option value="all">
+
+                            Status: All
+
+                        </option>
+
+
+
+                        <option value="active">
+
+                            Status: Active
+
+                        </option>
+
+
+
+                        <option value="inactive">
+
+                            Status: Inactive
+
+                        </option>
+
+
+
+                        <option value="locked">
+
+                            Status: Locked
+
+                        </option>
+
+
+
+                    </select>
+
+
+
+                </label>
+
+
+
+
+
+                <!-- SECURITY -->
+
+
+
+                <label class="system-filter">
+
+
+
+                    <select
+
+                        aria-label="Filter by security"
+
+                        data-system-security-filter
+
+                    >
+
+
+
+                        <option value="all">
+
+                            Security: All
+
+                        </option>
+
+
+
+                        <option value="normal">
+
+                            Security: Normal
+
+                        </option>
+
+
+
+                        <option value="protected">
+
+                            Security: Protected
+
+                        </option>
+
+
+
+                        <option value="inactive">
+
+                            Security: Inactive
+
+                        </option>
+
+
+
+                        <option value="locked">
+
+                            Security: Locked
+
+                        </option>
+
+
+
+                    </select>
+
+
+
+                </label>
+
+
+
+
+
+            </div>
+
+
+
+
+
+
+
+            <!-- EXPORT -->
+
+
+
+            <button
+
+                type="button"
+
+                class="system-export-button"
+
+                data-system-export
+
+            >
+
+
+
+                <svg
+
+                    viewBox="0 0 24 24"
+
+                    aria-hidden="true"
+
+                >
+
+                    <path
+
+                        d="M12 15V4"
+
+                    />
+
+
+
+                    <path
+
+                        d="M8.5 7.5L12 4L15.5 7.5"
+
+                    />
+
+
+
+                    <path
+
+                        d="
+
+                            M6 10
+
+                            H5
+
+                            C3.9 10
+
+                            3 10.9
+
+                            3 12
+
+                            V18
+
+                            C3 19.1
+
+                            3.9 20
+
+                            5 20
+
+                            H19
+
+                            C20.1 20
+
+                            21 19.1
+
+                            21 18
+
+                            V12
+
+                            C21 10.9
+
+                            20.1 10
+
+                            19 10
+
+                            H18
+
+                        "
+
+                    />
+
+                </svg>
+
+
+
+                <span>
+
+                    Export
+
+                </span>
+
+
+
+            </button>
+
+
+
+
+
+        </div>
+
+
+
+
+
+
+
+        <!-- =================================================
+
+             TABLE
+
+             ================================================= -->
+
+
+
+        <div class="system-table-wrap">
+
+
+
+            <table class="system-table">
+
+
+
+
+
+                <thead>
+                    <tr>
+
+                        <th>
+                            <span class="system-sort-header">
+                                <span>User</span>
+
+                                <button
+                                    type="button"
+                                    class="system-sort-button"
+                                    data-system-sort-key="user"
+                                    aria-label="Sort by user"
+                                    aria-pressed="false"
+                                >
+                                    <iconsax-icon
+                                        name="arrow-swap-01"
+                                        type="twotone"
+                                        size="15"
+                                        color="currentColor"
+                                    ></iconsax-icon>
+                                </button>
+                            </span>
+                        </th>
+
+
+                        <th>
+                            <span class="system-sort-header">
+                                <span>Role</span>
+
+                                <button
+                                    type="button"
+                                    class="system-sort-button"
+                                    data-system-sort-key="role"
+                                    aria-label="Sort by role"
+                                    aria-pressed="false"
+                                >
+                                    <iconsax-icon
+                                        name="arrow-swap-01"
+                                        type="twotone"
+                                        size="15"
+                                        color="currentColor"
+                                    ></iconsax-icon>
+                                </button>
+                            </span>
+                        </th>
+
+
+                        <th>
+                            <span class="system-sort-header">
+                                <span>Status</span>
+
+                                <button
+                                    type="button"
+                                    class="system-sort-button"
+                                    data-system-sort-key="status"
+                                    aria-label="Sort by status"
+                                    aria-pressed="false"
+                                >
+                                    <iconsax-icon
+                                        name="arrow-swap-01"
+                                        type="twotone"
+                                        size="15"
+                                        color="currentColor"
+                                    ></iconsax-icon>
+                                </button>
+                            </span>
+                        </th>
+
+
+                        <th>
+                            <span class="system-sort-header">
+                                <span>Last Active</span>
+
+                                <button
+                                    type="button"
+                                    class="system-sort-button"
+                                    data-system-sort-key="last_active"
+                                    aria-label="Sort by last active"
+                                    aria-pressed="false"
+                                >
+                                    <iconsax-icon
+                                        name="arrow-swap-01"
+                                        type="twotone"
+                                        size="15"
+                                        color="currentColor"
+                                    ></iconsax-icon>
+                                </button>
+                            </span>
+                        </th>
+
+
+                        <th>
+                            <span class="system-sort-header">
+                                <span>Last Login</span>
+
+                                <button
+                                    type="button"
+                                    class="system-sort-button"
+                                    data-system-sort-key="last_login"
+                                    aria-label="Sort by last login"
+                                    aria-pressed="false"
+                                >
+                                    <iconsax-icon
+                                        name="arrow-swap-01"
+                                        type="twotone"
+                                        size="15"
+                                        color="currentColor"
+                                    ></iconsax-icon>
+                                </button>
+                            </span>
+                        </th>
+
+
+                        <th>
+                            <span class="system-sort-header">
+                                <span>Security</span>
+
+                                <button
+                                    type="button"
+                                    class="system-sort-button"
+                                    data-system-sort-key="security"
+                                    aria-label="Sort by security"
+                                    aria-pressed="false"
+                                >
+                                    <iconsax-icon
+                                        name="arrow-swap-01"
+                                        type="twotone"
+                                        size="15"
+                                        color="currentColor"
+                                    ></iconsax-icon>
+                                </button>
+                            </span>
+                        </th>
+
+
+                        <th class="system-action-column">
+                            Action
+                        </th>
+
+                    </tr>
+                </thead>
+
+
+
+
+
+
+
+                <tbody data-system-table-body>
+
+
+
+
+
+                    {% for item in system_users %}
+
+
+
+                        <tr
+
+                            data-system-user-row
+
+
+
+                            data-search="{{ (
+
+                                item.name
+
+                                ~ ' '
+
+                                ~ item.email
+
+                            )|lower }}"
+
+
+
+                            data-role="{{ item.role }}"
+
+
+
+                            data-status="{{ item.display_status }}"
+
+                            data-security="{{ item.security_key }}"
+
+                            data-sort-user="{{ item.name|lower }}"
+
+                            data-sort-role="{{ item.role|lower }}"
+
+                            data-sort-status="{{ item.display_status|lower }}"
+
+                            data-sort-last-active="{{ item.last_active_meta|default('', true) }}"
+
+                            data-sort-last-login="{{ item.last_login_label|default('', true) }}"
+
+                            data-sort-security="{{ item.security_key|lower }}"
+
+                        >
+
+
+
+
+
+                            <!-- USER -->
+
+
+
+                            <td>
+
+
+
+                                <div class="system-user-cell">
+
+
+
+
+
+                                    <div
+
+                                        class="
+
+                                            system-avatar
+
+                                            system-avatar-{{ item.avatar_tone }}
+
+                                        "
+
+                                    >
+
+
+
+                                        {% if item.profile_photo_url %}
+
+
+
+                                            <img
+
+                                                src="{{ item.profile_photo_url }}"
+
+                                                alt=""
+
+                                            >
+
+
+
+                                        {% else %}
+
+
+
+                                            <span>
+
+                                                {{ item.initials }}
+
+                                            </span>
+
+
+
+                                        {% endif %}
+
+
+
+                                    </div>
+
+
+
+
+
+                                    <div class="system-user-copy">
+
+
+
+                                        <strong>
+
+                                            {{ item.name }}
+
+                                        </strong>
+
+
+
+                                        <small>
+
+                                            {{ item.email }}
+
+                                        </small>
+
+
+
+                                    </div>
+
+
+
+
+
+                                </div>
+
+
+
+                            </td>
+
+
+
+
+
+
+
+                            <!-- ROLE -->
+
+
+
+                            <td>
+
+
+
+                                <span
+
+                                    class="
+
+                                        system-role-pill
+
+                                        system-role-{{ item.role }}
+
+                                    "
+
+                                >
+
+                                    {{ item.role_label }}
+
+                                </span>
+
+
+
+                            </td>
+
+
+
+
+
+
+
+                            <!-- STATUS -->
+
+
+
+                            <td>
+
+
+
+                                <div
+
+                                    class="
+
+                                        system-status-cell
+
+                                        system-status-{{ item.display_status }}
+
+                                    "
+
+                                >
+
+
+
+                                    <span
+
+                                        class="system-status-dot"
+
+                                    ></span>
+
+
+
+                                    <strong>
+
+                                        {{ item.status_label }}
+
+                                    </strong>
+
+
+
+                                </div>
+
+
+
+                            </td>
+
+
+
+
+
+
+
+                            <!-- LAST ACTIVE -->
+
+
+
+                            <td>
+
+
+
+                                <div class="system-two-line-cell">
+
+
+
+                                    <strong>
+
+
+
+                                        {% if item.last_active_dot %}
+
+
+
+                                            <span
+
+                                                class="
+
+                                                    system-mini-dot
+
+                                                    system-mini-dot-{{ item.last_active_dot }}
+
+                                                "
+
+                                            ></span>
+
+
+
+                                        {% endif %}
+
+
+
+                                        {{ item.last_active_label }}
+
+
+
+                                    </strong>
+
+
+
+
+
+                                    <small>
+
+                                        {{ item.last_active_meta }}
+
+                                    </small>
+
+
+
+                                </div>
+
+
+
+                            </td>
+
+
+
+
+
+
+
+                            <!-- LAST LOGIN -->
+
+
+
+                            <td>
+
+
+
+                                <div class="system-two-line-cell">
+
+
+
+                                    <strong>
+
+                                        {{ item.last_login_label }}
+
+                                    </strong>
+
+
+
+                                    <small>
+
+                                        {{ item.last_login_ip }}
+
+                                    </small>
+
+
+
+                                </div>
+
+
+
+                            </td>
+
+
+
+
+
+
+
+                            <!-- SECURITY -->
+
+
+
+                            <td>
+
+
+
+                                <div
+
+                                    class="
+
+                                        system-security
+
+                                        system-security-{{ item.security_key }}
+
+                                    "
+
+                                >
+
+
+
+                                    <iconsax-icon
+
+                                        name="shield-tick"
+
+                                        type="twotone"
+
+                                        size="23"
+
+                                        color="currentColor"
+
+                                    ></iconsax-icon>
+
+
+
+
+
+                                    <div>
+
+
+
+                                        <strong>
+
+                                            {{ item.security_label }}
+
+                                        </strong>
+
+
+
+                                        <small>
+
+                                            {{ item.security_meta }}
+
+                                        </small>
+
+
+
+                                    </div>
+
+
+
+                                </div>
+
+
+
+                            </td>
+
+
+
+
+
+
+
+                            <!-- ACTION -->
+
+
+
+                            <td class="system-action-column">
+
+
+
+                                <button
+
+                                    type="button"
+
+                                    class="system-edit-button"
+
+                                    data-system-edit-user
+
+                                    data-user-id="{{ item.id }}"
+
+                                >
+
+                                    Edit
+
+                                </button>
+
+
+
+                            </td>
+
+
+
+
+
+                        </tr>
+
+
+
+                    {% endfor %}
+
+
+
+
+
+                </tbody>
+
+
+
+
+
+            </table>
+
+
+
+        </div>
+
+
+
+
+
+
+
+        <!-- =================================================
+
+             TABLE FOOTER
+
+             ================================================= -->
+
+
+
+        <div class="system-table-footer">
+
+
+
+
+
+            <span data-system-result-text>
+
+                Showing 0 users
+
+            </span>
+
+
+
+
+
+            <nav
+
+                class="system-pagination"
+
+                aria-label="User pagination"
+
+                data-system-pagination
+
+            >
+
+
+
+
+
+                <button
+
+                    type="button"
+
+                    class="system-page-button"
+
+                    data-system-prev
+
+                    aria-label="Previous page"
+
+                >
+
+                    ‹
+
+                </button>
+
+
+
+
+
+                <div
+
+                    class="system-page-numbers"
+
+                    data-system-page-numbers
+
+                ></div>
+
+
+
+
+
+                <button
+
+                    type="button"
+
+                    class="system-page-button"
+
+                    data-system-next
+
+                    aria-label="Next page"
+
+                >
+
+                    ›
+
+                </button>
+
+
+
+
+
+            </nav>
+
+
+
+
+
+        </div>
+
+
+
+
+
+    </section>
+
+
+
+
+
+
+
+    <!-- =====================================================
+
+         BOTTOM GRID
+
+         ===================================================== -->
+
+
+
+    <section class="system-bottom-grid">
+
+
+
+
+
+        <!-- =================================================
+
+             ROLE & PERMISSIONS
+
+             ================================================= -->
+
+
+
+        <article class="system-bottom-card">
+
+
+
+
+
+            <div class="system-card-title">
+
+
+
+                <iconsax-icon
+
+                    name="shield-tick"
+
+                    type="twotone"
+
+                    size="18"
+
+                    color="currentColor"
+
+                ></iconsax-icon>
+
+
+
+                <h2>
+
+                    Role &amp; Permissions
+
+                </h2>
+
+
+
+            </div>
+
+
+
+
+
+
+
+            <table class="system-permissions-table">
+
+
+
+
+
+                <thead>
+
+
+
+                    <tr>
+
+
+
+                        <th>
+
+                            Capability
+
+                        </th>
+
+
+
+                        <th>
+
+                            User
+
+                        </th>
+
+
+
+                        <th>
+
+                            Admin
+
+                        </th>
+
+
+
+                        <th>
+
+                            Super
+
+                        </th>
+
+
+
+                    </tr>
+
+
+
+                </thead>
+
+
+
+
+
+
+
+                <tbody>
+
+
+
+
+
+                    <tr>
+
+
+
+                        <td>
+
+                            Inspection &amp; reports
+
+                        </td>
+
+
+
+                        <td class="is-enabled">
+
+                            ✓
+
+                        </td>
+
+
+
+                        <td class="is-enabled">
+
+                            ✓
+
+                        </td>
+
+
+
+                        <td class="is-enabled">
+
+                            ✓
+
+                        </td>
+
+
+
+                    </tr>
+
+
+
+
+
+
+
+                    <tr>
+
+
+
+                        <td>
+
+                            Anomalous pipeline
+
+                        </td>
+
+
+
+                        <td class="is-disabled">
+
+                            —
+
+                        </td>
+
+
+
+                        <td class="is-enabled">
+
+                            ✓
+
+                        </td>
+
+
+
+                        <td class="is-enabled">
+
+                            ✓
+
+                        </td>
+
+
+
+                    </tr>
+
+
+
+
+
+
+
+                    <tr>
+
+
+
+                        <td>
+
+                            Model / backup / retention
+
+                        </td>
+
+
+
+                        <td class="is-disabled">
+
+                            —
+
+                        </td>
+
+
+
+                        <td class="is-enabled">
+
+                            ✓
+
+                        </td>
+
+
+
+                        <td class="is-enabled">
+
+                            ✓
+
+                        </td>
+
+
+
+                    </tr>
+
+
+
+
+
+
+
+                    <tr>
+
+
+
+                        <td>
+
+                            Manage users &amp; roles
+
+                        </td>
+
+
+
+                        <td class="is-disabled">
+
+                            —
+
+                        </td>
+
+
+
+                        <td class="is-disabled">
+
+                            —
+
+                        </td>
+
+
+
+                        <td class="is-enabled">
+
+                            ✓
+
+                        </td>
+
+
+
+                    </tr>
+
+
+
+
+
+
+
+                    <tr>
+
+
+
+                        <td>
+
+                            System configuration
+
+                        </td>
+
+
+
+                        <td class="is-disabled">
+
+                            —
+
+                        </td>
+
+
+
+                        <td class="is-disabled">
+
+                            —
+
+                        </td>
+
+
+
+                        <td class="is-enabled">
+
+                            ✓
+
+                        </td>
+
+
+
+                    </tr>
+
+
+
+
+
+                </tbody>
+
+
+
+
+
+            </table>
+
+
+
+
+
+        </article>
+
+
+
+
+
+
+
+        <!-- =================================================
+
+             SYSTEM CONFIGURATION
+
+             ================================================= -->
+
+
+
+        <article class="system-bottom-card">
+
+
+
+
+
+            <div class="system-card-title">
+
+
+
+                <iconsax-icon
+
+                    name="setting-2"
+
+                    type="twotone"
+
+                    size="18"
+
+                    color="currentColor"
+
+                ></iconsax-icon>
+
+
+
+                <h2>
+
+                    System Configuration
+
+                </h2>
+
+
+
+            </div>
+
+
+
+
+
+
+
+            <div class="system-config-grid">
+
+
+
+                <!-- Yield Target -->
+
+                <div class="system-config-field">
+
+                    <div class="system-config-label-row">
+
+                        <label for="yield_target">
+
+                            Yield target (%)
+
+                        </label>
+
+
+
+                        <span
+
+                            class="config-info"
+
+                            tabindex="0"
+
+                            aria-label="Target yield rate the system aims to achieve."
+
+                        >
+
+                            <svg
+
+                                class="config-info-icon"
+
+                                viewBox="0 0 24 24"
+
+                                fill="none"
+
+                                aria-hidden="true"
+
+                            >
+
+                                <circle
+
+                                    cx="12"
+
+                                    cy="12"
+
+                                    r="9"
+
+                                    stroke="currentColor"
+
+                                    stroke-width="1.6"
+
+                                />
+
+
+
+                                <path
+
+                                    d="M12 10.8V16"
+
+                                    stroke="currentColor"
+
+                                    stroke-width="1.6"
+
+                                    stroke-linecap="round"
+
+                                />
+
+
+
+                                <circle
+
+                                    cx="12"
+
+                                    cy="7.6"
+
+                                    r="0.9"
+
+                                    fill="currentColor"
+
+                                />
+
+                            </svg>
+
+
+
+                            <span class="config-tooltip">
+
+                                Target yield rate the system aims to achieve.
+
+                            </span>
+
+                        </span>
+
+                    </div>
+
+
+
+                    <input
+
+                        id="yield_target"
+
+                        name="yield_target"
+
+                        type="number"
+
+                        value="85"
+
+                        min="0"
+
+                        max="100"
+
+                        step="0.1"
+
+                        class="system-config-input"
+
+                    >
+
+                </div>
+
+
+
+
+
+                <!-- Batch Pass Threshold -->
+
+                <div class="system-config-field">
+
+                    <div class="system-config-label-row">
+
+                        <label for="batch_pass_threshold">
+
+                            Batch pass threshold (%)
+
+                        </label>
+
+
+
+                        <span
+
+                            class="config-info"
+
+                            tabindex="0"
+
+                            aria-label="Target yield rate the system aims to achieve."
+
+                        >
+
+                            <svg
+
+                                class="config-info-icon"
+
+                                viewBox="0 0 24 24"
+
+                                fill="none"
+
+                                aria-hidden="true"
+
+                            >
+
+                                <circle
+
+                                    cx="12"
+
+                                    cy="12"
+
+                                    r="9"
+
+                                    stroke="currentColor"
+
+                                    stroke-width="1.6"
+
+                                />
+
+
+
+                                <path
+
+                                    d="M12 10.8V16"
+
+                                    stroke="currentColor"
+
+                                    stroke-width="1.6"
+
+                                    stroke-linecap="round"
+
+                                />
+
+
+
+                                <circle
+
+                                    cx="12"
+
+                                    cy="7.6"
+
+                                    r="0.9"
+
+                                    fill="currentColor"
+
+                                />
+
+                            </svg>
+
+
+
+                            <span class="config-tooltip">
+
+                                Minimum yield required for a batch to pass.
+
+                            </span>
+
+                        </span>
+
+                    </div>
+
+
+
+                    <input
+
+                        id="batch_pass_threshold"
+
+                        name="batch_pass_threshold"
+
+                        type="number"
+
+                        value="80"
+
+                        min="0"
+
+                        max="100"
+
+                        step="0.1"
+
+                        class="system-config-input"
+
+                    >
+
+                </div>
+
+
+
+
+
+                <!-- Confidence Threshold -->
+
+                <div class="system-config-field">
+
+                    <div class="system-config-label-row">
+
+                        <label for="confidence_threshold">
+
+                            Confidence threshold
+
+                        </label>
+
+
+
+                        <span
+
+                            class="config-info"
+
+                            tabindex="0"
+
+                            aria-label="Target yield rate the system aims to achieve."
+
+                        >
+
+                            <svg
+
+                                class="config-info-icon"
+
+                                viewBox="0 0 24 24"
+
+                                fill="none"
+
+                                aria-hidden="true"
+
+                            >
+
+                                <circle
+
+                                    cx="12"
+
+                                    cy="12"
+
+                                    r="9"
+
+                                    stroke="currentColor"
+
+                                    stroke-width="1.6"
+
+                                />
+
+
+
+                                <path
+
+                                    d="M12 10.8V16"
+
+                                    stroke="currentColor"
+
+                                    stroke-width="1.6"
+
+                                    stroke-linecap="round"
+
+                                />
+
+
+
+                                <circle
+
+                                    cx="12"
+
+                                    cy="7.6"
+
+                                    r="0.9"
+
+                                    fill="currentColor"
+
+                                />
+
+                            </svg>
+
+
+
+                            <span class="config-tooltip">
+
+                                Minimum AI confidence required before a detection is accepted.
+
+                            </span>
+
+                        </span>
+
+                    </div>
+
+
+
+                    <input
+
+                        id="confidence_threshold"
+
+                        name="confidence_threshold"
+
+                        type="number"
+
+                        value="0.50"
+
+                        min="0"
+
+                        max="1"
+
+                        step="0.01"
+
+                        class="system-config-input"
+
+                    >
+
+                </div>
+
+
+
+
+
+                <!-- Password Hashing -->
+
+                <div class="system-config-field">
+
+                    <div class="system-config-label-row">
+
+                        <label for="password_hashing">
+
+                            Password hashing
+
+                        </label>
+
+
+
+                        <span
+
+                            class="config-info"
+
+                            tabindex="0"
+
+                            aria-label="Target yield rate the system aims to achieve."
+
+                        >
+
+                            <svg
+
+                                class="config-info-icon"
+
+                                viewBox="0 0 24 24"
+
+                                fill="none"
+
+                                aria-hidden="true"
+
+                            >
+
+                                <circle
+
+                                    cx="12"
+
+                                    cy="12"
+
+                                    r="9"
+
+                                    stroke="currentColor"
+
+                                    stroke-width="1.6"
+
+                                />
+
+
+
+                                <path
+
+                                    d="M12 10.8V16"
+
+                                    stroke="currentColor"
+
+                                    stroke-width="1.6"
+
+                                    stroke-linecap="round"
+
+                                />
+
+
+
+                                <circle
+
+                                    cx="12"
+
+                                    cy="7.6"
+
+                                    r="0.9"
+
+                                    fill="currentColor"
+
+                                />
+
+                            </svg>
+
+
+
+                            <span class="config-tooltip">
+
+                                Method used to securely protect user passwords.
+
+                            </span>
+
+                        </span>
+
+                    </div>
+
+
+
+                    <input
+
+                        id="password_hashing"
+
+                        name="password_hashing"
+
+                        type="text"
+
+                        value="werkzeug.security"
+
+                        class="system-config-input"
+
+                        readonly
+
+                    >
+
+                </div>
+
+
+
+            </div>
+
+
+
+
+
+
+
+            <button
+
+                type="button"
+
+                class="system-save-button"
+
+                data-system-save-config
+
+            >
+
+                Save configuration
+
+            </button>
+
+
+
+
+
+        </article>
+
+
+
+
+
+    </section>
+
+
+
+
+
+</div>
+
+
+
+
+
+{% endblock %}
+
+
+
+
+
+
+
+{% block extra_js %}
+
+
+
+<script
+
+    src="{{ url_for(
+
+        'static',
+
+        filename='js/system.js'
+
+    ) }}"
+
+    defer
+
+></script>
+
+
+
+<script
+
+    src="{{ url_for(
+
+        'static',
+
+        filename='js/profile_photo_crop.js'
+
+    ) }}"
+
+></script>
+
+
+
+{% endblock %}

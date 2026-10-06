@@ -986,62 +986,57 @@ Registration Requests | BIKA
                  EMPTY STATE
                  ================================================= -->
 
-            <div class="rr-empty-state">
-
-
-                <div class="rr-empty-icon">
-
-                    <iconsax-icon
-                        name="profile-circle"
-                        type="twotone"
-                        size="25"
-                        color="currentColor"
+            <div class="empty-state">
+                <div class="empty-state-icon-circle">
+                    <svg
+                        class="empty-state-icon-svg"
+                        width="28"
+                        height="28"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
                         aria-hidden="true"
-                    ></iconsax-icon>
-
+                    >
+                        <path
+                            d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                        <path
+                            d="M20.59 22C20.59 18.13 16.74 15 12 15C7.26 15 3.41 18.13 3.41 22"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
                 </div>
 
-
-
-                <h2>
-
-                    {% if registration_status == 'approved' %}
-
-                        No approved registrations
-
-                    {% elif registration_status == 'rejected' %}
-
-                        No rejected registrations
-
-                    {% else %}
-
+                <h3 class="empty-state-title">
+                    {% if status == 'pending' %}
                         No pending registrations
-
-                    {% endif %}
-
-                </h2>
-
-
-
-                <p>
-
-                    {% if registration_status == 'approved' %}
-
-                        Approved registration requests will appear here.
-
-                    {% elif registration_status == 'rejected' %}
-
-                        Rejected registration requests will appear here.
-
+                    {% elif status == 'approved' %}
+                        No approved registrations
+                    {% elif status == 'rejected' %}
+                        No rejected registrations
                     {% else %}
-
-                        Verified registration requests will appear here.
-
+                        No registration requests
                     {% endif %}
+                </h3>
 
+                <p class="empty-state-description">
+                    {% if status == 'pending' %}
+                        Verified registration requests will appear here.
+                    {% elif status == 'approved' %}
+                        Approved registration requests will appear here.
+                    {% elif status == 'rejected' %}
+                        Rejected registration requests will appear here.
+                    {% else %}
+                        Registration requests will appear here.
+                    {% endif %}
                 </p>
-
-
             </div>
 
 

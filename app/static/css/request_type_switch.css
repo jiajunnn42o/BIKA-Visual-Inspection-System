@@ -1,17 +1,30 @@
 /* =========================================================
-   BIKA REQUEST TYPE SWITCH
+   BIKA
+   REQUEST TYPE SWITCH
 
-   Shared only by:
-   - Registration Requests
-   - Work Information Requests
+   Registration Requests
+   Work Information Requests
+   ========================================================= */
 
-   Does NOT modify rr-* or wir-* components.
+
+/* =========================================================
+   OUTER
    ========================================================= */
 
 .request-type-switch {
-    width: fit-content;
+    width: 430px;
+    height: 42px;
 
-    display: inline-flex;
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(
+                0,
+                1fr
+            )
+        );
 
     align-items: center;
 
@@ -20,111 +33,147 @@
     margin:
         16px
         0
-        0;
+        20px;
 
     padding: 4px;
 
-    border:
-        1px solid
-        rgba(
-            225,
-            225,
-            225,
-            0.90
-        );
+    box-sizing: border-box;
 
-    border-radius:
-        999px;
+    border: 0;
 
-    background:
-        rgba(
-            255,
-            255,
-            255,
-            0.60
-        );
+    border-radius: 999px;
+
+    /* 与图二类似的浅灰底，
+       但不会白到像另一个 card */
+    background: #E7E7E7;
+
+    box-shadow: none;
 }
 
 
-.request-type-switch-link {
-    min-width: 155px;
+/* =========================================================
+   ITEM
+   ========================================================= */
 
+.request-type-switch-link {
+    width: 100%;
     height: 34px;
 
-    display: inline-flex;
+    display: flex;
 
     align-items: center;
-
     justify-content: center;
 
     padding:
         0
-        17px;
+        14px;
 
-    border-radius:
-        999px;
+    box-sizing: border-box;
 
-    background:
-        transparent;
+    border: 0;
 
-    color:
-        #555555;
+    border-radius: 999px;
+
+    outline: 0;
+
+    background: transparent;
+
+    color: #4F4F4F;
 
     font-family:
         "Inter",
         Arial,
         sans-serif;
 
-    font-size:
-        11px;
+    /* 和下面 Status tabs 接近 */
+    font-size: 13px;
 
-    font-weight:
-        500;
+    font-weight: 500;
 
     line-height: 1;
 
-    text-decoration:
-        none !important;
+    text-align: center;
+
+    text-decoration: none !important;
 
     white-space: nowrap;
 
+    cursor: pointer;
+
     transition:
-        color 150ms ease,
-        background-color 150ms ease;
+        background-color 150ms ease,
+        color 150ms ease;
 }
 
+
+/* =========================================================
+   LINK RESET
+   ========================================================= */
 
 .request-type-switch-link:link,
 .request-type-switch-link:visited,
-.request-type-switch-link:hover,
 .request-type-switch-link:active,
-.request-type-switch-link:focus {
-    text-decoration:
-        none !important;
+.request-type-switch-link:focus,
+.request-type-switch-link:focus-visible {
+    text-decoration: none !important;
+
+    outline: 0;
 }
 
 
-.request-type-switch-link:hover {
-    color:
-        #741F2E;
+/* =========================================================
+   NORMAL HOVER
+   ========================================================= */
+
+.request-type-switch-link:not(.is-active):hover {
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.30
+        );
+
+    color: #242424;
 }
 
+
+/* =========================================================
+   ACTIVE
+   Exact BIKA brand red
+   ========================================================= */
 
 .request-type-switch-link.is-active {
-    background:
-        #741F2E;
+    background: #741F2E;
 
-    color:
-        #FFFFFF;
+    color: #FFFFFF;
+
+    font-weight: 600;
+
+    box-shadow: none;
 }
 
 
-.request-type-switch-link.is-active:hover {
-    background:
-        #5E1825;
+.request-type-switch-link.is-active:hover,
+.request-type-switch-link.is-active:focus,
+.request-type-switch-link.is-active:active,
+.request-type-switch-link.is-active:visited {
+    background: #741F2E;
 
-    color:
-        #FFFFFF;
+    color: #FFFFFF;
+}
+
+
+/* =========================================================
+   ALIGNMENT
+   ========================================================= */
+
+.rr-page
+.request-type-switch,
+
+[data-work-requests-page]
+.request-type-switch {
+    margin-left: 0;
 }
 
 
@@ -134,45 +183,54 @@
 
 html[data-theme="dark"]
 .request-type-switch {
-    border-color:
-        rgba(
-            255,
-            255,
-            255,
-            0.09
-        );
-
-    background:
-        rgba(
-            255,
-            255,
-            255,
-            0.035
-        );
+    background: #343436;
 }
 
 
 html[data-theme="dark"]
 .request-type-switch-link {
-    color:
-        #CACACA;
+    color: #D3D3D3;
 }
 
 
 html[data-theme="dark"]
-.request-type-switch-link:hover {
-    color:
-        #FFFFFF;
-}
-
-
-html[data-theme="dark"]
-.request-type-switch-link.is-active {
+.request-type-switch-link:not(.is-active):hover {
     background:
-        #741F2E;
+        rgba(
+            255,
+            255,
+            255,
+            0.055
+        );
 
-    color:
-        #FFFFFF;
+    color: #FFFFFF;
+}
+
+
+html[data-theme="dark"]
+.request-type-switch-link.is-active,
+html[data-theme="dark"]
+.request-type-switch-link.is-active:hover {
+    background: #741F2E;
+
+    color: #FFFFFF;
+}
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (
+    max-width: 760px
+) {
+
+    .request-type-switch {
+        width: 100%;
+
+        max-width: 430px;
+    }
+
 }
 
 
@@ -181,25 +239,32 @@ html[data-theme="dark"]
    ========================================================= */
 
 @media (
-    max-width: 600px
+    max-width: 520px
 ) {
 
     .request-type-switch {
         width: 100%;
+        height: 40px;
+
+        gap: 3px;
+
+        padding: 3px;
+
+        margin:
+            14px
+            0
+            18px;
     }
 
 
     .request-type-switch-link {
-        min-width: 0;
-
-        flex: 1;
+        height: 34px;
 
         padding:
             0
-            10px;
+            8px;
 
-        font-size:
-            9.5px;
+        font-size: 11px;
     }
 
 }
