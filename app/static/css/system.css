@@ -4905,223 +4905,6 @@ html[data-theme="dark"]
     line-height: 1.55;
 }
 
-/* =========================================================
-   SUPERADMIN PASSWORD VERIFICATION
-   ========================================================= */
-
-.system-user-confirm-password {
-    margin:
-        18px
-        0
-        20px;
-
-    text-align: left;
-}
-
-.system-user-confirm-password[hidden] {
-    display: none !important;
-}
-
-.system-user-confirm-security-note {
-    display: flex;
-    align-items: flex-start;
-
-    gap: 10px;
-
-    margin-bottom: 15px;
-
-    padding:
-        12px
-        13px;
-
-    border:
-        1px solid
-        rgba(
-            116,
-            31,
-            46,
-            0.12
-        );
-
-    border-radius: 12px;
-
-    background:
-        rgba(
-            116,
-            31,
-            46,
-            0.045
-        );
-
-    color: #741F2E;
-}
-
-.system-user-confirm-security-note iconsax-icon {
-    flex: 0 0 auto;
-
-    margin-top: 1px;
-}
-
-.system-user-confirm-security-note div {
-    min-width: 0;
-}
-
-.system-user-confirm-security-note strong {
-    display: block;
-
-    margin-bottom: 3px;
-
-    color: #4A252B;
-
-    font-size: 12px;
-    font-weight: 650;
-}
-
-.system-user-confirm-security-note span {
-    display: block;
-
-    color: #8A7478;
-
-    font-size: 10.8px;
-    font-weight: 400;
-    line-height: 1.45;
-}
-
-.system-user-confirm-password-field {
-    display: block;
-}
-
-.system-user-confirm-password-field > span {
-    display: block;
-
-    margin-bottom: 7px;
-
-    color: #555555;
-
-    font-size: 11.5px;
-    font-weight: 550;
-}
-
-.system-user-confirm-password-input-wrap {
-    width: 100%;
-    min-height: 44px;
-
-    display: flex;
-    align-items: center;
-
-    gap: 9px;
-
-    padding:
-        0
-        12px;
-
-    border:
-        1px solid
-        #DEDEDE;
-
-    border-radius: 12px;
-
-    background: #FFFFFF;
-
-    transition:
-        border-color 160ms ease,
-        box-shadow 160ms ease,
-        background 160ms ease;
-}
-
-.system-user-confirm-password-input-wrap:focus-within {
-    border-color:
-        rgba(
-            116,
-            31,
-            46,
-            0.55
-        );
-
-    box-shadow:
-        0
-        0
-        0
-        3px
-        rgba(
-            116,
-            31,
-            46,
-            0.07
-        );
-}
-
-.system-user-confirm-password-input-wrap > iconsax-icon {
-    flex: 0 0 auto;
-
-    color: #969696;
-}
-
-.system-user-confirm-password-input-wrap input {
-    min-width: 0;
-    flex: 1;
-
-    border: 0;
-    outline: 0;
-
-    background: transparent;
-
-    color: #333333;
-
-    font: inherit;
-    font-size: 12px;
-}
-
-.system-user-confirm-password-input-wrap input::placeholder {
-    color: #AAAAAA;
-}
-
-.system-user-confirm-password-toggle {
-    width: 30px;
-    height: 30px;
-
-    flex: 0 0 auto;
-
-    display: grid;
-    place-items: center;
-
-    padding: 0;
-
-    border: 0;
-
-    background: transparent;
-
-    color: #969696;
-
-    cursor: pointer;
-
-    border-radius: 8px;
-}
-
-.system-user-confirm-password-toggle:hover {
-    background:
-        rgba(
-            0,
-            0,
-            0,
-            0.045
-        );
-
-    color: #741F2E;
-}
-
-.system-user-confirm-password-error {
-    min-height: 16px;
-
-    margin-top: 6px;
-
-    color: #B43B4B;
-
-    font-size: 10.5px;
-    font-weight: 500;
-    line-height: 1.4;
-}
-
 .system-user-confirm-actions {
     display: flex;
     align-items: center;
@@ -5255,88 +5038,6 @@ html[data-theme="dark"]
 }
 
 
-html[data-theme="dark"]
-.system-user-confirm-security-note {
-    border-color:
-        rgba(
-            255,
-            255,
-            255,
-            0.08
-        );
-
-    background:
-        rgba(
-            255,
-            255,
-            255,
-            0.045
-        );
-}
-
-html[data-theme="dark"]
-.system-user-confirm-security-note strong {
-    color: #F0E6E8;
-}
-
-html[data-theme="dark"]
-.system-user-confirm-security-note span {
-    color: #AFA2A5;
-}
-
-html[data-theme="dark"]
-.system-user-confirm-password-field > span {
-    color: #C7C7C7;
-}
-
-html[data-theme="dark"]
-.system-user-confirm-password-input-wrap {
-    border-color:
-        rgba(
-            255,
-            255,
-            255,
-            0.09
-        );
-
-    background:
-        rgba(
-            255,
-            255,
-            255,
-            0.045
-        );
-}
-
-html[data-theme="dark"]
-.system-user-confirm-password-input-wrap input {
-    color: #F1F1F1;
-}
-
-html[data-theme="dark"]
-.system-user-confirm-password-input-wrap input::placeholder {
-    color: #7E7E7E;
-}
-
-html[data-theme="dark"]
-.system-user-confirm-password-toggle {
-    color: #999999;
-}
-
-html[data-theme="dark"]
-.system-user-confirm-password-toggle:hover {
-    background:
-        rgba(
-            255,
-            255,
-            255,
-            0.06
-        );
-
-    color: #F0DDE1;
-}
-
-
 /* =========================================================
    MOBILE
    ========================================================= */
@@ -5377,4 +5078,477 @@ html[data-theme="dark"]
 .system-user-modal-content[hidden],
 .system-user-confirm-backdrop[hidden] {
     display: none !important;
+}
+
+/* =========================================================
+   ADMINISTRATION — CUSTOM TOOLBAR FILTER DROPDOWNS
+   ========================================================= */
+
+/*
+ * The original <select> elements stay in the DOM for the
+ * existing JS filtering/export logic, but are visually hidden.
+ */
+.system-filter-native {
+    position: absolute !important;
+
+    width: 1px !important;
+    height: 1px !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    opacity: 0 !important;
+
+    pointer-events: none !important;
+
+    clip: rect(0 0 0 0) !important;
+    clip-path: inset(50%) !important;
+
+    overflow: hidden !important;
+}
+
+
+/* FILTER WRAPPER */
+
+.system-filter {
+    position: relative;
+
+    min-width: 132px;
+}
+
+
+/* TRIGGER */
+
+.system-filter-trigger {
+    width: 100%;
+    height: 30px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 12px;
+
+    padding:
+        0
+        12px
+        0
+        13px;
+
+    border:
+        1px solid
+        #E4E4E6;
+
+    border-radius: 999px;
+
+    outline: 0;
+
+    background:
+        rgba(255, 255, 255, 0.96);
+
+    color:
+        #555558;
+
+    font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
+    font-size: 10.5px;
+    font-weight: 450;
+
+    line-height: 1;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 1px 2px
+        rgba(0, 0, 0, 0.018);
+
+    transition:
+        border-color 150ms ease,
+        background 150ms ease,
+        color 150ms ease,
+        box-shadow 150ms ease;
+}
+
+.system-filter-trigger:hover {
+    border-color:
+        #CECED2;
+
+    background:
+        #FFFFFF;
+}
+
+.system-filter.is-open
+.system-filter-trigger {
+    border-color:
+        rgba(116, 31, 46, 0.58);
+
+    background:
+        #FFFFFF;
+
+    color:
+        #741F2E;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(116, 31, 46, 0.07);
+}
+
+
+/* CHEVRON */
+
+.system-filter-chevron {
+    width: 6px;
+    height: 6px;
+
+    flex: 0 0 auto;
+
+    margin-right: 1px;
+    margin-top: -3px;
+
+    border-right:
+        1.4px solid
+        #858589;
+
+    border-bottom:
+        1.4px solid
+        #858589;
+
+    transform:
+        rotate(45deg);
+
+    transition:
+        transform 150ms ease,
+        margin-top 150ms ease,
+        border-color 150ms ease;
+}
+
+.system-filter.is-open
+.system-filter-chevron {
+    margin-top: 3px;
+
+    border-color:
+        #741F2E;
+
+    transform:
+        rotate(225deg);
+}
+
+
+/* MENU */
+
+.system-filter-menu {
+    position: absolute;
+
+    top:
+        calc(100% + 6px);
+
+    left: 0;
+
+    z-index: 1200;
+
+    min-width: 100%;
+    width: max-content;
+
+    padding: 5px;
+
+    border:
+        1px solid
+        #E7E4E5;
+
+    border-radius: 13px;
+
+    background:
+        rgba(255, 255, 255, 0.99);
+
+    box-shadow:
+        0 14px 34px
+        rgba(36, 25, 28, 0.13),
+        0 3px 10px
+        rgba(36, 25, 28, 0.04);
+
+    backdrop-filter:
+        blur(14px);
+
+    -webkit-backdrop-filter:
+        blur(14px);
+
+    animation:
+        systemFilterMenuIn
+        130ms
+        cubic-bezier(
+            0.2,
+            0.8,
+            0.2,
+            1
+        );
+
+    transform-origin:
+        top left;
+}
+
+.system-filter-menu[hidden] {
+    display: none !important;
+}
+
+@keyframes systemFilterMenuIn {
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(-4px)
+            scale(0.985);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1);
+    }
+}
+
+
+/* OPTIONS */
+
+.system-filter-option {
+    width: 100%;
+    min-width: 142px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 18px;
+
+    padding:
+        0
+        10px;
+
+    border: 0;
+    border-radius: 9px;
+
+    outline: 0;
+
+    background:
+        transparent;
+
+    color:
+        #48484B;
+
+    font-family:
+        "Inter",
+        Arial,
+        sans-serif;
+
+    font-size: 10.7px;
+    font-weight: 450;
+
+    line-height: 1;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        color 120ms ease,
+        background 120ms ease;
+}
+
+.system-filter-option:hover,
+.system-filter-option:focus-visible {
+    background:
+        #FAF3F5;
+
+    color:
+        #741F2E;
+}
+
+.system-filter-option.is-selected {
+    background:
+        #F5E9EC;
+
+    color:
+        #741F2E;
+
+    font-weight: 600;
+}
+
+
+/* CHECK */
+
+.system-filter-check {
+    width: 18px;
+    height: 18px;
+
+    flex: 0 0 auto;
+
+    display: grid;
+    place-items: center;
+
+    border-radius: 999px;
+
+    background:
+        rgba(116, 31, 46, 0.09);
+
+    color:
+        #741F2E;
+
+    font-size: 9px;
+    font-weight: 750;
+
+    line-height: 1;
+
+    opacity: 0;
+
+    transform:
+        scale(0.82);
+
+    transition:
+        opacity 120ms ease,
+        transform 120ms ease;
+}
+
+.system-filter-option.is-selected
+.system-filter-check {
+    opacity: 1;
+
+    transform:
+        scale(1);
+}
+
+
+/* DARK MODE */
+
+html[data-theme="dark"]
+.system-filter-trigger {
+    border-color:
+        rgba(255, 255, 255, 0.10);
+
+    background:
+        #29292C;
+
+    color:
+        #D7D7DA;
+
+    box-shadow:
+        none;
+}
+
+html[data-theme="dark"]
+.system-filter-trigger:hover {
+    border-color:
+        rgba(255, 255, 255, 0.16);
+
+    background:
+        #2D2D30;
+}
+
+html[data-theme="dark"]
+.system-filter.is-open
+.system-filter-trigger {
+    border-color:
+        #B65366;
+
+    background:
+        #2B2B2E;
+
+    color:
+        #F0C3CC;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(182, 83, 102, 0.11);
+}
+
+html[data-theme="dark"]
+.system-filter-chevron {
+    border-color:
+        #A5A5A9;
+}
+
+html[data-theme="dark"]
+.system-filter.is-open
+.system-filter-chevron {
+    border-color:
+        #E0A0AD;
+}
+
+html[data-theme="dark"]
+.system-filter-menu {
+    border-color:
+        rgba(255, 255, 255, 0.08);
+
+    background:
+        rgba(37, 37, 39, 0.99);
+
+    box-shadow:
+        0 18px 42px
+        rgba(0, 0, 0, 0.40);
+}
+
+html[data-theme="dark"]
+.system-filter-option {
+    color:
+        #DCDCE0;
+}
+
+html[data-theme="dark"]
+.system-filter-option:hover,
+html[data-theme="dark"]
+.system-filter-option:focus-visible {
+    background:
+        rgba(176, 74, 93, 0.13);
+
+    color:
+        #F1C9D1;
+}
+
+html[data-theme="dark"]
+.system-filter-option.is-selected {
+    background:
+        rgba(176, 74, 93, 0.19);
+
+    color:
+        #F2C0CA;
+}
+
+html[data-theme="dark"]
+.system-filter-check {
+    background:
+        rgba(210, 113, 132, 0.16);
+
+    color:
+        #F0B2BE;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 980px) {
+
+    .system-filter {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .system-filter-trigger {
+        width: 100%;
+    }
+
+    .system-filter-menu {
+        min-width: 100%;
+        width: 100%;
+    }
+
+    .system-filter-option {
+        min-width: 0;
+    }
+
 }

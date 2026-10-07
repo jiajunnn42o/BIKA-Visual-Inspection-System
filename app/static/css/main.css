@@ -2190,3 +2190,16 @@ html[data-theme="dark"] .app-sidebar a.is-active iconsax-icon,
 html[data-theme="dark"] button:hover iconsax-icon {
     color: #FFFFFF !important;
 }
+
+/* =========================================================
+   DISABLE SIDEBAR LINK DRAGGING
+   ========================================================= */
+
+.sidebar a,
+.sidebar-link,
+.app-sidebar a,
+.app-nav a {
+    -webkit-user-drag: none;
+    user-select: none;
+    -webkit-user-select: none;
+}

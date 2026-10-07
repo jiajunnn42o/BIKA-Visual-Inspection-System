@@ -25,9 +25,13 @@
          ===================================================== -->
 
     <title>
+
         {% block title %}
+
             BIKA Visual Inspection System
+
         {% endblock %}
+
     </title>
 
 
@@ -128,7 +132,54 @@
     >
 
 
+    <!-- =====================================================
+         PREVENT SIDEBAR LINK DRAGGING
+         ===================================================== -->
+
+    <style>
+
+        /*
+         * Sidebar links still work normally when clicked.
+         *
+         * This only prevents:
+         * - browser link dragging
+         * - URL drag preview
+         * - accidental text selection while dragging
+         */
+
+        .app-sidebar a,
+        .app-sidebar .app-nav-item {
+            -webkit-user-drag: none;
+            user-drag: none;
+
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+
+        .app-sidebar a *,
+        .app-sidebar .app-nav-item * {
+            -webkit-user-drag: none;
+            user-drag: none;
+
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+
+        .app-sidebar img {
+            -webkit-user-drag: none;
+            user-drag: none;
+
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+    </style>
+
+
     {% block extra_css %}
+
     {% endblock %}
 
 </head>
@@ -164,13 +215,11 @@
                     BIKA
                 </span>
 
-
                 <span class="app-sidebar-brand-subtitle">
                     Visual Inspection
                 </span>
 
             </div>
-
 
 
             <!-- =============================================
@@ -181,7 +230,6 @@
                 class="app-nav-section"
                 aria-label="Workspace"
             >
-
 
                 <div class="app-nav-section-heading">
 
@@ -194,12 +242,12 @@
                 </div>
 
 
-
                 <!-- DASHBOARD -->
 
                 <a
                     href="#"
                     class="app-nav-item"
+                    draggable="false"
                 >
 
                     <iconsax-icon
@@ -216,12 +264,12 @@
                 </a>
 
 
-
                 <!-- INSPECTION -->
 
                 <a
                     href="#"
                     class="app-nav-item"
+                    draggable="false"
                 >
 
                     <iconsax-icon
@@ -238,12 +286,12 @@
                 </a>
 
 
-
                 <!-- REPORTS -->
 
                 <a
                     href="#"
                     class="app-nav-item"
+                    draggable="false"
                 >
 
                     <iconsax-icon
@@ -260,12 +308,12 @@
                 </a>
 
 
-
                 <!-- DATA ANALYTICS -->
 
                 <a
                     href="#"
                     class="app-nav-item"
+                    draggable="false"
                 >
 
                     <iconsax-icon
@@ -281,156 +329,170 @@
 
                 </a>
 
-
             </nav>
-
 
 
             <!-- =============================================
-                MANAGEMENT
-                ============================================= -->
+                 MANAGEMENT
+                 ADMIN / SUPERADMIN ONLY
+                 ============================================= -->
 
-            <nav
-                class="app-nav-section"
-                aria-label="Management"
-            >
+            {% if current_user.role in ["admin", "superadmin"] %}
 
-
-                <div class="app-nav-section-heading">
-
-                    <span>
-                        Management
-                    </span>
-
-                    <span class="app-nav-section-line"></span>
-
-                </div>
-
-
-
-                <!-- =====================================================
-                    ABOUT SYSTEM
-                    PAGE NOT CREATED YET
-                    ===================================================== -->
-
-                <a
-                    href="#"
-                    class="app-nav-item"
+                <nav
+                    class="app-nav-section"
+                    aria-label="Management"
                 >
 
-                    <iconsax-icon
-                        name="setting-2"
-                        type="twotone"
-                        size="22"
-                        color="currentColor"
-                    ></iconsax-icon>
+                    <div class="app-nav-section-heading">
 
-                    <span>
-                        About System
-                    </span>
+                        <span>
+                            Management
+                        </span>
 
-                </a>
+                        <span class="app-nav-section-line"></span>
+
+                    </div>
 
 
-
-                <!-- =====================================================
-                    ADMINISTRATION - SUPERADMIN ONLY
-                    ===================================================== -->
-
-                {% if current_user.role == "superadmin" %}
+                    <!-- =========================================
+                         ABOUT SYSTEM
+                         ADMIN + SUPERADMIN
+                         ========================================= -->
 
                     <a
-                        href="{{ url_for('superadmin.system_page') }}"
+                        href="{{ url_for('main.about_system') }}"
+
                         class="
                             app-nav-item
 
                             {% if
                                 request.endpoint
-                                ==
+                                and
+                                request.endpoint.startswith(
+                                    'main.about_system'
+                                )
+                            %}
+                                is-active
+                            {% endif %}
+                        "
+
+                        draggable="false"
+                    >
+
+                        <iconsax-icon
+                            name="setting-2"
+                            type="twotone"
+                            size="22"
+                            color="currentColor"
+                        ></iconsax-icon>
+
+                        <span>
+                            About System
+                        </span>
+
+                    </a>
+
+
+                    <!-- =========================================
+                         ADMINISTRATION
+                         SUPERADMIN ONLY
+                         ========================================= -->
+
+                    {% if current_user.role == "superadmin" %}
+
+                        <a
+                            href="{{ url_for(
                                 'superadmin.system_page'
-                            %}
-                                is-active
-                            {% endif %}
-                        "
-                    >
+                            ) }}"
 
-                        <iconsax-icon
-                            name="shield-tick"
-                            type="twotone"
-                            size="22"
-                            color="currentColor"
-                        ></iconsax-icon>
+                            class="
+                                app-nav-item
 
-                        <span>
-                            Administration
-                        </span>
+                                {% if
+                                    request.endpoint
+                                    ==
+                                    'superadmin.system_page'
+                                %}
+                                    is-active
+                                {% endif %}
+                            "
 
-                    </a>
+                            draggable="false"
+                        >
 
-                {% endif %}
+                            <iconsax-icon
+                                name="shield-tick"
+                                type="twotone"
+                                size="22"
+                                color="currentColor"
+                            ></iconsax-icon>
 
+                            <span>
+                                Administration
+                            </span>
 
-
-                <!-- =========================================
-                    REQUEST STATUS
-                    SUPERADMIN ONLY
-                    ========================================= -->
-
-                {% if current_user.role == "superadmin" %}
-
-
-                    {% set request_status_endpoints = [
-
-                        'superadmin.pending_registrations',
-
-                        'superadmin.review_registration',
-
-                        'superadmin.work_information_requests',
-
-                        'superadmin.approve_work_information_request',
-
-                        'superadmin.reject_work_information_request'
-
-                    ] %}
+                        </a>
 
 
-                    <a
-                        href="{{ url_for(
-                            'superadmin.pending_registrations'
-                        ) }}"
-                        class="
-                            app-nav-item
+                        <!-- =====================================
+                             REQUEST STATUS
+                             SUPERADMIN ONLY
+                             ===================================== -->
 
-                            {% if
-                                request.endpoint
-                                in
-                                request_status_endpoints
-                            %}
-                                is-active
-                            {% endif %}
-                        "
-                    >
+                        {% set request_status_endpoints = [
 
-                        <iconsax-icon
-                            name="message-question"
-                            type="twotone"
-                            size="22"
-                            color="currentColor"
-                        ></iconsax-icon>
+                            'superadmin.pending_registrations',
+
+                            'superadmin.review_registration',
+
+                            'superadmin.work_information_requests',
+
+                            'superadmin.approve_work_information_request',
+
+                            'superadmin.reject_work_information_request'
+
+                        ] %}
 
 
-                        <span>
-                            Request Status
-                        </span>
+                        <a
+                            href="{{ url_for(
+                                'superadmin.pending_registrations'
+                            ) }}"
 
-                    </a>
+                            class="
+                                app-nav-item
 
+                                {% if
+                                    request.endpoint
+                                    in
+                                    request_status_endpoints
+                                %}
+                                    is-active
+                                {% endif %}
+                            "
 
-                {% endif %}
+                            draggable="false"
+                        >
 
+                            <iconsax-icon
+                                name="message-question"
+                                type="twotone"
+                                size="22"
+                                color="currentColor"
+                            ></iconsax-icon>
 
-            </nav>
+                            <span>
+                                Request Status
+                            </span>
 
+                        </a>
+
+                    {% endif %}
+
+                </nav>
+
+            {% endif %}
 
 
             <!-- =============================================
@@ -441,7 +503,6 @@
                 class="app-nav-section"
                 aria-label="Account"
             >
-
 
                 <div class="app-nav-section-heading">
 
@@ -454,11 +515,11 @@
                 </div>
 
 
-
                 <a
                     href="{{ url_for(
                         'account.index'
                     ) }}"
+
                     class="
                         app-nav-item
 
@@ -472,6 +533,8 @@
                             is-active
                         {% endif %}
                     "
+
+                    draggable="false"
                 >
 
                     <iconsax-icon
@@ -481,16 +544,13 @@
                         color="currentColor"
                     ></iconsax-icon>
 
-
                     <span>
                         Account
                     </span>
 
                 </a>
 
-
             </nav>
-
 
 
             <!-- =============================================
@@ -506,7 +566,6 @@
 
                 <div class="app-sidebar-avatar">
 
-
                     {% if current_user.profile_photo %}
 
                         <img
@@ -515,13 +574,12 @@
                                 filename=current_user.profile_photo
                             ) }}"
                             alt="{{ current_user.full_name }}"
+                            draggable="false"
                         >
-
 
                     {% elif current_user.first_name %}
 
                         {{ current_user.first_name[0]|upper }}
-
 
                     {% else %}
 
@@ -529,9 +587,7 @@
 
                     {% endif %}
 
-
                 </div>
-
 
 
                 <!-- =========================================
@@ -539,7 +595,6 @@
                      ========================================= -->
 
                 <div class="app-sidebar-user-copy">
-
 
                     <strong>
 
@@ -554,7 +609,6 @@
                         {% endif %}
 
                     </strong>
-
 
 
                     <span>
@@ -575,9 +629,7 @@
 
                     </span>
 
-
                 </div>
-
 
 
                 <!-- =========================================
@@ -601,12 +653,9 @@
 
                 </button>
 
-
             </div>
 
-
         </aside>
-
 
 
         <!-- =================================================
@@ -655,7 +704,6 @@
                     </button>
 
 
-
                     <!-- LIGHT -->
 
                     <button
@@ -676,9 +724,7 @@
 
                     </button>
 
-
                 </div>
-
 
 
                 <!-- =========================================
@@ -705,13 +751,16 @@
 
                     <button
                         type="button"
+
                         class="
                             app-topbar-icon-button
                             app-notification-button
                         "
+
                         aria-label="Notifications"
                         aria-haspopup="true"
                         aria-expanded="false"
+
                         data-notification-toggle
                     >
 
@@ -722,7 +771,6 @@
                             color="currentColor"
                         ></iconsax-icon>
 
-
                         <span
                             class="app-notification-badge"
                             data-notification-badge
@@ -732,7 +780,6 @@
                         </span>
 
                     </button>
-
 
 
                     <!-- =====================================
@@ -751,7 +798,6 @@
                              ================================= -->
 
                         <div class="app-notification-head">
-
 
                             <div>
 
@@ -777,9 +823,7 @@
                                 Mark all as read
                             </button>
 
-
                         </div>
-
 
 
                         <!-- =================================
@@ -802,7 +846,6 @@
                         </div>
 
 
-
                         <!-- =================================
                              LIST
                              ================================= -->
@@ -812,7 +855,6 @@
                             data-notification-list
                             hidden
                         ></div>
-
 
 
                         <!-- =================================
@@ -825,9 +867,7 @@
                             hidden
                         >
 
-
                             <div class="app-notification-empty-icon">
-
 
                                 <svg
                                     viewBox="0 0 24 24"
@@ -851,7 +891,6 @@
                                         "
                                     />
 
-
                                     <path
                                         d="
                                             M10 19
@@ -866,31 +905,23 @@
 
                                 </svg>
 
-
                             </div>
-
 
                             <strong>
                                 No notifications
                             </strong>
 
-
                             <span>
                                 New updates will appear here.
                             </span>
 
-
                         </div>
-
 
                     </div>
 
-
                 </div>
 
-
             </header>
-
 
 
             <!-- =============================================
@@ -903,10 +934,9 @@
 {% endif %}
 
 
-
                 {% block content %}
-                {% endblock %}
 
+                {% endblock %}
 
 
 {% if current_user.is_authenticated %}
@@ -914,12 +944,9 @@
 
             </main>
 
-
         </div>
 
-
     </div>
-
 
 
     <!-- =====================================================
@@ -931,7 +958,6 @@
         id="logoutConfirmBackdrop"
         hidden
     >
-
 
         <section
             class="logout-confirm-dialog"
@@ -958,7 +984,6 @@
             </div>
 
 
-
             <!-- =============================================
                  TITLE
                  ============================================= -->
@@ -968,7 +993,6 @@
             </h2>
 
 
-
             <!-- =============================================
                  DESCRIPTION
                  ============================================= -->
@@ -976,7 +1000,6 @@
             <p id="logoutConfirmText">
                 Are you sure you want to log out of your account?
             </p>
-
 
 
             <!-- =============================================
@@ -997,26 +1020,25 @@
                 </button>
 
 
-
                 <!-- =========================================
                      ACTUAL LOGOUT
                      ========================================= -->
 
                 <form
                     method="POST"
+
                     action="{{ url_for(
                         'auth.logout'
                     ) }}"
+
                     class="logout-confirm-form"
                 >
-
 
                     <input
                         type="hidden"
                         name="csrf_token"
                         value="{{ csrf_token() }}"
                     >
-
 
                     <button
                         type="submit"
@@ -1025,21 +1047,16 @@
                         Log out
                     </button>
 
-
                 </form>
-
 
             </div>
 
-
         </section>
-
 
     </div>
 
 
 {% endif %}
-
 
 
 <!-- =========================================================
@@ -1062,7 +1079,108 @@
 ></script>
 
 
+<!-- =========================================================
+     PREVENT SIDEBAR LINK DRAGGING
+     ========================================================= -->
+
+<script>
+
+    (function () {
+
+        "use strict";
+
+
+        /* =================================================
+           FORCE ALL CURRENT SIDEBAR LINKS TO NOT DRAG
+           ================================================= */
+
+        document
+            .querySelectorAll(
+                ".app-sidebar a"
+            )
+            .forEach(
+                function (link) {
+
+                    link.setAttribute(
+                        "draggable",
+                        "false"
+                    );
+
+                }
+            );
+
+
+        /* =================================================
+           BLOCK NATIVE BROWSER LINK DRAG PREVIEW
+
+           This prevents things like:
+
+           Data Analytics
+           http://127.0.0.1:5000/about-system#
+
+           from appearing when the mouse is dragged.
+           ================================================= */
+
+        document.addEventListener(
+            "dragstart",
+            function (event) {
+
+                const target =
+                    event.target;
+
+
+                if (
+                    !target
+                    ||
+                    typeof target.closest
+                    !==
+                    "function"
+                ) {
+                    return;
+                }
+
+
+                const sidebarLink =
+                    target.closest(
+                        ".app-sidebar a"
+                    );
+
+
+                if (
+                    sidebarLink
+                ) {
+
+                    event.preventDefault();
+
+                    return;
+
+                }
+
+
+                const sidebarImage =
+                    target.closest(
+                        ".app-sidebar img"
+                    );
+
+
+                if (
+                    sidebarImage
+                ) {
+
+                    event.preventDefault();
+
+                }
+
+            }
+        );
+
+    })();
+
+</script>
+
+
 {% block extra_js %}
+
 {% endblock %}
 
 

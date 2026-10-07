@@ -1,0 +1,1887 @@
+{% extends "base.html" %}
+
+
+
+
+
+{% block title %}
+
+About System | BIKA
+
+{% endblock %}
+
+
+
+
+
+{% block extra_css %}
+
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/about_system.css', v='20261007-3') }}"
+>
+
+{% endblock %}
+
+
+
+
+
+{% block content %}
+
+<div
+
+    class="about-system-page"
+
+    data-about-system-page
+
+    data-retention-url="{{ url_for('main.update_about_system_retention') }}"
+
+    data-backup-settings-url="{{ url_for('main.update_about_system_backup_settings') }}"
+
+>
+
+
+
+    <header class="about-system-header">
+
+        <div>
+
+            <h1>About System</h1>
+
+            <p>Model, backups, retention and audit — all in one place</p>
+
+        </div>
+
+
+
+        <span class="about-role-badge">
+
+            {{ current_user.role|title }} access
+
+        </span>
+
+    </header>
+
+
+
+
+
+    <!-- =====================================================
+
+         SUMMARY
+
+         ===================================================== -->
+
+    <section class="about-summary-grid" aria-label="System summary">
+
+
+
+        <article class="about-summary-card">
+
+            <span class="about-summary-icon about-summary-icon-red">
+
+                <iconsax-icon name="box" type="twotone" size="24" color="currentColor"></iconsax-icon>
+
+            </span>
+
+            <div>
+
+                <small>Current Model</small>
+
+                <strong>{{ about_state.model.name }}</strong>
+
+            </div>
+
+        </article>
+
+
+
+        <article class="about-summary-card">
+
+            <span class="about-summary-icon about-summary-icon-red-soft">
+
+                <iconsax-icon name="layer" type="twotone" size="24" color="currentColor"></iconsax-icon>
+
+            </span>
+
+            <div>
+
+                <small>Version</small>
+
+                <strong>{{ about_state.model.version }}</strong>
+
+            </div>
+
+        </article>
+
+
+
+        <article class="about-summary-card">
+
+            <span class="about-summary-icon about-summary-icon-green">
+
+                <iconsax-icon name="tick-circle" type="twotone" size="24" color="currentColor"></iconsax-icon>
+
+            </span>
+
+            <div>
+
+                <small>Backup Status</small>
+
+                <strong class="about-status-{{ about_stats.backup_status_key }}">
+
+                    {{ about_stats.backup_status }}
+
+                </strong>
+
+            </div>
+
+        </article>
+
+
+
+        <article class="about-summary-card">
+
+            <span class="about-summary-icon about-summary-icon-red">
+
+                <iconsax-icon name="security-safe" type="twotone" size="24" color="currentColor"></iconsax-icon>
+
+            </span>
+
+            <div>
+
+                <small>Retention Policy</small>
+
+                <strong>
+
+                    {{ about_retention_options[about_state.retention_policy].label }}
+
+                </strong>
+
+            </div>
+
+        </article>
+
+
+
+        <article class="about-summary-card">
+
+            <span class="about-summary-icon about-summary-icon-red">
+
+                <iconsax-icon name="document" type="twotone" size="24" color="currentColor"></iconsax-icon>
+
+            </span>
+
+            <div>
+
+                <small>Database Size</small>
+
+                <strong>{{ about_stats.database_size }}</strong>
+
+            </div>
+
+        </article>
+
+
+
+        <article class="about-summary-card">
+
+            <span class="about-summary-icon about-summary-icon-red">
+
+                <iconsax-icon name="calendar" type="twotone" size="24" color="currentColor"></iconsax-icon>
+
+            </span>
+
+            <div>
+
+                <small>Audit Event Today</small>
+
+                <strong>{{ about_stats.audit_today }}</strong>
+
+            </div>
+
+        </article>
+
+
+
+    </section>
+
+
+
+
+
+    <!-- =====================================================
+
+         MAIN GRID
+
+         ===================================================== -->
+
+    <div class="about-main-grid">
+
+
+
+        <!-- MODEL MANAGEMENT -->
+
+        <section class="about-panel">
+
+            <div class="about-panel-heading">
+
+                <div>
+
+                    <iconsax-icon name="shield" type="twotone" size="19" color="currentColor"></iconsax-icon>
+
+                    <h2>Model Management</h2>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="about-model-grid">
+
+                <div class="about-info-row">
+
+                    <span>Current Model</span>
+
+                    <strong>{{ about_state.model.name }}</strong>
+
+                </div>
+
+                <div class="about-info-row">
+
+                    <span>Status</span>
+
+                    <strong class="about-pill about-pill-green">
+
+                        {{ about_state.model.status }}
+
+                    </strong>
+
+                </div>
+
+                <div class="about-info-row">
+
+                    <span>Version</span>
+
+                    <strong>{{ about_state.model.version }}</strong>
+
+                </div>
+
+                <div class="about-info-row">
+
+                    <span>Last Updated</span>
+
+                    <strong>{{ about_state.model.last_updated or '—' }}</strong>
+
+                </div>
+
+                <div class="about-info-row">
+
+                    <span>Classes</span>
+
+                    <strong>{{ about_state.model.classes }}</strong>
+
+                </div>
+
+                <div class="about-info-row">
+
+                    <span>mAP / Accuracy</span>
+
+                    <strong>{{ about_model_accuracy }}</strong>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="about-action-row">
+
+                <button
+
+                    type="button"
+
+                    class="about-button about-button-primary"
+
+                    data-about-coming-soon="Model version switching"
+
+                >
+
+                    <iconsax-icon
+
+                        name="repeat-arrow"
+
+                        type="twotone"
+
+                        size="18"
+
+                        color="currentColor"
+
+                    ></iconsax-icon>
+
+
+
+                    Switch Version
+
+                </button>
+
+
+
+                <button
+
+                    type="button"
+
+                    class="about-button about-button-secondary"
+
+                    data-about-coming-soon="Model upload"
+
+                >
+
+                    <iconsax-icon
+
+                        name="document-upload"
+
+                        type="twotone"
+
+                        size="18"
+
+                        color="currentColor"
+
+                    ></iconsax-icon>
+
+
+
+                    <span>
+
+                        Upload New Model
+
+                    </span>
+
+                </button>
+
+            </div>
+
+        </section>
+
+
+
+
+
+        <!-- DATA RETENTION -->
+
+        <section class="about-panel about-retention-panel">
+
+            <div class="about-panel-heading">
+
+                <div>
+
+                    <iconsax-icon name="trash" type="twotone" size="19" color="currentColor"></iconsax-icon>
+
+                    <h2>Data Retention</h2>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="about-retention-options" data-retention-options>
+
+                {% for key, option in about_retention_options.items() %}
+
+                    <button
+
+                        type="button"
+
+                        class="about-retention-option {% if about_state.retention_policy == key %}is-selected{% endif %}"
+
+                        data-retention-policy="{{ key }}"
+
+                    >
+
+                        <strong>{{ option.label }}</strong>
+
+                        <span>{{ option.description }}</span>
+
+                    </button>
+
+                {% endfor %}
+
+            </div>
+
+
+
+            <div class="about-retention-meta">
+
+                <div>
+
+                    <span>Current database size</span>
+
+                    <strong>{{ about_stats.database_size }}</strong>
+
+                </div>
+
+                <div>
+
+                    <span>Oldest Record</span>
+
+                    <strong>{{ about_stats.oldest_record }}</strong>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="about-storage-row">
+
+                <div>
+
+                    <span>Storage Usage</span>
+
+                    <strong>
+
+                        {{ about_stats.storage_usage }} / {{ about_stats.storage_quota }}
+
+                        ({{ '%.2f'|format(about_stats.storage_percent) }}%)
+
+                    </strong>
+
+                </div>
+
+
+
+                <div
+
+                    class="about-progress"
+
+                    aria-label="Storage usage"
+
+                    data-storage-percent="{{ about_stats.storage_percent }}"
+
+                >
+
+                    <span></span>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+
+
+        <!-- BACKUP SETTINGS -->
+
+        <section class="about-panel">
+
+            <div class="about-panel-heading">
+
+                <div>
+
+                    <iconsax-icon name="notification-bing" type="twotone" size="19" color="currentColor"></iconsax-icon>
+
+                    <h2>Backup Settings</h2>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="about-backup-top-row">
+
+                <div class="about-field-block">
+
+                    <span class="about-field-label">Backup Type</span>
+
+                    <div class="about-segmented" data-backup-type-group>
+
+                        {% for key, label in about_backup_types.items() %}
+
+                            <button
+
+                                type="button"
+
+                                class="about-segment {% if about_state.backup.type == key %}is-selected{% endif %}"
+
+                                data-backup-type="{{ key }}"
+
+                            >
+
+                                <strong>{{ label }}</strong>
+
+                                <span>
+
+                                    {% if key == 'database' %}Records &amp; logs{% else %}Everything{% endif %}
+
+                                </span>
+
+                            </button>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="about-field-block">
+
+                    <span class="about-field-label">Auto Backup</span>
+
+                    <label class="about-auto-card">
+
+                        <span>
+
+                            <strong>Auto Backup</strong>
+
+                            <small>Back up automatically on schedule.</small>
+
+                        </span>
+
+
+
+                        <input
+
+                            type="checkbox"
+
+                            data-auto-backup
+
+                            {% if about_state.backup.auto_enabled %}checked{% endif %}
+
+                        >
+
+                        <span class="about-switch" aria-hidden="true"></span>
+
+                    </label>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="about-backup-fields">
+
+
+
+                <!-- =================================================
+
+                    DESTINATION
+
+                    ================================================= -->
+
+
+
+                <button
+
+                    type="button"
+
+                    class="about-inline-field about-inline-field-clickable"
+
+                    data-open-destination
+
+                >
+
+                    <span>
+
+                        Destination
+
+                    </span>
+
+
+
+                    <strong data-destination-label>
+
+                        {{ about_state.backup.destination }}
+
+                    </strong>
+
+
+
+                    <span class="about-inline-field-icon">
+
+                        <iconsax-icon
+
+                            name="folder"
+
+                            type="twotone"
+
+                            size="18"
+
+                            color="currentColor"
+
+                        ></iconsax-icon>
+
+                    </span>
+
+                </button>
+
+
+
+
+
+                <!-- =================================================
+
+                    SCHEDULE
+
+                    ================================================= -->
+
+
+
+                <button
+
+                    type="button"
+
+                    class="about-inline-field about-inline-field-clickable"
+
+                    data-open-schedule
+
+                >
+
+                    <span>
+
+                        Schedule
+
+                    </span>
+
+
+
+                    <strong data-schedule-label>
+
+                        {{ about_state.backup.schedule }}
+
+                    </strong>
+
+
+
+                    <span class="about-inline-field-icon">
+
+                        <iconsax-icon
+
+                            name="calendar-2"
+
+                            type="twotone"
+
+                            size="18"
+
+                            color="currentColor"
+
+                        ></iconsax-icon>
+
+                    </span>
+
+                </button>
+
+
+
+            </div>
+
+
+
+            <div class="about-action-row about-action-row-split">
+
+                <button
+
+                    type="button"
+
+                    class="about-button about-button-primary"
+
+                    data-about-coming-soon="Database backup engine"
+
+                >
+
+                    <iconsax-icon name="cloud-add" type="twotone" size="18" color="currentColor"></iconsax-icon>
+
+                    Create Backup Now
+
+                </button>
+
+
+
+                <button
+
+                    type="button"
+
+                    class="about-button about-button-primary"
+
+                    data-save-backup-settings
+
+                >
+
+                    Save Schedule
+
+                </button>
+
+            </div>
+
+        </section>
+
+
+
+
+
+        <!-- BACKUP HISTORY -->
+
+        <section class="about-panel">
+
+            <div class="about-panel-heading about-panel-heading-actions">
+
+                <div>
+
+                    <iconsax-icon name="archive" type="twotone" size="19" color="currentColor"></iconsax-icon>
+
+                    <h2>Backup History &amp; Restore</h2>
+
+                </div>
+
+
+
+                {% if about_permissions.can_upload_backup %}
+
+                    <button
+
+                        type="button"
+
+                        class="about-small-outline"
+
+                        data-about-coming-soon="Backup ZIP upload"
+
+                    >
+
+                        Upload ZIP
+
+                    </button>
+
+                {% endif %}
+
+            </div>
+
+
+
+            <div class="about-table-wrap">
+
+                <table class="about-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Date / File</th>
+
+                            <th>Type / Size</th>
+
+                            <th>Status</th>
+
+                            <th class="about-table-actions-heading">Action</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        <tr class="about-empty-row">
+
+                            <td colspan="4">
+
+                                <div class="about-empty-state">
+
+                                    <iconsax-icon name="archive-book" type="twotone" size="25" color="currentColor"></iconsax-icon>
+
+                                    <strong>No backup history yet</strong>
+
+                                    <span>Backup files will appear here after the backup engine is connected.</span>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+
+            {% if not about_permissions.can_restore_backup %}
+
+                <p class="about-permission-note">
+
+                    Restore and backup ZIP upload are restricted to SuperAdmin.
+
+                </p>
+
+            {% endif %}
+
+        </section>
+
+
+
+    </div>
+
+
+
+
+
+    <!-- =====================================================
+
+         AUDIT LOG
+
+         ===================================================== -->
+
+    <section class="about-panel about-audit-panel">
+
+        <div class="about-audit-toolbar">
+
+            <div class="about-panel-heading about-panel-heading-inline">
+
+                <div>
+
+                    <iconsax-icon name="alarm" type="twotone" size="19" color="currentColor"></iconsax-icon>
+
+                    <h2>Audit Log</h2>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="about-audit-controls">
+
+                <div class="about-audit-filters" role="group" aria-label="Audit category">
+
+                    <button type="button" class="is-selected" data-audit-filter="all">All</button>
+
+                    <button type="button" data-audit-filter="config">Config</button>
+
+                    <button type="button" data-audit-filter="backup">Backup</button>
+
+                    <button type="button" data-audit-filter="restore">Restore</button>
+
+
+
+                    {% if about_permissions.can_view_security_audit %}
+
+                        <button type="button" data-audit-filter="security">Security</button>
+
+                    {% endif %}
+
+                </div>
+
+
+
+                <label class="about-audit-search">
+
+                    <iconsax-icon name="search-normal-1" type="twotone" size="15" color="currentColor"></iconsax-icon>
+
+                    <input type="search" placeholder="Search logs..." data-audit-search>
+
+                </label>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="about-table-wrap about-audit-table-wrap">
+
+            <table class="about-table about-audit-table">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Date / Time</th>
+
+                        <th>User</th>
+
+                        <th>Role</th>
+
+                        <th>Action</th>
+
+                        <th>Category</th>
+
+                        <th>Details</th>
+
+                        <th>IP Address</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody data-audit-body>
+
+                    {% for event in about_audit_events %}
+
+                        <tr
+
+                            data-audit-row
+
+                            data-audit-category="{{ event.category|lower }}"
+
+                            data-audit-search-text="{{ (event.timestamp_label ~ ' ' ~ event.user ~ ' ' ~ event.role_label ~ ' ' ~ event.action ~ ' ' ~ event.category ~ ' ' ~ event.details ~ ' ' ~ event.ip_address)|lower }}"
+
+                        >
+
+                            <td>{{ event.timestamp_label }}</td>
+
+                            <td>{{ event.user }}</td>
+
+                            <td>{{ event.role_label }}</td>
+
+                            <td><strong>{{ event.action }}</strong></td>
+
+                            <td>
+
+                                <span class="about-audit-category about-audit-category-{{ event.category|lower }}">
+
+                                    {{ event.category }}
+
+                                </span>
+
+                            </td>
+
+                            <td>{{ event.details }}</td>
+
+                            <td>{{ event.ip_address }}</td>
+
+                        </tr>
+
+                    {% endfor %}
+
+
+
+                    <tr class="about-empty-row {% if about_audit_events %}is-hidden{% endif %}" data-audit-empty>
+
+                        <td colspan="7">
+
+                            <div class="about-empty-state about-empty-state-compact">
+
+                                <iconsax-icon name="document-text" type="twotone" size="23" color="currentColor"></iconsax-icon>
+
+                                <strong>No audit events found</strong>
+
+                                <span>Configuration and backup changes will be recorded here.</span>
+
+                            </div>
+
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+
+
+
+    <!-- =====================================================
+
+         TOAST
+
+         ===================================================== -->
+
+    <div class="about-toast" data-about-toast hidden>
+
+        <iconsax-icon name="info-circle" type="twotone" size="18" color="currentColor"></iconsax-icon>
+
+        <span data-about-toast-text></span>
+
+    </div>
+
+
+
+</div>
+
+
+
+<!-- =====================================================
+
+     BACKUP DESTINATION MODAL
+
+     ===================================================== -->
+
+
+
+<div
+
+    class="about-setting-modal-backdrop"
+
+    data-destination-modal
+
+    hidden
+
+>
+
+    <section
+
+        class="about-setting-modal"
+
+        role="dialog"
+
+        aria-modal="true"
+
+        aria-labelledby="destinationModalTitle"
+
+    >
+
+
+
+        <div class="about-setting-modal-header">
+
+
+
+            <div>
+
+                <h2 id="destinationModalTitle">
+
+                    Backup Destination
+
+                </h2>
+
+
+
+                <p>
+
+                    Choose where backup files will be stored.
+
+                </p>
+
+            </div>
+
+
+
+
+
+            <button
+
+                type="button"
+
+                class="about-setting-modal-close"
+
+                data-close-destination
+
+                aria-label="Close"
+
+            >
+
+                ×
+
+            </button>
+
+
+
+        </div>
+
+
+
+
+
+        <div class="about-setting-modal-body">
+
+
+
+            <label class="about-setting-choice">
+
+
+
+                <input
+
+                    type="radio"
+
+                    name="backup_destination"
+
+                    value="Local Storage (Default)"
+
+                    data-destination-option
+
+                >
+
+
+
+                <span class="about-setting-choice-icon">
+
+                    <iconsax-icon
+
+                        name="folder"
+
+                        type="twotone"
+
+                        size="21"
+
+                        color="currentColor"
+
+                    ></iconsax-icon>
+
+                </span>
+
+
+
+                <span>
+
+                    <strong>
+
+                        Local Storage
+
+                    </strong>
+
+
+
+                    <small>
+
+                        Default server backup directory
+
+                    </small>
+
+                </span>
+
+
+
+            </label>
+
+
+
+
+
+            <label class="about-setting-choice">
+
+
+
+                <input
+
+                    type="radio"
+
+                    name="backup_destination"
+
+                    value="Project Backup Folder"
+
+                    data-destination-option
+
+                >
+
+
+
+                <span class="about-setting-choice-icon">
+
+                    <iconsax-icon
+
+                        name="archive"
+
+                        type="twotone"
+
+                        size="21"
+
+                        color="currentColor"
+
+                    ></iconsax-icon>
+
+                </span>
+
+
+
+                <span>
+
+                    <strong>
+
+                        Project Backup Folder
+
+                    </strong>
+
+
+
+                    <small>
+
+                        Store backups inside the project backup folder
+
+                    </small>
+
+                </span>
+
+
+
+            </label>
+
+
+
+
+
+            <label class="about-setting-choice">
+
+
+
+                <input
+
+                    type="radio"
+
+                    name="backup_destination"
+
+                    value="Custom Server Folder"
+
+                    data-destination-option
+
+                >
+
+
+
+                <span class="about-setting-choice-icon">
+
+                    <iconsax-icon
+
+                        name="folder-open"
+
+                        type="twotone"
+
+                        size="21"
+
+                        color="currentColor"
+
+                    ></iconsax-icon>
+
+                </span>
+
+
+
+                <span>
+
+                    <strong>
+
+                        Custom Server Folder
+
+                    </strong>
+
+
+
+                    <small>
+
+                        Use another server-side backup directory
+
+                    </small>
+
+                </span>
+
+
+
+            </label>
+
+
+
+
+
+            <label
+
+                class="about-custom-destination"
+
+                data-custom-destination-wrap
+
+                hidden
+
+            >
+
+                <span>
+
+                    Folder Path
+
+                </span>
+
+
+
+                <input
+
+                    type="text"
+
+                    placeholder="D:\BIKA_Backups"
+
+                    maxlength="260"
+
+                    data-custom-destination
+
+                >
+
+            </label>
+
+
+
+        </div>
+
+
+
+
+
+        <div class="about-setting-modal-actions">
+
+
+
+            <button
+
+                type="button"
+
+                class="about-setting-cancel"
+
+                data-cancel-destination
+
+            >
+
+                Cancel
+
+            </button>
+
+
+
+            <button
+
+                type="button"
+
+                class="about-setting-apply"
+
+                data-apply-destination
+
+            >
+
+                Apply
+
+            </button>
+
+
+
+        </div>
+
+
+
+    </section>
+
+</div>
+
+
+
+<!-- =====================================================
+     BACKUP SCHEDULE MODAL
+     ===================================================== -->
+
+<div
+    class="about-setting-modal-backdrop"
+    data-schedule-modal
+    hidden
+>
+    <section
+        class="about-setting-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="scheduleModalTitle"
+    >
+
+        <div class="about-setting-modal-header">
+
+            <div>
+                <h2 id="scheduleModalTitle">
+                    Backup Schedule
+                </h2>
+
+                <p>
+                    Choose when automatic backups should run.
+                </p>
+            </div>
+
+            <button
+                type="button"
+                class="about-setting-modal-close"
+                data-close-schedule
+                aria-label="Close"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div class="about-setting-modal-body">
+
+            <!-- FREQUENCY -->
+
+            <div class="about-setting-control">
+
+                <span>
+                    Frequency
+                </span>
+
+                <div
+                    class="about-custom-select"
+                    data-custom-select
+                >
+                    <button
+                        type="button"
+                        class="about-custom-select-trigger"
+                        data-custom-select-trigger
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                    >
+                        <span data-custom-select-label>
+                            Weekly
+                        </span>
+
+                        <span
+                            class="about-custom-select-chevron"
+                            aria-hidden="true"
+                        ></span>
+                    </button>
+
+                    <div
+                        class="about-custom-select-menu"
+                        data-custom-select-menu
+                        role="listbox"
+                        hidden
+                    >
+                        <button
+                            type="button"
+                            class="about-custom-select-option"
+                            data-value="daily"
+                            role="option"
+                        >
+                            Daily
+                        </button>
+
+                        <button
+                            type="button"
+                            class="about-custom-select-option is-selected"
+                            data-value="weekly"
+                            role="option"
+                            aria-selected="true"
+                        >
+                            Weekly
+                        </button>
+
+                        <button
+                            type="button"
+                            class="about-custom-select-option"
+                            data-value="monthly"
+                            role="option"
+                        >
+                            Monthly
+                        </button>
+                    </div>
+
+                    <input
+                        type="hidden"
+                        value="weekly"
+                        data-schedule-frequency
+                    >
+                </div>
+
+            </div>
+
+
+            <!-- WEEKLY DAY -->
+
+            <div
+                class="about-setting-control"
+                data-weekly-day-wrap
+            >
+
+                <span>
+                    Day
+                </span>
+
+                <div
+                    class="about-custom-select"
+                    data-custom-select
+                >
+                    <button
+                        type="button"
+                        class="about-custom-select-trigger"
+                        data-custom-select-trigger
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                    >
+                        <span data-custom-select-label>
+                            Sunday
+                        </span>
+
+                        <span
+                            class="about-custom-select-chevron"
+                            aria-hidden="true"
+                        ></span>
+                    </button>
+
+                    <div
+                        class="about-custom-select-menu"
+                        data-custom-select-menu
+                        role="listbox"
+                        hidden
+                    >
+                        {% for day in [
+                            'Monday',
+                            'Tuesday',
+                            'Wednesday',
+                            'Thursday',
+                            'Friday',
+                            'Saturday',
+                            'Sunday'
+                        ] %}
+
+                            <button
+                                type="button"
+                                class="about-custom-select-option {% if day == 'Sunday' %}is-selected{% endif %}"
+                                data-value="{{ day }}"
+                                role="option"
+                                {% if day == 'Sunday' %}aria-selected="true"{% endif %}
+                            >
+                                {{ day }}
+                            </button>
+
+                        {% endfor %}
+                    </div>
+
+                    <input
+                        type="hidden"
+                        value="Sunday"
+                        data-schedule-weekday
+                    >
+                </div>
+
+            </div>
+
+
+            <!-- MONTHLY DAY -->
+
+            <div
+                class="about-setting-control"
+                data-monthly-day-wrap
+                hidden
+            >
+
+                <span>
+                    Day of Month
+                </span>
+
+                <div
+                    class="about-custom-select"
+                    data-custom-select
+                >
+                    <button
+                        type="button"
+                        class="about-custom-select-trigger"
+                        data-custom-select-trigger
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                    >
+                        <span data-custom-select-label>
+                            1
+                        </span>
+
+                        <span
+                            class="about-custom-select-chevron"
+                            aria-hidden="true"
+                        ></span>
+                    </button>
+
+                    <div
+                        class="about-custom-select-menu about-custom-select-menu-scroll"
+                        data-custom-select-menu
+                        role="listbox"
+                        hidden
+                    >
+                        {% for day in range(1, 29) %}
+
+                            <button
+                                type="button"
+                                class="about-custom-select-option {% if day == 1 %}is-selected{% endif %}"
+                                data-value="{{ day }}"
+                                role="option"
+                                {% if day == 1 %}aria-selected="true"{% endif %}
+                            >
+                                {{ day }}
+                            </button>
+
+                        {% endfor %}
+                    </div>
+
+                    <input
+                        type="hidden"
+                        value="1"
+                        data-schedule-month-day
+                    >
+                </div>
+
+            </div>
+
+
+            <!-- TIME -->
+
+            <div class="about-setting-control">
+
+                <span>
+                    Time
+                </span>
+
+                <div
+                    class="about-time-picker"
+                    data-time-picker
+                >
+
+                    <!-- MAIN FIELD -->
+
+                    <button
+                        type="button"
+                        class="about-time-trigger"
+                        data-time-trigger
+                        aria-expanded="false"
+                    >
+
+                        <span data-time-label>
+                            02:00
+                        </span>
+
+                        <span
+                            class="about-custom-select-chevron"
+                            aria-hidden="true"
+                        ></span>
+
+                    </button>
+
+
+                    <!-- TIME PANEL -->
+
+                    <div
+                        class="about-time-panel"
+                        data-time-panel
+                        hidden
+                    >
+
+                        <div class="about-time-columns">
+
+
+                            <!-- HOUR -->
+
+                            <div class="about-time-column">
+
+                                <span class="about-time-column-label">
+                                    Hour
+                                </span>
+
+                                <div
+                                    class="about-custom-select"
+                                    data-custom-select
+                                >
+
+                                    <button
+                                        type="button"
+                                        class="about-custom-select-trigger"
+                                        data-custom-select-trigger
+                                    >
+
+                                        <span data-custom-select-label>
+                                            02
+                                        </span>
+
+                                        <span
+                                            class="about-custom-select-chevron"
+                                            aria-hidden="true"
+                                        ></span>
+
+                                    </button>
+
+
+                                    <div
+                                        class="
+                                            about-custom-select-menu
+                                            about-custom-select-menu-scroll
+                                        "
+                                        data-custom-select-menu
+                                        hidden
+                                    >
+
+                                        {% for hour in range(0, 24) %}
+
+                                            {% set hour_text = '%02d'|format(hour) %}
+
+                                            <button
+                                                type="button"
+                                                class="
+                                                    about-custom-select-option
+
+                                                    {% if hour == 2 %}
+                                                        is-selected
+                                                    {% endif %}
+                                                "
+                                                data-value="{{ hour_text }}"
+                                            >
+                                                {{ hour_text }}
+                                            </button>
+
+                                        {% endfor %}
+
+                                    </div>
+
+
+                                    <input
+                                        type="hidden"
+                                        value="02"
+                                        data-time-hour
+                                    >
+
+                                </div>
+
+                            </div>
+
+
+                            <span class="about-time-separator">
+                                :
+                            </span>
+
+
+                            <!-- MINUTE -->
+
+                            <div class="about-time-column">
+
+                                <span class="about-time-column-label">
+                                    Minute
+                                </span>
+
+                                <div
+                                    class="about-custom-select"
+                                    data-custom-select
+                                >
+
+                                    <button
+                                        type="button"
+                                        class="about-custom-select-trigger"
+                                        data-custom-select-trigger
+                                    >
+
+                                        <span data-custom-select-label>
+                                            00
+                                        </span>
+
+                                        <span
+                                            class="about-custom-select-chevron"
+                                            aria-hidden="true"
+                                        ></span>
+
+                                    </button>
+
+
+                                    <div
+                                        class="
+                                            about-custom-select-menu
+                                            about-custom-select-menu-scroll
+                                        "
+                                        data-custom-select-menu
+                                        hidden
+                                    >
+
+                                        {% for minute in range(0, 60) %}
+
+                                            {% set minute_text = '%02d'|format(minute) %}
+
+                                            <button
+                                                type="button"
+                                                class="
+                                                    about-custom-select-option
+
+                                                    {% if minute == 0 %}
+                                                        is-selected
+                                                    {% endif %}
+                                                "
+                                                data-value="{{ minute_text }}"
+                                            >
+                                                {{ minute_text }}
+                                            </button>
+
+                                        {% endfor %}
+
+                                    </div>
+
+
+                                    <input
+                                        type="hidden"
+                                        value="00"
+                                        data-time-minute
+                                    >
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            type="button"
+                            class="about-time-done"
+                            data-time-done
+                        >
+                            Done
+                        </button>
+
+                    </div>
+
+
+                    <!-- final value used by your existing schedule logic -->
+
+                    <input
+                        type="hidden"
+                        value="02:00"
+                        data-schedule-time
+                    >
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="about-setting-modal-actions">
+
+            <button
+                type="button"
+                class="about-setting-cancel"
+                data-cancel-schedule
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                class="about-setting-apply"
+                data-apply-schedule
+            >
+                Apply
+            </button>
+
+        </div>
+
+    </section>
+</div>
+
+
+{% endblock %}
+
+
+
+
+
+{% block extra_js %}
+
+<script
+    src="{{ url_for('static', filename='js/about_system.js', v='20261007-3') }}"
+></script>
+
+{% endblock %}

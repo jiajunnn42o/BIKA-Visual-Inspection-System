@@ -60,6 +60,447 @@
         );
 
 
+    /* =====================================================
+       CUSTOM TOOLBAR FILTER DROPDOWNS
+       ===================================================== */
+
+    const filterDropdowns =
+        Array.from(
+            page.querySelectorAll(
+                "[data-system-filter-dropdown]"
+            )
+        );
+
+
+    let openFilterDropdown =
+        null;
+
+
+    function syncFilterDropdown(
+        wrapper
+    ) {
+
+        if (!wrapper) {
+            return;
+        }
+
+
+        const nativeSelect =
+            wrapper.querySelector(
+                "select"
+            );
+
+
+        const label =
+            wrapper.querySelector(
+                "[data-system-filter-label]"
+            );
+
+
+        const options =
+            Array.from(
+                wrapper.querySelectorAll(
+                    "[data-system-filter-menu] [data-value]"
+                )
+            );
+
+
+        if (!nativeSelect) {
+            return;
+        }
+
+
+        const currentValue =
+            nativeSelect.value;
+
+
+        const selectedNativeOption =
+            nativeSelect.options[
+                nativeSelect.selectedIndex
+            ];
+
+
+        if (
+            label
+            &&
+            selectedNativeOption
+        ) {
+
+            label.textContent =
+                selectedNativeOption.textContent
+                    .trim();
+
+        }
+
+
+        options.forEach(
+            (option) => {
+
+                const selected =
+                    (
+                        option.dataset.value
+                        ===
+                        currentValue
+                    );
+
+
+                option.classList.toggle(
+                    "is-selected",
+                    selected
+                );
+
+
+                option.setAttribute(
+                    "aria-selected",
+                    selected
+                        ? "true"
+                        : "false"
+                );
+
+            }
+        );
+
+    }
+
+
+    function closeFilterDropdown(
+        wrapper
+    ) {
+
+        if (!wrapper) {
+            return;
+        }
+
+
+        const trigger =
+            wrapper.querySelector(
+                "[data-system-filter-trigger]"
+            );
+
+
+        const menu =
+            wrapper.querySelector(
+                "[data-system-filter-menu]"
+            );
+
+
+        wrapper.classList.remove(
+            "is-open"
+        );
+
+
+        trigger?.setAttribute(
+            "aria-expanded",
+            "false"
+        );
+
+
+        if (menu) {
+
+            menu.hidden =
+                true;
+
+        }
+
+
+        if (
+            openFilterDropdown
+            ===
+            wrapper
+        ) {
+
+            openFilterDropdown =
+                null;
+
+        }
+
+    }
+
+
+    function closeAllFilterDropdowns(
+        except = null
+    ) {
+
+        filterDropdowns.forEach(
+            (wrapper) => {
+
+                if (
+                    wrapper
+                    ===
+                    except
+                ) {
+                    return;
+                }
+
+
+                closeFilterDropdown(
+                    wrapper
+                );
+
+            }
+        );
+
+    }
+
+
+    function openToolbarFilterDropdown(
+        wrapper
+    ) {
+
+        const trigger =
+            wrapper.querySelector(
+                "[data-system-filter-trigger]"
+            );
+
+
+        const menu =
+            wrapper.querySelector(
+                "[data-system-filter-menu]"
+            );
+
+
+        if (
+            !trigger
+            ||
+            !menu
+        ) {
+            return;
+        }
+
+
+        const alreadyOpen =
+            wrapper.classList.contains(
+                "is-open"
+            );
+
+
+        closeAllFilterDropdowns(
+            wrapper
+        );
+
+
+        if (
+            alreadyOpen
+        ) {
+
+            closeFilterDropdown(
+                wrapper
+            );
+
+            return;
+
+        }
+
+
+        syncFilterDropdown(
+            wrapper
+        );
+
+
+        wrapper.classList.add(
+            "is-open"
+        );
+
+
+        trigger.setAttribute(
+            "aria-expanded",
+            "true"
+        );
+
+
+        menu.hidden =
+            false;
+
+
+        openFilterDropdown =
+            wrapper;
+
+    }
+
+
+    filterDropdowns.forEach(
+        (wrapper) => {
+
+            const nativeSelect =
+                wrapper.querySelector(
+                    "select"
+                );
+
+
+            const trigger =
+                wrapper.querySelector(
+                    "[data-system-filter-trigger]"
+                );
+
+
+            const menu =
+                wrapper.querySelector(
+                    "[data-system-filter-menu]"
+                );
+
+
+            const options =
+                Array.from(
+                    wrapper.querySelectorAll(
+                        "[data-system-filter-menu] [data-value]"
+                    )
+                );
+
+
+            syncFilterDropdown(
+                wrapper
+            );
+
+
+            trigger?.addEventListener(
+                "click",
+                (event) => {
+
+                    event.preventDefault();
+
+                    event.stopPropagation();
+
+
+                    openToolbarFilterDropdown(
+                        wrapper
+                    );
+
+                }
+            );
+
+
+            menu?.addEventListener(
+                "click",
+                (event) => {
+
+                    event.stopPropagation();
+
+                }
+            );
+
+
+            options.forEach(
+                (option) => {
+
+                    option.addEventListener(
+                        "click",
+                        (event) => {
+
+                            event.preventDefault();
+
+                            event.stopPropagation();
+
+
+                            if (!nativeSelect) {
+                                return;
+                            }
+
+
+                            nativeSelect.value =
+                                option.dataset.value
+                                ||
+                                "all";
+
+
+                            syncFilterDropdown(
+                                wrapper
+                            );
+
+
+                            /*
+                             * Keep all existing Administration
+                             * filtering/pagination/export behaviour.
+                             */
+
+                            nativeSelect.dispatchEvent(
+                                new Event(
+                                    "change",
+                                    {
+                                        bubbles:
+                                            true,
+                                    }
+                                )
+                            );
+
+
+                            closeFilterDropdown(
+                                wrapper
+                            );
+
+
+                            trigger?.focus();
+
+                        }
+                    );
+
+                }
+            );
+
+
+            nativeSelect?.addEventListener(
+                "change",
+                () => {
+
+                    syncFilterDropdown(
+                        wrapper
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+    document.addEventListener(
+        "click",
+        (event) => {
+
+            if (
+                openFilterDropdown
+                &&
+                !openFilterDropdown.contains(
+                    event.target
+                )
+            ) {
+
+                closeAllFilterDropdowns();
+
+            }
+
+        }
+    );
+
+
+    document.addEventListener(
+        "keydown",
+        (event) => {
+
+            if (
+                event.key
+                ===
+                "Escape"
+                &&
+                openFilterDropdown
+            ) {
+
+                const trigger =
+                    openFilterDropdown.querySelector(
+                        "[data-system-filter-trigger]"
+                    );
+
+
+                closeAllFilterDropdowns();
+
+
+                trigger?.focus();
+
+            }
+
+        }
+    );
+
+
     const prevButton =
         page.querySelector(
             "[data-system-prev]"

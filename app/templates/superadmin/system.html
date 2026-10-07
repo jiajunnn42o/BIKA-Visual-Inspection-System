@@ -6,7 +6,7 @@
 
 {% block title %}
 
-System | BIKA
+Administration | BIKA
 
 {% endblock %}
 
@@ -76,7 +76,7 @@ System | BIKA
 
             <h1>
 
-                System
+                Administration
 
             </h1>
 
@@ -608,57 +608,117 @@ System | BIKA
 
 
 
-                <label class="system-filter">
+                <div
+                    class="system-filter"
+                    data-system-filter-dropdown
+                >
 
-
+                    <!--
+                        Keep the original select in the DOM because the
+                        existing Administration filtering/export logic
+                        already reads its value and listens for "change".
+                    -->
 
                     <select
-
+                        class="system-filter-native"
                         aria-label="Filter by role"
-
                         data-system-role-filter
-
+                        tabindex="-1"
                     >
 
-
-
                         <option value="all">
-
                             Role: All
-
                         </option>
-
-
 
                         <option value="user">
-
                             Role: User
-
                         </option>
-
-
 
                         <option value="admin">
-
                             Role: Admin
-
                         </option>
-
-
 
                         <option value="superadmin">
-
                             Role: Superadmin
-
                         </option>
-
-
 
                     </select>
 
 
+                    <button
+                        type="button"
+                        class="system-filter-trigger"
+                        data-system-filter-trigger
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                    >
 
-                </label>
+                        <span data-system-filter-label>
+                            Role: All
+                        </span>
+
+                        <span
+                            class="system-filter-chevron"
+                            aria-hidden="true"
+                        ></span>
+
+                    </button>
+
+
+                    <div
+                        class="system-filter-menu"
+                        data-system-filter-menu
+                        role="listbox"
+                        hidden
+                    >
+
+                        <button
+                            type="button"
+                            class="system-filter-option is-selected"
+                            data-value="all"
+                            role="option"
+                            aria-selected="true"
+                        >
+                            <span>Role: All</span>
+                            <span class="system-filter-check" aria-hidden="true">✓</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="system-filter-option"
+                            data-value="user"
+                            role="option"
+                            aria-selected="false"
+                        >
+                            <span>Role: User</span>
+                            <span class="system-filter-check" aria-hidden="true">✓</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="system-filter-option"
+                            data-value="admin"
+                            role="option"
+                            aria-selected="false"
+                        >
+                            <span>Role: Admin</span>
+                            <span class="system-filter-check" aria-hidden="true">✓</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="system-filter-option"
+                            data-value="superadmin"
+                            role="option"
+                            aria-selected="false"
+                        >
+                            <span>Role: Superadmin</span>
+                            <span class="system-filter-check" aria-hidden="true">✓</span>
+                        </button>
+
+                    </div>
+
+                </div>
 
 
 
@@ -668,57 +728,111 @@ System | BIKA
 
 
 
-                <label class="system-filter">
-
-
+                <div
+                    class="system-filter"
+                    data-system-filter-dropdown
+                >
 
                     <select
-
+                        class="system-filter-native"
                         aria-label="Filter by status"
-
                         data-system-status-filter
-
+                        tabindex="-1"
                     >
 
-
-
                         <option value="all">
-
                             Status: All
-
                         </option>
-
-
 
                         <option value="active">
-
                             Status: Active
-
                         </option>
-
-
 
                         <option value="inactive">
-
                             Status: Inactive
-
                         </option>
-
-
 
                         <option value="locked">
-
                             Status: Locked
-
                         </option>
-
-
 
                     </select>
 
 
+                    <button
+                        type="button"
+                        class="system-filter-trigger"
+                        data-system-filter-trigger
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                    >
 
-                </label>
+                        <span data-system-filter-label>
+                            Status: All
+                        </span>
+
+                        <span
+                            class="system-filter-chevron"
+                            aria-hidden="true"
+                        ></span>
+
+                    </button>
+
+
+                    <div
+                        class="system-filter-menu"
+                        data-system-filter-menu
+                        role="listbox"
+                        hidden
+                    >
+
+                        <button
+                            type="button"
+                            class="system-filter-option is-selected"
+                            data-value="all"
+                            role="option"
+                            aria-selected="true"
+                        >
+                            <span>Status: All</span>
+                            <span class="system-filter-check" aria-hidden="true">✓</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="system-filter-option"
+                            data-value="active"
+                            role="option"
+                            aria-selected="false"
+                        >
+                            <span>Status: Active</span>
+                            <span class="system-filter-check" aria-hidden="true">✓</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="system-filter-option"
+                            data-value="inactive"
+                            role="option"
+                            aria-selected="false"
+                        >
+                            <span>Status: Inactive</span>
+                            <span class="system-filter-check" aria-hidden="true">✓</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="system-filter-option"
+                            data-value="locked"
+                            role="option"
+                            aria-selected="false"
+                        >
+                            <span>Status: Locked</span>
+                            <span class="system-filter-check" aria-hidden="true">✓</span>
+                        </button>
+
+                    </div>
+
+                </div>
 
 
 
@@ -728,65 +842,126 @@ System | BIKA
 
 
 
-                <label class="system-filter">
-
-
+                <div
+                    class="system-filter"
+                    data-system-filter-dropdown
+                >
 
                     <select
-
+                        class="system-filter-native"
                         aria-label="Filter by security"
-
                         data-system-security-filter
-
+                        tabindex="-1"
                     >
 
-
-
                         <option value="all">
-
                             Security: All
-
                         </option>
-
-
 
                         <option value="normal">
-
                             Security: Normal
-
                         </option>
-
-
 
                         <option value="protected">
-
                             Security: Protected
-
                         </option>
-
-
 
                         <option value="inactive">
-
                             Security: Inactive
-
                         </option>
-
-
 
                         <option value="locked">
-
                             Security: Locked
-
                         </option>
-
-
 
                     </select>
 
 
+                    <button
+                        type="button"
+                        class="system-filter-trigger"
+                        data-system-filter-trigger
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                    >
 
-                </label>
+                        <span data-system-filter-label>
+                            Security: All
+                        </span>
+
+                        <span
+                            class="system-filter-chevron"
+                            aria-hidden="true"
+                        ></span>
+
+                    </button>
+
+
+                    <div
+                        class="system-filter-menu"
+                        data-system-filter-menu
+                        role="listbox"
+                        hidden
+                    >
+
+                        <button
+                            type="button"
+                            class="system-filter-option is-selected"
+                            data-value="all"
+                            role="option"
+                            aria-selected="true"
+                        >
+                            <span>Security: All</span>
+                            <span class="system-filter-check" aria-hidden="true">✓</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="system-filter-option"
+                            data-value="normal"
+                            role="option"
+                            aria-selected="false"
+                        >
+                            <span>Security: Normal</span>
+                            <span class="system-filter-check" aria-hidden="true">✓</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="system-filter-option"
+                            data-value="protected"
+                            role="option"
+                            aria-selected="false"
+                        >
+                            <span>Security: Protected</span>
+                            <span class="system-filter-check" aria-hidden="true">✓</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="system-filter-option"
+                            data-value="inactive"
+                            role="option"
+                            aria-selected="false"
+                        >
+                            <span>Security: Inactive</span>
+                            <span class="system-filter-check" aria-hidden="true">✓</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="system-filter-option"
+                            data-value="locked"
+                            role="option"
+                            aria-selected="false"
+                        >
+                            <span>Security: Locked</span>
+                            <span class="system-filter-check" aria-hidden="true">✓</span>
+                        </button>
+
+                    </div>
+
+                </div>
 
 
 
@@ -1933,6 +2108,66 @@ System | BIKA
 
 
 
+
+
+
+                    <tr>
+
+                        <td>
+
+                            Backup restore / recovery
+
+                        </td>
+
+                        <td class="is-disabled">
+
+                            —
+
+                        </td>
+
+                        <td class="is-disabled">
+
+                            —
+
+                        </td>
+
+                        <td class="is-enabled">
+
+                            ✓
+
+                        </td>
+
+                    </tr>
+
+
+
+                    <tr>
+
+                        <td>
+
+                            Security audit
+
+                        </td>
+
+                        <td class="is-disabled">
+
+                            —
+
+                        </td>
+
+                        <td class="is-disabled">
+
+                            —
+
+                        </td>
+
+                        <td class="is-enabled">
+
+                            ✓
+
+                        </td>
+
+                    </tr>
 
 
 

@@ -30,3 +30,6 @@ Thumbs.db
 
 # Logs
 *.log
+# About System runtime state
+instance/about_system_state.json
+instance/about_system_audit.json

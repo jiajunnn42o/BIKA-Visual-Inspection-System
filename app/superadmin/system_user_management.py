@@ -27,6 +27,11 @@ from app.superadmin import (
 )
 
 
+from app.services.about_system_audit_service import (
+    write_about_system_audit,
+)
+
+
 VALID_ROLES = {
     "user",
     "admin",
@@ -533,6 +538,15 @@ def system_update_user_access(
     )
 
 
+    original_role = (
+        user.role
+    )
+
+    original_status = (
+        user.status
+    )
+
+
     # =====================================================
     # WORKFLOW-OWNED STATUS
     # =====================================================
@@ -660,7 +674,7 @@ def system_update_user_access(
     role_changed = (
         requested_role
         !=
-        user.role
+        original_role
     )
 
     requires_superadmin_password = (
@@ -928,6 +942,60 @@ def system_update_user_access(
                     "be saved. Please try again."
                 ),
         }), 500
+
+
+    # =====================================================
+    # ABOUT SYSTEM AUDIT LOG
+    # =====================================================
+
+    if (
+        original_role
+        !=
+        user.role
+    ):
+
+        write_about_system_audit(
+            category="Security",
+            action="Changed user role",
+            details=(
+                f"{user.full_name}: "
+                f"{_role_label(original_role)} "
+                f"→ {_role_label(user.role)}"
+            ),
+        )
+
+
+    if (
+        original_status
+        !=
+        user.status
+    ):
+
+        action_labels = {
+            "disable":
+                "Deactivated user account",
+
+            "reactivate":
+                "Reactivated user account",
+
+            "unlock":
+                "Unlocked user account",
+        }
+
+        write_about_system_audit(
+            category="Security",
+            action=(
+                action_labels.get(
+                    status_action,
+                    "Changed user account status",
+                )
+            ),
+            details=(
+                f"{user.full_name}: "
+                f"{_status_label(original_status)} "
+                f"→ {_status_label(user.status)}"
+            ),
+        )
 
 
     return jsonify({
