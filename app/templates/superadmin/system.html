@@ -2980,25 +2980,108 @@ Administration | BIKA
 
                     <div class="system-user-access-grid">
 
-                        <label class="system-user-access-field">
+                        <div class="system-user-access-field">
                             <span>Access Role</span>
 
-                            <div class="system-user-select-wrap">
+                            <div
+                                class="system-user-role-select"
+                                data-system-edit-role-dropdown
+                            >
+
                                 <select
+                                    class="system-user-role-native"
                                     data-system-edit-role
                                     aria-label="Access role"
+                                    tabindex="-1"
                                 >
                                     <option value="user">User</option>
                                     <option value="admin">Admin</option>
                                     <option value="superadmin">SuperAdmin</option>
                                 </select>
+
+
+                                <button
+                                    type="button"
+                                    class="system-user-role-trigger"
+                                    data-system-edit-role-trigger
+                                    aria-haspopup="listbox"
+                                    aria-expanded="false"
+                                >
+                                    <span data-system-edit-role-label>
+                                        User
+                                    </span>
+
+                                    <span
+                                        class="system-user-role-chevron"
+                                        aria-hidden="true"
+                                    ></span>
+                                </button>
+
+
+                                <div
+                                    class="system-user-role-menu"
+                                    data-system-edit-role-menu
+                                    role="listbox"
+                                    hidden
+                                >
+
+                                    <button
+                                        type="button"
+                                        class="system-user-role-option"
+                                        data-value="user"
+                                        role="option"
+                                        aria-selected="false"
+                                    >
+                                        <span>User</span>
+                                        <span
+                                            class="system-user-role-check"
+                                            aria-hidden="true"
+                                        >
+                                            ✓
+                                        </span>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="system-user-role-option"
+                                        data-value="admin"
+                                        role="option"
+                                        aria-selected="false"
+                                    >
+                                        <span>Admin</span>
+                                        <span
+                                            class="system-user-role-check"
+                                            aria-hidden="true"
+                                        >
+                                            ✓
+                                        </span>
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        class="system-user-role-option"
+                                        data-value="superadmin"
+                                        role="option"
+                                        aria-selected="false"
+                                    >
+                                        <span>SuperAdmin</span>
+                                        <span
+                                            class="system-user-role-check"
+                                            aria-hidden="true"
+                                        >
+                                            ✓
+                                        </span>
+                                    </button>
+
+                                </div>
+
                             </div>
 
                             <small
                                 class="system-user-field-help"
                                 data-system-edit-role-help
                             ></small>
-                        </label>
+                        </div>
 
 
                         <div class="system-user-access-field">

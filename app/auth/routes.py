@@ -5,6 +5,7 @@ from flask import (
     flash,
     redirect,
     render_template,
+    request,
     url_for,
 )
 
@@ -108,6 +109,19 @@ PHONE_VERIFICATION_TOKEN_MAX_AGE = (
 
 PASSWORD_RESET_TOKEN_MAX_AGE = (
     30 * 60
+)
+
+
+# =========================================================
+# REMEMBER LOGIN SETTINGS
+# =========================================================
+
+REMEMBER_LOGIN_COOKIE_NAME = (
+    "bika_remembered_login"
+)
+
+REMEMBER_LOGIN_MAX_AGE = (
+    30 * 24 * 60 * 60
 )
 
 
@@ -3007,6 +3021,45 @@ def reset_password(
 
 
 # =========================================================
+# REMEMBER LOGIN HELPER
+# =========================================================
+
+def _apply_remembered_login_to_form(
+    form,
+):
+    """
+    Prefill the login identifier and Remember me checkbox
+    from an identifier-only cookie.
+
+    The application never stores the user's password.
+    Browser password managers handle password autofill.
+    """
+
+    remembered_identifier = (
+        request.cookies.get(
+            REMEMBER_LOGIN_COOKIE_NAME,
+            "",
+        )
+        or
+        ""
+    ).strip()
+
+    if (
+        remembered_identifier
+        and
+        request.method
+        ==
+        "GET"
+    ):
+
+        form.identifier.data = (
+            remembered_identifier
+        )
+
+        form.remember_me.data = True
+
+
+# =========================================================
 # LOGIN
 # =========================================================
 
@@ -3034,6 +3087,12 @@ def login():
     form = (
         LoginForm()
     )
+
+
+    _apply_remembered_login_to_form(
+        form
+    )
+
 
     if form.validate_on_submit():
 
@@ -3356,11 +3415,49 @@ def login():
             ),
         )
 
-        return redirect(
+
+        response = redirect(
             url_for(
                 "main.index"
             )
         )
+
+
+        if (
+            form.remember_me.data
+        ):
+
+            response.set_cookie(
+                REMEMBER_LOGIN_COOKIE_NAME,
+                raw_identifier,
+                max_age=(
+                    REMEMBER_LOGIN_MAX_AGE
+                ),
+                httponly=True,
+                secure=bool(
+                    current_app.config.get(
+                        "SESSION_COOKIE_SECURE",
+                        False,
+                    )
+                ),
+                samesite="Lax",
+            )
+
+        else:
+
+            response.delete_cookie(
+                REMEMBER_LOGIN_COOKIE_NAME,
+                secure=bool(
+                    current_app.config.get(
+                        "SESSION_COOKIE_SECURE",
+                        False,
+                    )
+                ),
+                samesite="Lax",
+            )
+
+
+        return response
 
     return render_template(
         "auth/login.html",

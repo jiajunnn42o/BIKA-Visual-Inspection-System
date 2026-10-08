@@ -1929,6 +1929,38 @@
         );
 
 
+    const editRoleDropdown =
+        page.querySelector(
+            "[data-system-edit-role-dropdown]"
+        );
+
+
+    const editRoleTrigger =
+        page.querySelector(
+            "[data-system-edit-role-trigger]"
+        );
+
+
+    const editRoleLabel =
+        page.querySelector(
+            "[data-system-edit-role-label]"
+        );
+
+
+    const editRoleMenu =
+        page.querySelector(
+            "[data-system-edit-role-menu]"
+        );
+
+
+    const editRoleOptions =
+        Array.from(
+            page.querySelectorAll(
+                "[data-system-edit-role-menu] [data-value]"
+            )
+        );
+
+
     const editRoleHelp =
         page.querySelector(
             "[data-system-edit-role-help]"
@@ -2039,6 +2071,317 @@
     /* =====================================================
        USER EDIT HELPERS
        ===================================================== */
+
+    /* =====================================================
+       EDIT USER — CUSTOM ROLE DROPDOWN
+       ===================================================== */
+
+    function syncEditRoleDropdown() {
+
+        if (
+            !editRole
+            ||
+            !editRoleDropdown
+        ) {
+            return;
+        }
+
+
+        const value =
+            editRole.value;
+
+
+        const selectedNativeOption =
+            editRole.options[
+                editRole.selectedIndex
+            ];
+
+
+        if (
+            editRoleLabel
+            &&
+            selectedNativeOption
+        ) {
+
+            editRoleLabel.textContent =
+                selectedNativeOption
+                    .textContent
+                    .trim();
+
+        }
+
+
+        if (
+            editRoleTrigger
+        ) {
+
+            editRoleTrigger.disabled =
+                editRole.disabled;
+
+        }
+
+
+        editRoleOptions.forEach(
+            (option) => {
+
+                const selected =
+                    (
+                        option.dataset.value
+                        ===
+                        value
+                    );
+
+
+                option.classList.toggle(
+                    "is-selected",
+                    selected
+                );
+
+
+                option.setAttribute(
+                    "aria-selected",
+                    selected
+                        ? "true"
+                        : "false"
+                );
+
+            }
+        );
+
+    }
+
+
+    function restoreEditRoleMenu() {
+
+        if (
+            !editRoleMenu
+            ||
+            !editRoleDropdown
+        ) {
+            return;
+        }
+
+
+        if (
+            editRoleMenu.parentNode
+            !==
+            editRoleDropdown
+        ) {
+
+            editRoleDropdown.appendChild(
+                editRoleMenu
+            );
+
+        }
+
+
+        editRoleMenu.classList.remove(
+            "is-portal"
+        );
+
+
+        editRoleMenu.style.removeProperty(
+            "left"
+        );
+
+
+        editRoleMenu.style.removeProperty(
+            "top"
+        );
+
+
+        editRoleMenu.style.removeProperty(
+            "width"
+        );
+
+
+        editRoleMenu.style.removeProperty(
+            "max-height"
+        );
+
+    }
+
+
+    function closeEditRoleDropdown() {
+
+        if (
+            !editRoleDropdown
+        ) {
+            return;
+        }
+
+
+        editRoleDropdown.classList.remove(
+            "is-open"
+        );
+
+
+        editRoleTrigger?.setAttribute(
+            "aria-expanded",
+            "false"
+        );
+
+
+        if (
+            editRoleMenu
+        ) {
+
+            editRoleMenu.hidden =
+                true;
+
+        }
+
+
+        restoreEditRoleMenu();
+
+    }
+
+
+    function positionEditRoleMenu() {
+
+        if (
+            !editRoleTrigger
+            ||
+            !editRoleMenu
+        ) {
+            return;
+        }
+
+
+        const rect =
+            editRoleTrigger
+                .getBoundingClientRect();
+
+
+        const gap =
+            7;
+
+
+        const viewportPadding =
+            12;
+
+
+        editRoleMenu.style.width =
+            `${rect.width}px`;
+
+
+        editRoleMenu.style.left =
+            `${Math.max(
+                viewportPadding,
+                Math.min(
+                    rect.left,
+                    window.innerWidth
+                    -
+                    rect.width
+                    -
+                    viewportPadding
+                )
+            )}px`;
+
+
+        editRoleMenu.style.top =
+            `${rect.bottom + gap}px`;
+
+
+        const menuRect =
+            editRoleMenu
+                .getBoundingClientRect();
+
+
+        if (
+            menuRect.bottom
+            >
+            window.innerHeight
+            -
+            viewportPadding
+        ) {
+
+            editRoleMenu.style.top =
+                `${Math.max(
+                    viewportPadding,
+                    rect.top
+                    -
+                    menuRect.height
+                    -
+                    gap
+                )}px`;
+
+        }
+
+    }
+
+
+    function openEditRoleDropdown() {
+
+        if (
+            !editRole
+            ||
+            !editRoleDropdown
+            ||
+            !editRoleTrigger
+            ||
+            !editRoleMenu
+            ||
+            editRole.disabled
+        ) {
+            return;
+        }
+
+
+        const alreadyOpen =
+            editRoleDropdown
+                .classList
+                .contains(
+                    "is-open"
+                );
+
+
+        if (
+            alreadyOpen
+        ) {
+
+            closeEditRoleDropdown();
+
+            return;
+
+        }
+
+
+        closeAllFilterDropdowns();
+
+
+        syncEditRoleDropdown();
+
+
+        document.body.appendChild(
+            editRoleMenu
+        );
+
+
+        editRoleMenu.classList.add(
+            "is-portal"
+        );
+
+
+        editRoleDropdown.classList.add(
+            "is-open"
+        );
+
+
+        editRoleTrigger.setAttribute(
+            "aria-expanded",
+            "true"
+        );
+
+
+        editRoleMenu.hidden =
+            false;
+
+
+        positionEditRoleMenu();
+
+    }
+
 
     function getCsrfToken() {
 
@@ -2621,6 +2964,9 @@
                     !data.can_edit_role
                 );
 
+
+            syncEditRoleDropdown();
+
         }
 
 
@@ -2829,6 +3175,9 @@
         }
 
 
+        closeEditRoleDropdown();
+
+
         if (
             userConfirm
             &&
@@ -2991,6 +3340,9 @@
 
 
     function showUserConfirm() {
+
+        closeEditRoleDropdown();
+
 
         if (
             !userConfirm
@@ -3639,11 +3991,154 @@
     );
 
 
+    editRoleTrigger?.addEventListener(
+        "click",
+        (event) => {
+
+            event.preventDefault();
+
+            event.stopPropagation();
+
+
+            openEditRoleDropdown();
+
+        }
+    );
+
+
+    editRoleMenu?.addEventListener(
+        "click",
+        (event) => {
+
+            event.stopPropagation();
+
+        }
+    );
+
+
+    editRoleOptions.forEach(
+        (option) => {
+
+            option.addEventListener(
+                "click",
+                (event) => {
+
+                    event.preventDefault();
+
+                    event.stopPropagation();
+
+
+                    if (
+                        !editRole
+                        ||
+                        editRole.disabled
+                    ) {
+                        return;
+                    }
+
+
+                    editRole.value =
+                        option.dataset.value
+                        ||
+                        "user";
+
+
+                    syncEditRoleDropdown();
+
+
+                    editRole.dispatchEvent(
+                        new Event(
+                            "change",
+                            {
+                                bubbles:
+                                    true,
+                            }
+                        )
+                    );
+
+
+                    closeEditRoleDropdown();
+
+
+                    editRoleTrigger?.focus();
+
+                }
+            );
+
+        }
+    );
+
+
     editRole?.addEventListener(
         "change",
         () => {
 
+            syncEditRoleDropdown();
+
             updateEditSaveState();
+
+        }
+    );
+
+
+    document.addEventListener(
+        "click",
+        (event) => {
+
+            if (
+                !editRoleDropdown
+                ||
+                !editRoleMenu
+                ||
+                !editRoleDropdown.classList.contains(
+                    "is-open"
+                )
+            ) {
+                return;
+            }
+
+
+            const clickedTrigger =
+                editRoleDropdown.contains(
+                    event.target
+                );
+
+
+            const clickedMenu =
+                editRoleMenu.contains(
+                    event.target
+                );
+
+
+            if (
+                !clickedTrigger
+                &&
+                !clickedMenu
+            ) {
+
+                closeEditRoleDropdown();
+
+            }
+
+        }
+    );
+
+
+    window.addEventListener(
+        "resize",
+        () => {
+
+            if (
+                editRoleDropdown
+                ?.classList
+                .contains(
+                    "is-open"
+                )
+            ) {
+
+                positionEditRoleMenu();
+
+            }
 
         }
     );
@@ -3851,6 +4346,23 @@
 
 
             if (
+                editRoleDropdown
+                ?.classList
+                .contains(
+                    "is-open"
+                )
+            ) {
+
+                closeEditRoleDropdown();
+
+                editRoleTrigger?.focus();
+
+                return;
+
+            }
+
+
+            if (
                 userConfirm
                 &&
                 !userConfirm.hidden
@@ -3884,6 +4396,8 @@
     refreshProcessedRows();
 
     updateSortButtonUI();
+
+    syncEditRoleDropdown();
 
     render();
 
