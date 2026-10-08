@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import json
 import os
-
-import os
 from datetime import datetime, timezone
 from functools import wraps
 from pathlib import Path
@@ -254,7 +252,18 @@ def _page_context() -> dict:
     if state.get("backup", {}).get("type") not in BACKUP_TYPES:
         state.setdefault("backup", {})["type"] = "database"
 
-    audit_events = _normalise_audit(_load_audit())
+    is_superadmin = (
+        current_user.role
+        ==
+        UserRole.SUPERADMIN.value
+    )
+
+    audit_events = (
+        _normalise_audit(_load_audit())
+        if is_superadmin
+        else []
+    )
+
     database_size = _database_size_bytes()
 
     today_utc = datetime.now(timezone.utc).date()
@@ -305,12 +314,40 @@ def _page_context() -> dict:
             "storage_percent": round(usage_percent, 2),
         },
         "about_permissions": {
-            "is_admin": current_user.role == UserRole.ADMIN.value,
-            "is_superadmin": current_user.role == UserRole.SUPERADMIN.value,
-            "can_manage_operations": current_user.role in ABOUT_SYSTEM_ROLES,
-            "can_restore_backup": current_user.role == UserRole.SUPERADMIN.value,
-            "can_upload_backup": current_user.role == UserRole.SUPERADMIN.value,
-            "can_view_security_audit": current_user.role == UserRole.SUPERADMIN.value,
+            "is_admin":
+                current_user.role == UserRole.ADMIN.value,
+
+            "is_superadmin":
+                is_superadmin,
+
+            "can_manage_operations":
+                current_user.role in ABOUT_SYSTEM_ROLES,
+
+            "can_manage_model":
+                current_user.role in ABOUT_SYSTEM_ROLES,
+
+            "can_manage_retention":
+                current_user.role in ABOUT_SYSTEM_ROLES,
+
+            # Backup configuration changes are server-level operations.
+            # SuperAdmin only.
+            "can_manage_backup_settings":
+                is_superadmin,
+
+            "can_view_backup_history":
+                current_user.role in ABOUT_SYSTEM_ROLES,
+
+            "can_restore_backup":
+                is_superadmin,
+
+            "can_upload_backup":
+                is_superadmin,
+
+            "can_view_audit_log":
+                is_superadmin,
+
+            "can_view_security_audit":
+                is_superadmin,
         },
     }
 
@@ -358,7 +395,7 @@ def update_about_system_retention():
 
 
 @main_bp.route("/about-system/backup-settings", methods=["POST"])
-@about_system_required
+@superadmin_only
 def update_about_system_backup_settings():
     data = request.get_json(silent=True) or {}
 

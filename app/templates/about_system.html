@@ -17,8 +17,11 @@ About System | BIKA
 {% block extra_css %}
 
 <link
+
     rel="stylesheet"
-    href="{{ url_for('static', filename='css/about_system.css', v='20261007-3') }}"
+
+    href="{{ url_for('static', filename='css/about_system.css') }}"
+
 >
 
 {% endblock %}
@@ -37,7 +40,11 @@ About System | BIKA
 
     data-retention-url="{{ url_for('main.update_about_system_retention') }}"
 
-    data-backup-settings-url="{{ url_for('main.update_about_system_backup_settings') }}"
+    {% if about_permissions.can_manage_backup_settings %}
+
+        data-backup-settings-url="{{ url_for('main.update_about_system_backup_settings') }}"
+
+    {% endif %}
 
 >
 
@@ -49,7 +56,13 @@ About System | BIKA
 
             <h1>About System</h1>
 
-            <p>Model, backups, retention and audit — all in one place</p>
+            <p>
+                {% if about_permissions.can_view_audit_log %}
+                    Model, backups, retention and audit — all in one place
+                {% else %}
+                    Model, backups and retention — operational controls
+                {% endif %}
+            </p>
 
         </div>
 
@@ -73,7 +86,10 @@ About System | BIKA
 
          ===================================================== -->
 
-    <section class="about-summary-grid" aria-label="System summary">
+    <section
+        class="about-summary-grid{% if not about_permissions.can_view_audit_log %} is-admin-view{% endif %}"
+        aria-label="System summary"
+    >
 
 
 
@@ -185,6 +201,8 @@ About System | BIKA
 
 
 
+        {% if about_permissions.can_view_audit_log %}
+
         <article class="about-summary-card">
 
             <span class="about-summary-icon about-summary-icon-red">
@@ -202,6 +220,8 @@ About System | BIKA
             </div>
 
         </article>
+
+        {% endif %}
 
 
 
@@ -475,6 +495,8 @@ About System | BIKA
 
 
 
+        {% if about_permissions.can_manage_backup_settings %}
+
         <!-- BACKUP SETTINGS -->
 
         <section class="about-panel">
@@ -727,6 +749,12 @@ About System | BIKA
 
 
 
+        {% endif %}
+
+
+
+
+
         <!-- BACKUP HISTORY -->
 
         <section class="about-panel">
@@ -737,7 +765,12 @@ About System | BIKA
 
                     <iconsax-icon name="archive" type="twotone" size="19" color="currentColor"></iconsax-icon>
 
-                    <h2>Backup History &amp; Restore</h2>
+                    <h2>
+                        Backup History
+                        {% if about_permissions.can_restore_backup %}
+                            &amp; Restore
+                        {% endif %}
+                    </h2>
 
                 </div>
 
@@ -832,6 +865,8 @@ About System | BIKA
 
 
 
+
+    {% if about_permissions.can_view_audit_log %}
 
     <!-- =====================================================
 
@@ -991,6 +1026,10 @@ About System | BIKA
 
 
 
+
+
+    
+    {% endif %}
 
 
     <!-- =====================================================
@@ -1372,504 +1411,329 @@ About System | BIKA
 
 
 <!-- =====================================================
+
      BACKUP SCHEDULE MODAL
+
      ===================================================== -->
 
+
+
 <div
+
     class="about-setting-modal-backdrop"
+
     data-schedule-modal
+
     hidden
+
 >
+
     <section
+
         class="about-setting-modal"
+
         role="dialog"
+
         aria-modal="true"
+
         aria-labelledby="scheduleModalTitle"
+
     >
+
+
 
         <div class="about-setting-modal-header">
 
+
+
             <div>
+
                 <h2 id="scheduleModalTitle">
+
                     Backup Schedule
+
                 </h2>
 
+
+
                 <p>
+
                     Choose when automatic backups should run.
+
                 </p>
+
             </div>
 
+
+
+
+
             <button
+
                 type="button"
+
                 class="about-setting-modal-close"
+
                 data-close-schedule
+
                 aria-label="Close"
+
             >
+
                 ×
+
             </button>
 
+
+
         </div>
+
+
+
 
 
         <div class="about-setting-modal-body">
 
+
+
             <!-- FREQUENCY -->
 
-            <div class="about-setting-control">
+
+
+            <label class="about-setting-control">
+
+
 
                 <span>
+
                     Frequency
+
                 </span>
 
-                <div
-                    class="about-custom-select"
-                    data-custom-select
-                >
-                    <button
-                        type="button"
-                        class="about-custom-select-trigger"
-                        data-custom-select-trigger
-                        aria-haspopup="listbox"
-                        aria-expanded="false"
-                    >
-                        <span data-custom-select-label>
-                            Weekly
-                        </span>
 
-                        <span
-                            class="about-custom-select-chevron"
-                            aria-hidden="true"
-                        ></span>
-                    </button>
 
-                    <div
-                        class="about-custom-select-menu"
-                        data-custom-select-menu
-                        role="listbox"
-                        hidden
-                    >
-                        <button
-                            type="button"
-                            class="about-custom-select-option"
-                            data-value="daily"
-                            role="option"
-                        >
-                            Daily
-                        </button>
+                <select data-schedule-frequency>
 
-                        <button
-                            type="button"
-                            class="about-custom-select-option is-selected"
-                            data-value="weekly"
-                            role="option"
-                            aria-selected="true"
-                        >
-                            Weekly
-                        </button>
+                    <option value="daily">
 
-                        <button
-                            type="button"
-                            class="about-custom-select-option"
-                            data-value="monthly"
-                            role="option"
-                        >
-                            Monthly
-                        </button>
-                    </div>
+                        Daily
 
-                    <input
-                        type="hidden"
-                        value="weekly"
-                        data-schedule-frequency
-                    >
-                </div>
+                    </option>
 
-            </div>
+
+
+                    <option value="weekly">
+
+                        Weekly
+
+                    </option>
+
+
+
+                    <option value="monthly">
+
+                        Monthly
+
+                    </option>
+
+                </select>
+
+
+
+            </label>
+
+
+
 
 
             <!-- WEEKLY DAY -->
 
-            <div
+
+
+            <label
+
                 class="about-setting-control"
+
                 data-weekly-day-wrap
+
             >
 
+
+
                 <span>
+
                     Day
+
                 </span>
 
-                <div
-                    class="about-custom-select"
-                    data-custom-select
-                >
-                    <button
-                        type="button"
-                        class="about-custom-select-trigger"
-                        data-custom-select-trigger
-                        aria-haspopup="listbox"
-                        aria-expanded="false"
-                    >
-                        <span data-custom-select-label>
-                            Sunday
-                        </span>
 
-                        <span
-                            class="about-custom-select-chevron"
-                            aria-hidden="true"
-                        ></span>
-                    </button>
 
-                    <div
-                        class="about-custom-select-menu"
-                        data-custom-select-menu
-                        role="listbox"
-                        hidden
-                    >
-                        {% for day in [
-                            'Monday',
-                            'Tuesday',
-                            'Wednesday',
-                            'Thursday',
-                            'Friday',
-                            'Saturday',
-                            'Sunday'
-                        ] %}
+                <select data-schedule-weekday>
 
-                            <button
-                                type="button"
-                                class="about-custom-select-option {% if day == 'Sunday' %}is-selected{% endif %}"
-                                data-value="{{ day }}"
-                                role="option"
-                                {% if day == 'Sunday' %}aria-selected="true"{% endif %}
-                            >
-                                {{ day }}
-                            </button>
+                    <option value="Monday">Monday</option>
 
-                        {% endfor %}
-                    </div>
+                    <option value="Tuesday">Tuesday</option>
 
-                    <input
-                        type="hidden"
+                    <option value="Wednesday">Wednesday</option>
+
+                    <option value="Thursday">Thursday</option>
+
+                    <option value="Friday">Friday</option>
+
+                    <option value="Saturday">Saturday</option>
+
+
+
+                    <option
+
                         value="Sunday"
-                        data-schedule-weekday
-                    >
-                </div>
 
-            </div>
+                        selected
+
+                    >
+
+                        Sunday
+
+                    </option>
+
+                </select>
+
+
+
+            </label>
+
+
+
 
 
             <!-- MONTHLY DAY -->
 
-            <div
+
+
+            <label
+
                 class="about-setting-control"
+
                 data-monthly-day-wrap
+
                 hidden
+
             >
 
+
+
                 <span>
+
                     Day of Month
+
                 </span>
 
-                <div
-                    class="about-custom-select"
-                    data-custom-select
-                >
-                    <button
-                        type="button"
-                        class="about-custom-select-trigger"
-                        data-custom-select-trigger
-                        aria-haspopup="listbox"
-                        aria-expanded="false"
-                    >
-                        <span data-custom-select-label>
-                            1
-                        </span>
 
-                        <span
-                            class="about-custom-select-chevron"
-                            aria-hidden="true"
-                        ></span>
-                    </button>
 
-                    <div
-                        class="about-custom-select-menu about-custom-select-menu-scroll"
-                        data-custom-select-menu
-                        role="listbox"
-                        hidden
-                    >
-                        {% for day in range(1, 29) %}
+                <select data-schedule-month-day>
 
-                            <button
-                                type="button"
-                                class="about-custom-select-option {% if day == 1 %}is-selected{% endif %}"
-                                data-value="{{ day }}"
-                                role="option"
-                                {% if day == 1 %}aria-selected="true"{% endif %}
-                            >
-                                {{ day }}
-                            </button>
+                    {% for day in range(1, 29) %}
 
-                        {% endfor %}
-                    </div>
+                        <option value="{{ day }}">
 
-                    <input
-                        type="hidden"
-                        value="1"
-                        data-schedule-month-day
-                    >
-                </div>
+                            {{ day }}
 
-            </div>
+                        </option>
+
+                    {% endfor %}
+
+                </select>
+
+
+
+            </label>
+
+
+
 
 
             <!-- TIME -->
 
-            <div class="about-setting-control">
+
+
+            <label class="about-setting-control">
+
+
 
                 <span>
+
                     Time
+
                 </span>
 
-                <div
-                    class="about-time-picker"
-                    data-time-picker
+
+
+                <input
+
+                    type="time"
+
+                    value="02:00"
+
+                    data-schedule-time
+
                 >
 
-                    <!-- MAIN FIELD -->
-
-                    <button
-                        type="button"
-                        class="about-time-trigger"
-                        data-time-trigger
-                        aria-expanded="false"
-                    >
-
-                        <span data-time-label>
-                            02:00
-                        </span>
-
-                        <span
-                            class="about-custom-select-chevron"
-                            aria-hidden="true"
-                        ></span>
-
-                    </button>
 
 
-                    <!-- TIME PANEL -->
-
-                    <div
-                        class="about-time-panel"
-                        data-time-panel
-                        hidden
-                    >
-
-                        <div class="about-time-columns">
+            </label>
 
 
-                            <!-- HOUR -->
-
-                            <div class="about-time-column">
-
-                                <span class="about-time-column-label">
-                                    Hour
-                                </span>
-
-                                <div
-                                    class="about-custom-select"
-                                    data-custom-select
-                                >
-
-                                    <button
-                                        type="button"
-                                        class="about-custom-select-trigger"
-                                        data-custom-select-trigger
-                                    >
-
-                                        <span data-custom-select-label>
-                                            02
-                                        </span>
-
-                                        <span
-                                            class="about-custom-select-chevron"
-                                            aria-hidden="true"
-                                        ></span>
-
-                                    </button>
-
-
-                                    <div
-                                        class="
-                                            about-custom-select-menu
-                                            about-custom-select-menu-scroll
-                                        "
-                                        data-custom-select-menu
-                                        hidden
-                                    >
-
-                                        {% for hour in range(0, 24) %}
-
-                                            {% set hour_text = '%02d'|format(hour) %}
-
-                                            <button
-                                                type="button"
-                                                class="
-                                                    about-custom-select-option
-
-                                                    {% if hour == 2 %}
-                                                        is-selected
-                                                    {% endif %}
-                                                "
-                                                data-value="{{ hour_text }}"
-                                            >
-                                                {{ hour_text }}
-                                            </button>
-
-                                        {% endfor %}
-
-                                    </div>
-
-
-                                    <input
-                                        type="hidden"
-                                        value="02"
-                                        data-time-hour
-                                    >
-
-                                </div>
-
-                            </div>
-
-
-                            <span class="about-time-separator">
-                                :
-                            </span>
-
-
-                            <!-- MINUTE -->
-
-                            <div class="about-time-column">
-
-                                <span class="about-time-column-label">
-                                    Minute
-                                </span>
-
-                                <div
-                                    class="about-custom-select"
-                                    data-custom-select
-                                >
-
-                                    <button
-                                        type="button"
-                                        class="about-custom-select-trigger"
-                                        data-custom-select-trigger
-                                    >
-
-                                        <span data-custom-select-label>
-                                            00
-                                        </span>
-
-                                        <span
-                                            class="about-custom-select-chevron"
-                                            aria-hidden="true"
-                                        ></span>
-
-                                    </button>
-
-
-                                    <div
-                                        class="
-                                            about-custom-select-menu
-                                            about-custom-select-menu-scroll
-                                        "
-                                        data-custom-select-menu
-                                        hidden
-                                    >
-
-                                        {% for minute in range(0, 60) %}
-
-                                            {% set minute_text = '%02d'|format(minute) %}
-
-                                            <button
-                                                type="button"
-                                                class="
-                                                    about-custom-select-option
-
-                                                    {% if minute == 0 %}
-                                                        is-selected
-                                                    {% endif %}
-                                                "
-                                                data-value="{{ minute_text }}"
-                                            >
-                                                {{ minute_text }}
-                                            </button>
-
-                                        {% endfor %}
-
-                                    </div>
-
-
-                                    <input
-                                        type="hidden"
-                                        value="00"
-                                        data-time-minute
-                                    >
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-
-                        <button
-                            type="button"
-                            class="about-time-done"
-                            data-time-done
-                        >
-                            Done
-                        </button>
-
-                    </div>
-
-
-                    <!-- final value used by your existing schedule logic -->
-
-                    <input
-                        type="hidden"
-                        value="02:00"
-                        data-schedule-time
-                    >
-
-                </div>
-
-            </div>
 
         </div>
+
+
+
 
 
         <div class="about-setting-modal-actions">
 
-            <button
-                type="button"
-                class="about-setting-cancel"
-                data-cancel-schedule
-            >
-                Cancel
-            </button>
+
 
             <button
+
                 type="button"
-                class="about-setting-apply"
-                data-apply-schedule
+
+                class="about-setting-cancel"
+
+                data-cancel-schedule
+
             >
-                Apply
+
+                Cancel
+
             </button>
+
+
+
+            <button
+
+                type="button"
+
+                class="about-setting-apply"
+
+                data-apply-schedule
+
+            >
+
+                Apply
+
+            </button>
+
+
 
         </div>
 
+
+
     </section>
+
 </div>
+
 
 
 {% endblock %}
@@ -1880,8 +1744,6 @@ About System | BIKA
 
 {% block extra_js %}
 
-<script
-    src="{{ url_for('static', filename='js/about_system.js', v='20261007-3') }}"
-></script>
+<script src="{{ url_for('static', filename='js/about_system.js') }}"></script>
 
 {% endblock %}

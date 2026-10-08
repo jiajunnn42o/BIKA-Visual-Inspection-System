@@ -186,23 +186,17 @@ html[data-theme="dark"]
     line-height: 1.08;
 
     letter-spacing:
-        -0.035em;
+        -0.025em;
 
 }
 
 
 .rr-page-head p {
-
-    margin:
-        4px
-        0
-        0;
-
-    color:
-        var(--rr-muted);
-
-    font-size: 12px;
-
+    margin: 4px 0 0;
+    color: var(--rr-muted);
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 1.35;
 }
 
 
