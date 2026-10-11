@@ -264,8 +264,20 @@
                 <!-- INSPECTION -->
 
                 <a
-                    href="#"
-                    class="app-nav-item"
+                    href="{{ url_for('main.inspection') }}"
+
+                    class="
+                        app-nav-item
+
+                        {% if
+                            request.endpoint
+                            ==
+                            'main.inspection'
+                        %}
+                            is-active
+                        {% endif %}
+                    "
+                    
                     draggable="false"
                 >
 

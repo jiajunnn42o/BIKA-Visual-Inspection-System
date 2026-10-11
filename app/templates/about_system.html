@@ -40,6 +40,16 @@ About System | BIKA
 
     data-retention-url="{{ url_for('main.update_about_system_retention') }}"
 
+        {% if about_permissions.can_manage_model %}
+
+        data-model-switch-url="{{ url_for('main.switch_model_version') }}"
+
+    data-model-version-preview-url="{{ url_for('main.preview_model_version') }}"
+
+        data-model-upload-url="{{ url_for('main.upload_model_version') }}"
+
+    {% endif %}
+
     {% if about_permissions.can_manage_backup_settings %}
 
         data-backup-settings-url="{{ url_for('main.update_about_system_backup_settings') }}"
@@ -105,7 +115,7 @@ About System | BIKA
 
                 <small>Current Model</small>
 
-                <strong>{{ about_state.model.name }}</strong>
+                <strong>{{ live_model.name }}</strong>
 
             </div>
 
@@ -125,7 +135,7 @@ About System | BIKA
 
                 <small>Version</small>
 
-                <strong>{{ about_state.model.version }}</strong>
+                <strong>{{ live_model.version }}</strong>
 
             </div>
 
@@ -265,7 +275,7 @@ About System | BIKA
 
                     <span>Current Model</span>
 
-                    <strong>{{ about_state.model.name }}</strong>
+                    <strong>{{ live_model.name }}</strong>
 
                 </div>
 
@@ -275,7 +285,7 @@ About System | BIKA
 
                     <strong class="about-pill about-pill-green">
 
-                        {{ about_state.model.status }}
+                        {{ live_model.status }}
 
                     </strong>
 
@@ -285,7 +295,7 @@ About System | BIKA
 
                     <span>Version</span>
 
-                    <strong>{{ about_state.model.version }}</strong>
+                    <strong>{{ live_model.version }}</strong>
 
                 </div>
 
@@ -293,7 +303,7 @@ About System | BIKA
 
                     <span>Last Updated</span>
 
-                    <strong>{{ about_state.model.last_updated or '—' }}</strong>
+                    <strong>{{ live_model.last_updated or '—' }}</strong>
 
                 </div>
 
@@ -301,15 +311,15 @@ About System | BIKA
 
                     <span>Classes</span>
 
-                    <strong>{{ about_state.model.classes }}</strong>
+                    <strong>{{ live_model.classes }}</strong>
 
                 </div>
 
                 <div class="about-info-row">
 
-                    <span>mAP / Accuracy</span>
+                    <span>Validated Performance</span>
 
-                    <strong>{{ about_model_accuracy }}</strong>
+                    <strong>{{ live_model.performance }}</strong>
 
                 </div>
 
@@ -317,71 +327,50 @@ About System | BIKA
 
 
 
+            {% if about_permissions.can_manage_model %}
+
             <div class="about-action-row">
 
                 <button
-
                     type="button"
-
                     class="about-button about-button-primary"
-
-                    data-about-coming-soon="Model version switching"
-
+                    data-open-model-switch
                 >
 
                     <iconsax-icon
-
                         name="repeat-arrow"
-
                         type="twotone"
-
                         size="18"
-
                         color="currentColor"
-
                     ></iconsax-icon>
-
-
 
                     Switch Version
 
                 </button>
 
 
-
                 <button
-
                     type="button"
-
                     class="about-button about-button-secondary"
-
-                    data-about-coming-soon="Model upload"
-
+                    data-open-model-upload
                 >
 
                     <iconsax-icon
-
                         name="document-upload"
-
                         type="twotone"
-
                         size="18"
-
                         color="currentColor"
-
                     ></iconsax-icon>
 
-
-
                     <span>
-
                         Upload New Model
-
                     </span>
 
                 </button>
 
             </div>
+
+            {% endif %}
 
         </section>
 
@@ -1734,6 +1723,350 @@ About System | BIKA
 
 </div>
 
+
+
+
+<!-- =====================================================
+     SWITCH MODEL VERSION
+     ===================================================== -->
+
+<div
+    class="about-setting-modal-backdrop"
+    data-model-switch-modal
+    hidden
+>
+
+    <section
+        class="about-setting-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="about-model-switch-title"
+    >
+
+        <header class="about-setting-modal-header">
+
+            <div>
+                <h2 id="about-model-switch-title">
+                    Switch Model Version
+                </h2>
+
+                <p>
+                    The selected package becomes active for future inspections.
+                </p>
+            </div>
+
+            <button
+                type="button"
+                class="about-setting-modal-close"
+                data-close-model-switch
+                aria-label="Close"
+            >
+                ×
+            </button>
+
+        </header>
+
+
+        <div class="about-setting-modal-body">
+
+            <div class="about-model-version-list">
+
+                {% if model_versions %}
+
+                    {% for model in model_versions %}
+
+                        <label
+                            class="about-model-version-option {% if model.is_active %}is-active{% endif %}"
+                        >
+
+                            <input
+                                type="radio"
+                                name="model_version"
+                                value="{{ model.version }}"
+                                data-model-version-option
+                                {% if model.is_active %}checked{% endif %}
+                            >
+
+                            <span class="about-model-version-copy">
+
+                                <strong>
+                                    {{ model.name }}
+                                </strong>
+
+                                <small class="about-model-version-id">
+                                    {{ model.version }} · {{ model.stage_label }}
+                                </small>
+
+                                <small>
+                                    {{ model.classes }} classes
+                                    {% if model.performance != '—' %}
+                                        · {{ model.performance }}
+                                    {% endif %}
+                                </small>
+
+                            </span>
+
+                            <span class="about-model-version-status">
+                                {{ 'Active' if model.is_active else 'Available' }}
+                            </span>
+
+                        </label>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <div class="about-model-empty-state">
+                        No complete model packages were found.
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <div class="about-setting-modal-actions">
+
+            <button
+                type="button"
+                class="about-setting-cancel"
+                data-cancel-model-switch
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                class="about-setting-apply"
+                data-apply-model-switch
+                {% if not model_versions %}disabled{% endif %}
+            >
+                Switch Version
+            </button>
+
+        </div>
+
+    </section>
+
+</div>
+
+
+<!-- =====================================================
+     UPLOAD MODEL PACKAGE
+     ===================================================== -->
+
+<div
+    class="about-setting-modal-backdrop"
+    data-model-upload-modal
+    hidden
+>
+
+    <section
+        class="about-setting-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="about-model-upload-title"
+    >
+
+        <header class="about-setting-modal-header">
+
+            <div>
+                <h2 id="about-model-upload-title">
+                    Upload New Model
+                </h2>
+
+                <p>
+                    Upload one complete BIKA model package ZIP. It will not be activated automatically.
+                </p>
+            </div>
+
+            <button
+                type="button"
+                class="about-setting-modal-close"
+                data-close-model-upload
+                aria-label="Close"
+            >
+                ×
+            </button>
+
+        </header>
+
+
+        <div class="about-setting-modal-body">
+
+            <div class="about-model-upload-grid">
+
+                <label class="about-model-upload-field">
+
+                    <span>
+                        Model Name
+                    </span>
+
+                    <input
+                        type="text"
+                        maxlength="80"
+                        value="{{ default_model_name }}"
+                        data-default-value="{{ default_model_name }}"
+                        autocomplete="off"
+                        data-model-upload-name
+                    >
+
+                    <small>
+                        Human-readable name shown in Model Management.
+                    </small>
+
+                </label>
+
+
+                <label class="about-model-upload-field">
+
+                    <span>
+                        Release Date
+                    </span>
+
+                    <input
+                        type="date"
+                        data-model-upload-release-date
+                    >
+
+                    <small>
+                        Used to generate the immutable calendar version.
+                    </small>
+
+                </label>
+
+            </div>
+
+
+            <div
+                class="about-generated-version"
+                data-generated-version-card
+            >
+
+                <span>
+                    Generated Version
+                </span>
+
+                <strong data-model-generated-version>
+                    —
+                </strong>
+
+                <small data-model-generated-version-help>
+                    Generated automatically from the release date and revision.
+                </small>
+
+            </div>
+
+
+            <fieldset class="about-model-stage-fieldset">
+
+                <legend>
+                    Model Stage
+                </legend>
+
+
+                <div class="about-model-stage-grid">
+
+                    {% for stage in model_stage_options %}
+
+                        <label class="about-model-stage-option">
+
+                            <input
+                                type="radio"
+                                name="model_stage"
+                                value="{{ stage.value }}"
+                                data-model-upload-stage
+                                {% if stage.value == 'production_candidate' %}checked{% endif %}
+                            >
+
+                            <span>
+
+                                <strong>
+                                    {{ stage.label }}
+                                </strong>
+
+                                <small>
+                                    {{ stage.description }}
+                                </small>
+
+                            </span>
+
+                        </label>
+
+                    {% endfor %}
+
+                </div>
+
+            </fieldset>
+
+
+            <label class="about-model-upload-field">
+
+                <span>
+                    Model Package ZIP
+                </span>
+
+                <input
+                    type="file"
+                    accept=".zip,application/zip"
+                    data-model-upload-file
+                >
+
+                <small>
+                    Required: detector_best.pt, detector_settings.json, classifier.pt and calibration_reference.json.
+                </small>
+
+            </label>
+
+
+            <label class="about-model-upload-field">
+
+                <span>
+                    Description
+                    <em>Optional</em>
+                </span>
+
+                <textarea
+                    maxlength="500"
+                    rows="3"
+                    placeholder="Example: Improved fractured and bent detection using additional production samples."
+                    data-model-upload-description
+                ></textarea>
+
+                <small>
+                    Short release note for future model comparison and audit.
+                </small>
+
+            </label>
+
+        </div>
+
+
+        <div class="about-setting-modal-actions">
+
+            <button
+                type="button"
+                class="about-setting-cancel"
+                data-cancel-model-upload
+            >
+                Cancel
+            </button>
+
+            <button
+                type="button"
+                class="about-setting-apply"
+                data-apply-model-upload
+            >
+                Upload Model
+            </button>
+
+        </div>
+
+    </section>
+
+</div>
 
 
 {% endblock %}

@@ -1,0 +1,873 @@
+{% extends "base.html" %}
+
+{% block title %}
+Inspection | BIKA
+{% endblock %}
+
+{% block extra_css %}
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/inspection.css') }}"
+>
+{% endblock %}
+
+{% block content %}
+
+<div
+    class="inspection-page"
+    data-inspection-page
+    data-run-image-url="{{ url_for('main.run_inspection_image') }}"
+>
+
+    <!-- =====================================================
+         PAGE HEADER
+         ===================================================== -->
+
+    <header class="inspection-page-header">
+
+        <div>
+            <h1>
+                Inspection
+            </h1>
+
+            <p>
+                Upload an image or video for visual defect detection
+            </p>
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         MAIN WORKSPACE
+         ===================================================== -->
+
+    <section class="inspection-workspace">
+
+
+        <!-- =================================================
+             LEFT COLUMN
+             ================================================= -->
+
+        <aside class="inspection-left-column">
+
+
+            <!-- NEW INSPECTION -->
+
+            <article class="inspection-card inspection-new-card">
+
+                <div class="inspection-card-heading">
+
+                    <h2>
+                        New Inspection
+                    </h2>
+
+                    <p>
+                        Choose detection mode
+                    </p>
+
+                </div>
+
+
+                <!-- MODE SWITCH -->
+
+                <div
+                    class="inspection-mode-switch"
+                    role="tablist"
+                    aria-label="Inspection upload mode"
+                >
+
+                    <button
+                        type="button"
+                        class="inspection-mode-button is-active"
+                        data-inspection-mode="image"
+                        role="tab"
+                        aria-selected="true"
+                    >
+                        Image Upload
+                    </button>
+
+                    <button
+                        type="button"
+                        class="inspection-mode-button"
+                        data-inspection-mode="video"
+                        role="tab"
+                        aria-selected="false"
+                    >
+                        Video Upload
+                    </button>
+
+                </div>
+
+
+                <!-- IMAGE UPLOAD -->
+
+                <section
+                    class="inspection-upload-section"
+                    data-upload-section="image"
+                >
+
+                    <div class="inspection-upload-label">
+
+                        <strong>
+                            Upload Image
+                        </strong>
+
+                        <span>
+                            JPG, JPEG, PNG, WEBP up to 10 MB
+                        </span>
+
+                    </div>
+
+
+                    <label
+                        class="inspection-dropzone"
+                        data-dropzone="image"
+                        for="inspection_image_input"
+                    >
+
+                        <input
+                            id="inspection_image_input"
+                            class="inspection-file-input"
+                            type="file"
+                            accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+                            data-file-input="image"
+                        >
+
+                        <span class="inspection-dropzone-icon">
+
+                            <iconsax-icon
+                                name="folder-add"
+                                type="twotone"
+                                size="32"
+                                color="currentColor"
+                            ></iconsax-icon>
+
+                        </span>
+
+                        <strong>
+                            Drag and Drop
+                        </strong>
+
+                        <small>
+                            or click to browse
+                        </small>
+
+                    </label>
+
+
+                    <p
+                        class="inspection-selected-file"
+                        data-selected-file="image"
+                    >
+                        No image selected.
+                    </p>
+
+                </section>
+
+
+                <!-- VIDEO UPLOAD -->
+
+                <section
+                    class="inspection-upload-section"
+                    data-upload-section="video"
+                    hidden
+                >
+
+                    <div class="inspection-upload-label">
+
+                        <strong>
+                            Upload Video
+                        </strong>
+
+                        <span>
+                            MP4, MOV, AVI, WEBM
+                        </span>
+
+                    </div>
+
+
+                    <label
+                        class="inspection-dropzone"
+                        data-dropzone="video"
+                        for="inspection_video_input"
+                    >
+
+                        <input
+                            id="inspection_video_input"
+                            class="inspection-file-input"
+                            type="file"
+                            accept=".mp4,.mov,.avi,.webm,video/mp4,video/webm,video/quicktime"
+                            data-file-input="video"
+                        >
+
+                        <span class="inspection-dropzone-icon">
+
+                            <iconsax-icon
+                                name="video-add"
+                                type="twotone"
+                                size="32"
+                                color="currentColor"
+                            ></iconsax-icon>
+
+                        </span>
+
+                        <strong>
+                            Drag and Drop
+                        </strong>
+
+                        <small>
+                            or click to browse
+                        </small>
+
+                    </label>
+
+
+                    <p
+                        class="inspection-selected-file"
+                        data-selected-file="video"
+                    >
+                        No video selected.
+                    </p>
+
+                </section>
+
+
+                <!-- ACTIONS -->
+
+                <div class="inspection-action-row">
+
+                    <button
+                        type="button"
+                        class="inspection-button inspection-button-primary"
+                        data-run-inspection
+                    >
+
+                        <iconsax-icon
+                            name="play-circle"
+                            type="twotone"
+                            size="16"
+                            color="currentColor"
+                        ></iconsax-icon>
+
+                        Run Inspection
+
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="inspection-button inspection-button-secondary"
+                        data-clear-inspection
+                    >
+
+                        <iconsax-icon
+                            name="refresh"
+                            type="twotone"
+                            size="16"
+                            color="currentColor"
+                        ></iconsax-icon>
+
+                        Clear Result
+
+                    </button>
+
+                </div>
+
+
+                <p
+                    class="inspection-inline-status"
+                    data-inspection-status
+                    aria-live="polite"
+                ></p>
+
+            </article>
+
+
+            <!-- MASK LEGEND -->
+
+            <article class="inspection-card inspection-legend-card">
+
+                <div class="inspection-card-heading inspection-card-heading-compact">
+
+                    <h2>
+                        Class Mask Legend
+                    </h2>
+
+                    <p>
+                        Each class uses a fixed mask colour
+                    </p>
+
+                </div>
+
+
+                <div
+                    class="inspection-class-list"
+                    data-class-legend
+                >
+
+                    {% if inspection_classes %}
+
+                        {% for item in inspection_classes %}
+
+                            <div
+                                class="inspection-class-row"
+                                data-class-name="{{ item.name }}"
+                                data-class-display-name="{{ item.display_name or item.name }}"
+                                data-class-index="{{ item.index }}"
+                                data-mask-colour="{{ item.colour }}"
+                                style="--mask-colour: {{ item.colour }};"
+                            >
+
+                                <span
+                                    class="inspection-class-dot"
+                                    aria-hidden="true"
+                                ></span>
+
+                                <span>
+                                    {{ item.display_name or item.name }}
+                                </span>
+
+                                <strong>
+                                    {{ item.decision }}
+                                </strong>
+
+                            </div>
+
+                        {% endfor %}
+
+                    {% else %}
+
+                        <div class="inspection-class-metadata-empty">
+
+                            <strong>
+                                Class metadata unavailable
+                            </strong>
+
+                            <span>
+                                Check the active classifier package.
+                            </span>
+
+                        </div>
+
+                    {% endif %}
+
+                </div>
+
+
+                <div class="inspection-model-meta">
+
+                    <span>
+                        Active Model
+                    </span>
+
+                    <strong>
+                        {{ inspection_model_version }}
+                    </strong>
+
+                    <small>
+                        {{ inspection_classifier_file }}
+                    </small>
+
+                </div>
+
+
+                {% if inspection_model_warning %}
+
+                    <p
+                        class="inspection-model-warning"
+                        title="{{ inspection_model_warning }}"
+                    >
+                        Class names could not be read from the active classifier.
+                    </p>
+
+                {% endif %}
+
+            </article>
+
+        </aside>
+
+
+        <!-- =================================================
+             CENTER COLUMN
+             ================================================= -->
+
+        <main class="inspection-center-column">
+
+
+            <!-- ORIGINAL VIEW -->
+
+            <article class="inspection-visual-card">
+
+                <header class="inspection-visual-header">
+
+                    <h2>
+                        Original View
+                    </h2>
+
+                    <span
+                        class="inspection-media-badge"
+                        data-media-badge
+                        hidden
+                    ></span>
+
+                </header>
+
+
+                <div
+                    class="inspection-viewer"
+                    data-original-viewer
+                >
+
+                    <div
+                        class="inspection-empty-state"
+                        data-original-empty
+                    >
+
+                        <iconsax-icon
+                            name="gallery"
+                            type="twotone"
+                            size="56"
+                            color="currentColor"
+                        ></iconsax-icon>
+
+                        <span>
+                            Original image or video preview will appear here
+                        </span>
+
+                    </div>
+
+
+                    <img
+                        class="inspection-preview-media"
+                        data-image-preview
+                        alt="Selected inspection image"
+                        hidden
+                    >
+
+
+                    <video
+                        class="inspection-preview-media inspection-video-preview"
+                        data-video-preview
+                        controls
+                        preload="metadata"
+                        hidden
+                    ></video>
+
+                </div>
+
+            </article>
+
+
+            <!-- DETECTION RESULT -->
+
+            <article class="inspection-visual-card inspection-result-card">
+
+                <header class="inspection-visual-header">
+
+                    <h2>
+                        Detection &amp; Segmentation Result
+                    </h2>
+
+                    <span
+                        class="inspection-result-count"
+                        data-result-count
+                        hidden
+                    >
+                        0 objects
+                    </span>
+
+                </header>
+
+
+                <div
+                    class="inspection-viewer inspection-result-viewer"
+                    data-result-viewer
+                >
+
+                    <div
+                        class="inspection-empty-state"
+                        data-result-empty
+                    >
+
+                        <iconsax-icon
+                            name="image"
+                            type="twotone"
+                            size="56"
+                            color="currentColor"
+                        ></iconsax-icon>
+
+                        <span>
+                            Annotated detection result will appear here
+                        </span>
+
+                    </div>
+
+
+                    <!--
+                        Future backend integration:
+                        Put the annotated image/video here.
+
+                        Every clickable mask/object may use:
+
+                        <button
+                            class="inspection-mask-hotspot"
+                            data-mask-object
+                            data-object-id="BSC-001"
+                            data-class-name="Bent"
+                            data-class-confidence="0.91"
+                            data-detection-confidence="0.88"
+                            data-decision="Defect"
+                            style="left:20%;top:20%;width:25%;height:30%;"
+                        ></button>
+                    -->
+
+                    <div
+                        class="inspection-result-stage"
+                        data-result-stage
+                        hidden
+                    ></div>
+
+                </div>
+
+            </article>
+
+        </main>
+
+
+        <!-- =================================================
+             RIGHT COLUMN
+             ================================================= -->
+
+        <aside class="inspection-right-column">
+
+
+            <!-- QUALITY SUMMARY -->
+
+            <article class="inspection-card inspection-summary-card">
+
+                <h2>
+                    Quality Summary
+                </h2>
+
+
+                <div
+                    class="inspection-summary-empty"
+                    data-quality-summary-empty
+                >
+                    Upload an image or video to view the quality summary.
+                </div>
+
+
+                <div
+                    class="inspection-quality-grid"
+                    data-quality-summary
+                    hidden
+                >
+
+                    <div>
+                        <span>
+                            Total
+                        </span>
+
+                        <strong data-summary-total>
+                            0
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>
+                            Normal
+                        </span>
+
+                        <strong data-summary-normal>
+                            0
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>
+                            Defect
+                        </span>
+
+                        <strong data-summary-defect>
+                            0
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>
+                            Yield
+                        </span>
+
+                        <strong data-summary-yield>
+                            —
+                        </strong>
+                    </div>
+
+                </div>
+
+            </article>
+
+
+            <!-- DEFECT REASON SUMMARY -->
+
+            <article class="inspection-card inspection-summary-card">
+
+                <h2>
+                    Defect Reason Summary
+                </h2>
+
+
+                <div
+                    class="inspection-summary-empty"
+                    data-defect-summary-empty
+                >
+                    No defect reason summary yet.
+                </div>
+
+
+                <div
+                    class="inspection-defect-list"
+                    data-defect-summary
+                    hidden
+                ></div>
+
+
+                <p class="inspection-summary-note">
+                    Normal = acceptable product.<br>
+                    Other classes are treated as defect conditions.
+                </p>
+
+            </article>
+
+
+            <!-- SELECTED OBJECT -->
+
+            <article
+                class="inspection-card inspection-object-card"
+                data-selected-object-card
+                hidden
+            >
+
+                <div class="inspection-object-card-head">
+
+                    <div>
+                        <small>
+                            Selected Mask
+                        </small>
+
+                        <h2 data-object-id>
+                            —
+                        </h2>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="inspection-object-close"
+                        data-close-object
+                        aria-label="Close selected object"
+                    >
+                        ×
+                    </button>
+
+                </div>
+
+
+                <div
+                    class="inspection-object-crop-compare"
+                    data-object-crop-compare
+                >
+
+                    <figure class="inspection-object-crop-item">
+
+                        <div class="inspection-object-crop-frame">
+
+                            <canvas
+                                data-object-crop-original
+                                aria-label="Original selected biscuit crop"
+                            ></canvas>
+
+                        </div>
+
+                        <figcaption>
+                            Original Crop
+                        </figcaption>
+
+                    </figure>
+
+
+                    <figure class="inspection-object-crop-item">
+
+                        <div class="inspection-object-crop-frame">
+
+                            <canvas
+                                data-object-crop-masked
+                                aria-label="Selected biscuit crop with segmentation mask"
+                            ></canvas>
+
+                        </div>
+
+                        <figcaption>
+                            Mask Result
+                        </figcaption>
+
+                    </figure>
+
+                </div>
+
+
+                <dl class="inspection-object-details">
+
+                    <div>
+                        <dt>
+                            Class
+                        </dt>
+
+                        <dd data-object-class>
+                            —
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>
+                            Class Confidence
+                        </dt>
+
+                        <dd data-object-class-confidence>
+                            —
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>
+                            Detection Confidence
+                        </dt>
+
+                        <dd data-object-detection-confidence>
+                            —
+                        </dd>
+                    </div>
+
+                    <div>
+                        <dt>
+                            Decision
+                        </dt>
+
+                        <dd data-object-decision>
+                            —
+                        </dd>
+                    </div>
+
+                </dl>
+
+            </article>
+
+        </aside>
+
+    </section>
+
+</div>
+
+
+<!-- =====================================================
+     INSPECTION PROGRESS MODAL
+     ===================================================== -->
+
+<div
+    class="inspection-loading-backdrop"
+    data-inspection-loading
+    hidden
+>
+
+    <section
+        class="inspection-loading-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="inspection-loading-title"
+    >
+
+        <div class="inspection-loading-spinner" aria-hidden="true">
+
+            <span></span>
+            <span></span>
+            <span></span>
+
+        </div>
+
+
+        <div class="inspection-loading-copy">
+
+            <span class="inspection-loading-kicker">
+                BIKA Visual Inspection
+            </span>
+
+            <h2 id="inspection-loading-title">
+                Running Inspection
+            </h2>
+
+            <p data-loading-stage>
+                Preparing inspection…
+            </p>
+
+        </div>
+
+
+        <div
+            class="inspection-progress-track"
+            role="progressbar"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow="0"
+            data-progress-track
+        >
+
+            <span
+                class="inspection-progress-fill"
+                data-progress-fill
+            ></span>
+
+        </div>
+
+
+        <div class="inspection-loading-meta">
+
+            <span data-progress-percent>
+                0%
+            </span>
+
+            <span data-loading-hint>
+                YOLO → SAM2 → Classifier
+            </span>
+
+        </div>
+
+
+        <button
+            type="button"
+            class="inspection-loading-cancel"
+            data-cancel-inspection
+        >
+            Cancel Inspection
+        </button>
+
+
+        <small class="inspection-loading-note">
+            Cancellation takes effect after the current GPU stage finishes.
+        </small>
+
+    </section>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script
+    src="{{ url_for('static', filename='js/inspection.js') }}"
+    defer
+></script>
+
+{% endblock %}
