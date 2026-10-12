@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-import json
-
 from collections import defaultdict
 from datetime import date, datetime, timedelta
-from functools import lru_cache
-from pathlib import Path
 from typing import Any
 
 from flask import current_app
+
+from app.extensions import db
+from app.models.inspection_batch import InspectionBatch
 
 
 CLASS_ORDER = (
@@ -36,57 +35,251 @@ CLASS_COLOURS = {
 }
 
 
-def _dataset_path() -> Path:
-    return (
-        Path(current_app.root_path).parent
-        / "data"
-        / "mock"
-        / "inspection_batches.json"
+def _config_float(
+    *names: str,
+    default: float,
+) -> float:
+    """
+    Read an optional target from Flask config while keeping the
+    existing Dashboard defaults when no setting is configured.
+    """
+    for name in names:
+        value = current_app.config.get(
+            name
+        )
+
+        if value is None:
+            continue
+
+        try:
+            return float(
+                value
+            )
+        except (
+            TypeError,
+            ValueError,
+        ):
+            continue
+
+    return float(
+        default
     )
 
 
-@lru_cache(maxsize=4)
-def _load_dataset_cached(
-    path_string: str,
-    modified_ns: int,
+def _dashboard_targets() -> dict[str, float]:
+    yield_target = _config_float(
+        "DASHBOARD_YIELD_TARGET",
+        "YIELD_TARGET",
+        default=85.0,
+    )
+
+    batch_pass_threshold = _config_float(
+        "DASHBOARD_BATCH_PASS_THRESHOLD",
+        "BATCH_PASS_THRESHOLD",
+        default=80.0,
+    )
+
+    defect_target = _config_float(
+        "DASHBOARD_DEFECT_TARGET",
+        "DEFECT_TARGET",
+        default=(
+            100.0
+            -
+            yield_target
+        ),
+    )
+
+    return {
+        "yield_rate_percent":
+            yield_target,
+
+        "defect_rate_percent":
+            defect_target,
+
+        "batch_pass_rate_percent":
+            batch_pass_threshold,
+    }
+
+
+def _record_to_dashboard_batch(
+    record: InspectionBatch,
+    *,
+    batch_pass_threshold: float,
 ) -> dict[str, Any]:
-    path = Path(path_string)
+    summary = dict(
+        record.summary_json
+        or
+        {}
+    )
 
-    with path.open(
-        "r",
-        encoding="utf-8",
-    ) as file:
-        data = json.load(file)
+    classes = dict(
+        record.classes_json
+        or
+        {}
+    )
 
-    if not isinstance(data, dict):
-        raise ValueError(
-            "Dashboard mock dataset must be a JSON object."
+    confidence = dict(
+        record.confidence_json
+        or
+        {}
+    )
+
+    timing = dict(
+        record.timing_json
+        or
+        {}
+    )
+
+    judged = int(
+        summary.get(
+            "judged",
+            0,
         )
+        or
+        0
+    )
 
-    batches = data.get("batches")
-
-    if not isinstance(batches, list):
-        raise ValueError(
-            "Dashboard mock dataset is missing the 'batches' list."
+    normal = int(
+        summary.get(
+            "normal",
+            0,
         )
+        or
+        0
+    )
 
-    return data
+    good_ratio = (
+        (
+            normal
+            /
+            judged
+        )
+        *
+        100.0
+
+        if judged
+
+        else
+        0.0
+    )
+
+    # The old mock dataset stored batch_pass as a boolean.
+    # Real inspection records do not need to duplicate that field,
+    # so Dashboard derives it from the configured pass threshold.
+    summary[
+        "batch_pass"
+    ] = bool(
+        judged
+        and
+        good_ratio
+        >=
+        batch_pass_threshold
+    )
+
+    inspection_date = (
+        record.inspection_date
+        or
+        record.created_at
+    )
+
+    if inspection_date is None:
+        inspection_date = datetime.now()
+
+    return {
+        "batch_id":
+            str(
+                record.batch_id
+            ),
+
+        "inspection_date":
+            inspection_date.isoformat(),
+
+        "source_type":
+            str(
+                record.source_type
+                or
+                "image"
+            ),
+
+        "file_name":
+            str(
+                record.original_filename
+                or
+                ""
+            ),
+
+        "model_version":
+            str(
+                record.model_version
+                or
+                "—"
+            ),
+
+        "summary":
+            summary,
+
+        "classes":
+            classes,
+
+        "confidence":
+            confidence,
+
+        "timing":
+            timing,
+    }
 
 
 def load_dashboard_dataset() -> dict[str, Any]:
-    path = _dataset_path()
+    """
+    Build the same dataset shape the existing Dashboard already expects,
+    but from real InspectionBatch database records instead of
+    data/mock/inspection_batches.json.
+    """
 
-    if not path.exists():
-        raise FileNotFoundError(
-            f"Dashboard mock data was not found at {path}"
+    targets = (
+        _dashboard_targets()
+    )
+
+    records = list(
+        db.session.scalars(
+            db.select(
+                InspectionBatch
+            ).order_by(
+                InspectionBatch.inspection_date.asc(),
+                InspectionBatch.id.asc(),
+            )
+        ).all()
+    )
+
+    batches = [
+        _record_to_dashboard_batch(
+            record,
+            batch_pass_threshold=(
+                targets[
+                    "batch_pass_rate_percent"
+                ]
+            ),
         )
 
-    stat = path.stat()
+        for record
+        in records
+    ]
 
-    return _load_dataset_cached(
-        str(path),
-        stat.st_mtime_ns,
-    )
+    return {
+        "dataset_info": {
+            "is_simulated":
+                False,
+
+            "source":
+                "inspection_database",
+
+            "targets":
+                targets,
+        },
+
+        "batches":
+            batches,
+    }
 
 
 def _parse_datetime(
@@ -669,13 +862,8 @@ def build_dashboard_data(
         )
 
     return {
-        "source": "mock",
-        "is_simulated": bool(
-            dataset_info.get(
-                "is_simulated",
-                True,
-            )
-        ),
+        "source": "database",
+        "is_simulated": False,
         "filter": {
             "range": resolved_range,
             "label": filter_label,

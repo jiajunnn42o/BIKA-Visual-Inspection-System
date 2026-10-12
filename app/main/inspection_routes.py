@@ -36,6 +36,10 @@ from app.services.inspection_pipeline_service import (
     inspect_image_bytes_with_progress,
 )
 
+from app.services.inspection_record_service import (
+    persist_completed_image_inspection,
+)
+
 
 # =========================================================
 # ALLOWED IMAGE TYPES
@@ -233,6 +237,8 @@ def _run_job(
     app,
     job_id: str,
     image_bytes: bytes,
+    source_filename: str,
+    user_id: str,
 ):
 
     with app.app_context():
@@ -326,6 +332,52 @@ def _run_job(
 
 
             # -------------------------------------------------
+            # Persist real inspection record + media artifacts
+            # -------------------------------------------------
+
+            _set_job_progress(
+                job_id,
+                100,
+                "Saving inspection record",
+            )
+
+            persistence_message = ""
+
+            try:
+
+                record = persist_completed_image_inspection(
+                    source_bytes=image_bytes,
+                    source_filename=source_filename,
+                    result=result,
+                    user_id=user_id,
+                )
+
+                result["record"] = {
+                    "saved": True,
+                    "batch_id": record.batch_id,
+                    "storage_backend": record.storage_backend,
+                    "original_key": record.original_key,
+                    "preview_key": record.preview_key,
+                    "result_key": record.result_key,
+                }
+
+            except Exception:
+
+                current_app.logger.exception(
+                    "Inspection completed but persistence failed."
+                )
+
+                persistence_message = (
+                    "Inspection completed, but the report record "
+                    "could not be saved. Check the server log."
+                )
+
+                result["record"] = {
+                    "saved": False,
+                }
+
+
+            # -------------------------------------------------
             # Complete
             # -------------------------------------------------
 
@@ -363,6 +415,11 @@ def _run_job(
                 job[
                     "result"
                 ] = result
+
+
+                job[
+                    "message"
+                ] = persistence_message
 
 
                 job[
@@ -773,6 +830,9 @@ def run_inspection_image():
             "result":
                 None,
 
+            "source_filename":
+                filename,
+
             "cancel_event":
                 cancel_event,
 
@@ -801,6 +861,10 @@ def run_inspection_image():
             app,
             job_id,
             image_bytes,
+            filename,
+            str(
+                current_user.get_id()
+            ),
         ),
 
         daemon=True,

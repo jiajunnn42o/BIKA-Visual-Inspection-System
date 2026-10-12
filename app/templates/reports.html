@@ -1,0 +1,478 @@
+{% extends "base.html" %}
+
+{% block title %}
+Reports | BIKA
+{% endblock %}
+
+{% block extra_css %}
+<link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/reports.css', v='20261012-v8') }}"
+>
+{% endblock %}
+
+{% block content %}
+
+<div
+    class="reports-page"
+    data-reports-page
+    data-reports-build="20261012-v8"
+>
+
+    <header class="reports-header">
+
+        <div>
+            <h1>Reports</h1>
+            <p>All previous inspection runs</p>
+        </div>
+
+    </header>
+
+
+    <section class="reports-toolbar">
+
+        <div
+            class="reports-tabs"
+            role="tablist"
+            aria-label="Report type"
+        >
+
+            <button
+                type="button"
+                class="reports-tab is-active"
+                role="tab"
+                aria-selected="true"
+                data-report-tab="batches"
+            >
+
+                <iconsax-icon
+                    name="layer"
+                    type="twotone"
+                    size="16"
+                    color="currentColor"
+                ></iconsax-icon>
+
+                <span>
+                    Batch Summary
+                </span>
+
+            </button>
+
+
+            <button
+                type="button"
+                class="reports-tab"
+                role="tab"
+                aria-selected="false"
+                data-report-tab="defects"
+            >
+
+                <iconsax-icon
+                    name="info-circle"
+                    type="twotone"
+                    size="16"
+                    color="currentColor"
+                ></iconsax-icon>
+
+                <span>
+                    Defect Event Log
+                </span>
+
+            </button>
+
+        </div>
+
+
+        <div class="reports-actions">
+
+            <button
+                type="button"
+                class="reports-action-button"
+                data-export-fields-button
+            >
+                <iconsax-icon
+                    name="task-square"
+                    type="twotone"
+                    size="16"
+                    color="currentColor"
+                ></iconsax-icon>
+
+                Export Fields
+            </button>
+
+
+            <button
+                type="button"
+                class="reports-action-button"
+                data-download-format="csv"
+            >
+                <iconsax-icon
+                    name="document-download"
+                    type="twotone"
+                    size="16"
+                    color="currentColor"
+                ></iconsax-icon>
+
+                Download CSV
+            </button>
+
+
+            <button
+                type="button"
+                class="reports-action-button"
+                data-download-format="json"
+            >
+                <iconsax-icon
+                    name="code-circle"
+                    type="twotone"
+                    size="16"
+                    color="currentColor"
+                ></iconsax-icon>
+
+                Download JSON
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <section
+        class="reports-card"
+        data-report-panel="batches"
+    >
+
+        <div class="reports-table-scroll">
+
+            <table class="reports-table">
+
+                <thead>
+
+                    <tr>
+                        <th class="reports-col-preview">
+                            Preview
+                        </th>
+
+                        <th class="reports-col-file">
+                            File Name
+                        </th>
+
+                        <th class="reports-col-date">
+                            Date / Time
+                        </th>
+
+                        <th>
+                            Total
+                        </th>
+
+                        <th>
+                            GOOD
+                        </th>
+
+                        <th>
+                            BAD
+                        </th>
+
+                        <th>
+                            Good Ratio
+                        </th>
+
+                        <th class="reports-col-status">
+                            Status
+                        </th>
+
+                        <th>
+                            Details
+                        </th>
+
+                        <th>
+                            Export
+                        </th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody data-batch-table-body>
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <footer class="reports-pagination">
+
+            <span data-batch-page-summary>
+                —
+            </span>
+
+            <div class="reports-pagination-controls">
+
+                <button
+                    type="button"
+                    data-batch-prev
+                    aria-label="Previous page"
+                >
+                    ‹
+                </button>
+
+                <span data-batch-page-number>
+                    1
+                </span>
+
+                <button
+                    type="button"
+                    data-batch-next
+                    aria-label="Next page"
+                >
+                    ›
+                </button>
+
+            </div>
+
+        </footer>
+
+    </section>
+
+
+    <section
+        class="reports-card"
+        data-report-panel="defects"
+        hidden
+    >
+
+        <div class="reports-table-scroll">
+
+            <table class="reports-table reports-defect-table">
+
+                <thead>
+                    <tr>
+                        <th class="reports-col-preview">
+                            Preview
+                        </th>
+
+                        <th class="reports-col-file">
+                            File Name
+                        </th>
+
+                        <th class="reports-col-date">
+                            Date / Time
+                        </th>
+
+                        <th>
+                            Defect
+                        </th>
+
+                        <th>
+                            Count
+                        </th>
+
+                        <th>
+                            Ratio
+                        </th>
+
+                        <th>
+                            Batch Status
+                        </th>
+
+                        <th>
+                            Details
+                        </th>
+
+                        <th>
+                            Export
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody data-defect-table-body>
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <footer class="reports-pagination">
+
+            <span data-defect-page-summary>
+                —
+            </span>
+
+            <div class="reports-pagination-controls">
+
+                <button
+                    type="button"
+                    data-defect-prev
+                    aria-label="Previous page"
+                >
+                    ‹
+                </button>
+
+                <span data-defect-page-number>
+                    1
+                </span>
+
+                <button
+                    type="button"
+                    data-defect-next
+                    aria-label="Next page"
+                >
+                    ›
+                </button>
+
+            </div>
+
+        </footer>
+
+    </section>
+
+
+    <div
+        class="reports-modal-backdrop"
+        data-reports-modal
+        hidden
+    >
+
+        <div
+            class="reports-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reports-detail-title"
+        >
+
+            <header class="reports-modal-header">
+
+                <div>
+                    <span
+                        class="reports-modal-kicker"
+                        data-detail-kicker
+                    >
+                        Inspection report
+                    </span>
+
+                    <h2
+                        id="reports-detail-title"
+                        data-detail-title
+                    >
+                        Batch Details
+                    </h2>
+                </div>
+
+                <button
+                    type="button"
+                    class="reports-modal-close"
+                    data-reports-modal-close
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+
+            </header>
+
+
+            <div
+                class="reports-modal-body"
+                data-detail-body
+            >
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div
+        class="reports-modal-backdrop"
+        data-export-fields-modal
+        hidden
+    >
+
+        <div
+            class="reports-modal reports-fields-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reports-fields-title"
+        >
+
+            <header class="reports-modal-header">
+
+                <div>
+                    <span class="reports-modal-kicker">
+                        Export configuration
+                    </span>
+
+                    <h2 id="reports-fields-title">
+                        Export Fields
+                    </h2>
+                </div>
+
+                <button
+                    type="button"
+                    class="reports-modal-close"
+                    data-export-fields-close
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+
+            </header>
+
+
+            <div class="reports-modal-body">
+
+                <p class="reports-fields-help">
+                    Choose which Batch Summary fields are included in CSV and JSON exports.
+                </p>
+
+                <div
+                    class="reports-field-grid"
+                    data-export-field-grid
+                >
+                </div>
+
+            </div>
+
+
+            <footer class="reports-modal-footer">
+
+                <button
+                    type="button"
+                    class="reports-secondary-button"
+                    data-export-select-all
+                >
+                    Select All
+                </button>
+
+                <button
+                    type="button"
+                    class="reports-primary-button"
+                    data-export-fields-save
+                >
+                    Save Fields
+                </button>
+
+            </footer>
+
+        </div>
+
+    </div>
+
+
+    <script
+        type="application/json"
+        data-reports-json
+    >{{ reports_data|tojson }}</script>
+
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script
+    src="{{ url_for('static', filename='js/reports.js', v='20261012-v8') }}"
+    defer
+></script>
+{% endblock %}

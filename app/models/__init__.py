@@ -21,3 +21,7 @@ __all__ = [
 from app.models.phone_verification import (
     PhoneVerification,
 )
+
+from app.models.inspection_batch import InspectionBatch
+
+__all__.append("InspectionBatch")

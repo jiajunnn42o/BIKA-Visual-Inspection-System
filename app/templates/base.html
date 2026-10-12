@@ -305,9 +305,13 @@
                 <!-- REPORTS -->
 
                 <a
-                    href="#"
-                    class="app-nav-item"
-                    draggable="false"
+                    href="{{ url_for('main.reports') }}"
+                    class="
+                        app-nav-item
+                        {% if request.endpoint == 'main.reports' %}
+                            is-active
+                        {% endif %}
+                    "
                 >
 
                     <iconsax-icon
