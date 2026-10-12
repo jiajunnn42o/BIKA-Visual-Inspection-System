@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+import time
+import uuid
+
 from threading import (
     Event,
     Lock,
     Thread,
 )
-import time
-import uuid
 
 from flask import (
     current_app,
     jsonify,
+    render_template,
     request,
     url_for,
 )
@@ -24,12 +26,20 @@ from app.main import (
     main_bp,
 )
 
+from app.services.inspection_model_metadata import (
+    get_classifier_ui_metadata,
+)
+
 from app.services.inspection_pipeline_service import (
     InspectionCancelled,
     InspectionPipelineError,
     inspect_image_bytes_with_progress,
 )
 
+
+# =========================================================
+# ALLOWED IMAGE TYPES
+# =========================================================
 
 ALLOWED_IMAGE_EXTENSIONS = {
     ".jpg",
@@ -42,26 +52,42 @@ ALLOWED_IMAGE_EXTENSIONS = {
 # =========================================================
 # IN-MEMORY INSPECTION JOBS
 #
-# Suitable for the current single-process development setup.
-# For production / multiple workers, move this state to Redis
-# or a database-backed job queue.
+# Current development implementation.
+#
+# Suitable for:
+# - Local Flask development
+# - Single-process server
+#
+# Future production:
+# Move job state to Redis / database-backed queue when
+# multiple workers or cloud GPU workers are introduced.
 # =========================================================
 
 _INSPECTION_JOBS = {}
+
 _INSPECTION_JOBS_LOCK = Lock()
 
-_JOB_TTL_SECONDS = 30 * 60
+_JOB_TTL_SECONDS = (
+    30
+    *
+    60
+)
 
+
+# =========================================================
+# ACTIVE JOB CHECK
+#
+# Used by Model Management.
+# Prevents switching the active model while an inspection
+# is currently queued or running.
+# =========================================================
 
 def has_active_inspection_jobs() -> bool:
-    """
-    Used by Model Management to prevent changing the active
-    model while an image inspection is queued or running.
-    """
 
     with _INSPECTION_JOBS_LOCK:
 
         return any(
+
             job.get(
                 "status"
             )
@@ -75,13 +101,19 @@ def has_active_inspection_jobs() -> bool:
         )
 
 
+# =========================================================
+# JOB CLEANUP
+# =========================================================
+
 def _cleanup_jobs():
 
     now = time.time()
 
+
     with _INSPECTION_JOBS_LOCK:
 
         expired = [
+
             job_id
 
             for job_id, job
@@ -98,12 +130,18 @@ def _cleanup_jobs():
             )
         ]
 
+
         for job_id in expired:
+
             _INSPECTION_JOBS.pop(
                 job_id,
                 None,
             )
 
+
+# =========================================================
+# GET JOB FOR CURRENT USER
+# =========================================================
 
 def _job_for_user(
     job_id: str,
@@ -111,9 +149,12 @@ def _job_for_user(
 
     with _INSPECTION_JOBS_LOCK:
 
-        job = _INSPECTION_JOBS.get(
-            job_id
+        job = (
+            _INSPECTION_JOBS.get(
+                job_id
+            )
         )
+
 
         if (
             job is None
@@ -128,10 +169,16 @@ def _job_for_user(
                 current_user.get_id()
             )
         ):
+
             return None
+
 
         return job
 
+
+# =========================================================
+# UPDATE JOB PROGRESS
+# =========================================================
 
 def _set_job_progress(
     job_id: str,
@@ -141,12 +188,17 @@ def _set_job_progress(
 
     with _INSPECTION_JOBS_LOCK:
 
-        job = _INSPECTION_JOBS.get(
-            job_id
+        job = (
+            _INSPECTION_JOBS.get(
+                job_id
+            )
         )
 
+
         if job is None:
+
             return
+
 
         job[
             "progress"
@@ -160,16 +212,22 @@ def _set_job_progress(
             ),
         )
 
+
         job[
             "stage"
         ] = str(
             stage
         )
 
+
         job[
             "updated_at"
         ] = time.time()
 
+
+# =========================================================
+# BACKGROUND INSPECTION WORKER
+# =========================================================
 
 def _run_job(
     app,
@@ -179,37 +237,66 @@ def _run_job(
 
     with app.app_context():
 
+        # -------------------------------------------------
+        # Mark job as running
+        # -------------------------------------------------
+
         with _INSPECTION_JOBS_LOCK:
 
-            job = _INSPECTION_JOBS.get(
-                job_id
+            job = (
+                _INSPECTION_JOBS.get(
+                    job_id
+                )
             )
 
+
             if job is None:
+
                 return
+
 
             job[
                 "status"
             ] = "running"
 
+
             job[
                 "stage"
-            ] = "Starting inspection"
+            ] = (
+                "Starting inspection"
+            )
+
 
             job[
                 "updated_at"
             ] = time.time()
 
-            cancel_event = job[
-                "cancel_event"
-            ]
+
+            cancel_event = (
+                job[
+                    "cancel_event"
+                ]
+            )
 
 
         try:
 
+            # -------------------------------------------------
+            # Run exact BIKA inspection pipeline
+            #
+            # YOLO
+            # → SAM2
+            # → Dedup
+            # → Safe Zone
+            # → Crop + Geometry + Relative Colour
+            # → Classifier
+            # → Calibration
+            # -------------------------------------------------
+
             result = (
                 inspect_image_bytes_with_progress(
                     image_bytes,
+
                     progress_callback=(
                         lambda progress, stage:
                             _set_job_progress(
@@ -218,12 +305,18 @@ def _run_job(
                                 stage,
                             )
                     ),
+
                     cancel_check=(
                         cancel_event.is_set
                     ),
                 )
             )
 
+
+            # -------------------------------------------------
+            # Cancellation may be requested during a GPU stage.
+            # It becomes effective once the current stage ends.
+            # -------------------------------------------------
 
             if cancel_event.is_set():
 
@@ -232,63 +325,98 @@ def _run_job(
                 )
 
 
+            # -------------------------------------------------
+            # Complete
+            # -------------------------------------------------
+
             with _INSPECTION_JOBS_LOCK:
 
-                job = _INSPECTION_JOBS.get(
-                    job_id
+                job = (
+                    _INSPECTION_JOBS.get(
+                        job_id
+                    )
                 )
 
+
                 if job is None:
+
                     return
+
 
                 job[
                     "status"
                 ] = "complete"
 
+
                 job[
                     "progress"
                 ] = 100
 
+
                 job[
                     "stage"
-                ] = "Inspection complete"
+                ] = (
+                    "Inspection complete"
+                )
+
 
                 job[
                     "result"
                 ] = result
 
+
                 job[
                     "updated_at"
                 ] = time.time()
 
+
+        # =================================================
+        # CANCELLED
+        # =================================================
 
         except InspectionCancelled:
 
             with _INSPECTION_JOBS_LOCK:
 
-                job = _INSPECTION_JOBS.get(
-                    job_id
+                job = (
+                    _INSPECTION_JOBS.get(
+                        job_id
+                    )
                 )
 
+
                 if job is None:
+
                     return
+
 
                 job[
                     "status"
                 ] = "cancelled"
 
+
                 job[
                     "stage"
-                ] = "Inspection cancelled"
+                ] = (
+                    "Inspection cancelled"
+                )
+
 
                 job[
                     "message"
-                ] = "Inspection cancelled."
+                ] = (
+                    "Inspection cancelled."
+                )
+
 
                 job[
                     "updated_at"
                 ] = time.time()
 
+
+        # =================================================
+        # EXPECTED PIPELINE ERROR
+        # =================================================
 
         except InspectionPipelineError as exc:
 
@@ -300,20 +428,29 @@ def _run_job(
 
             with _INSPECTION_JOBS_LOCK:
 
-                job = _INSPECTION_JOBS.get(
-                    job_id
+                job = (
+                    _INSPECTION_JOBS.get(
+                        job_id
+                    )
                 )
 
+
                 if job is None:
+
                     return
+
 
                 job[
                     "status"
                 ] = "failed"
 
+
                 job[
                     "stage"
-                ] = "Inspection failed"
+                ] = (
+                    "Inspection failed"
+                )
+
 
                 job[
                     "message"
@@ -321,10 +458,15 @@ def _run_job(
                     exc
                 )
 
+
                 job[
                     "updated_at"
                 ] = time.time()
 
+
+        # =================================================
+        # UNEXPECTED ERROR
+        # =================================================
 
         except Exception:
 
@@ -335,20 +477,29 @@ def _run_job(
 
             with _INSPECTION_JOBS_LOCK:
 
-                job = _INSPECTION_JOBS.get(
-                    job_id
+                job = (
+                    _INSPECTION_JOBS.get(
+                        job_id
+                    )
                 )
 
+
                 if job is None:
+
                     return
+
 
                 job[
                     "status"
                 ] = "failed"
 
+
                 job[
                     "stage"
-                ] = "Inspection failed"
+                ] = (
+                    "Inspection failed"
+                )
+
 
                 job[
                     "message"
@@ -357,10 +508,77 @@ def _run_job(
                     "Check the server log for details."
                 )
 
+
                 job[
                     "updated_at"
                 ] = time.time()
 
+
+# =========================================================
+# INSPECTION PAGE
+#
+# GET /inspection
+#
+# This route was previously lost when routes.py was replaced
+# by the Dashboard implementation.
+# =========================================================
+
+@main_bp.route(
+    "/inspection",
+    methods=[
+        "GET",
+    ],
+)
+@login_required
+def inspection():
+
+    # -----------------------------------------------------
+    # Read class metadata from the CURRENT active
+    # classifier instead of hard-coding class names.
+    # -----------------------------------------------------
+
+    model_metadata = (
+        get_classifier_ui_metadata(
+            str(
+                current_app.config[
+                    "CLASSIFIER_PATH"
+                ]
+            )
+        )
+    )
+
+
+    return render_template(
+        "inspection.html",
+
+        user=current_user,
+
+        inspection_classes=(
+            model_metadata[
+                "classes"
+            ]
+        ),
+
+        inspection_model_version=(
+            current_app.config.get(
+                "MODEL_VERSION",
+                "Not configured",
+            )
+        ),
+
+        inspection_classifier_file=(
+            model_metadata[
+                "classifier_file"
+            ]
+        ),
+    )
+
+
+# =========================================================
+# START IMAGE INSPECTION
+#
+# POST /inspection/run-image
+# =========================================================
 
 @main_bp.route(
     "/inspection/run-image",
@@ -373,6 +591,10 @@ def run_inspection_image():
 
     _cleanup_jobs()
 
+
+    # -----------------------------------------------------
+    # Uploaded file
+    # -----------------------------------------------------
 
     uploaded_file = (
         request.files.get(
@@ -389,6 +611,7 @@ def run_inspection_image():
 
         return jsonify(
             ok=False,
+
             message=(
                 "Please select an image first."
             ),
@@ -401,7 +624,12 @@ def run_inspection_image():
     )
 
 
+    # -----------------------------------------------------
+    # File extension
+    # -----------------------------------------------------
+
     extension = (
+
         (
             "."
             +
@@ -414,7 +642,9 @@ def run_inspection_image():
             ]
             .lower()
         )
+
         if "." in filename
+
         else ""
     )
 
@@ -427,6 +657,7 @@ def run_inspection_image():
 
         return jsonify(
             ok=False,
+
             message=(
                 "Supported image formats are "
                 "JPG, JPEG, PNG and WEBP."
@@ -434,17 +665,40 @@ def run_inspection_image():
         ), 400
 
 
+    # -----------------------------------------------------
+    # Read bytes
+    # -----------------------------------------------------
+
     image_bytes = (
         uploaded_file.read()
     )
 
 
-    max_bytes = (
-        int(
-            current_app.config[
-                "INSPECTION_MAX_IMAGE_MB"
-            ]
+    if not image_bytes:
+
+        return jsonify(
+            ok=False,
+
+            message=(
+                "The uploaded image is empty."
+            ),
+        ), 400
+
+
+    # -----------------------------------------------------
+    # File size limit
+    # -----------------------------------------------------
+
+    max_image_mb = int(
+        current_app.config.get(
+            "INSPECTION_MAX_IMAGE_MB",
+            10,
         )
+    )
+
+
+    max_bytes = (
+        max_image_mb
         *
         1024
         *
@@ -462,12 +716,17 @@ def run_inspection_image():
 
         return jsonify(
             ok=False,
+
             message=(
                 "Image size must not exceed "
-                f"{current_app.config['INSPECTION_MAX_IMAGE_MB']} MB."
+                f"{max_image_mb} MB."
             ),
         ), 413
 
+
+    # -----------------------------------------------------
+    # Create job
+    # -----------------------------------------------------
 
     job_id = (
         uuid.uuid4()
@@ -475,10 +734,14 @@ def run_inspection_image():
     )
 
 
-    cancel_event = Event()
+    cancel_event = (
+        Event()
+    )
 
 
-    now = time.time()
+    now = (
+        time.time()
+    )
 
 
     with _INSPECTION_JOBS_LOCK:
@@ -486,6 +749,7 @@ def run_inspection_image():
         _INSPECTION_JOBS[
             job_id
         ] = {
+
             "job_id":
                 job_id,
 
@@ -520,6 +784,10 @@ def run_inspection_image():
         }
 
 
+    # -----------------------------------------------------
+    # Obtain real Flask app object for background thread
+    # -----------------------------------------------------
+
     app = (
         current_app
         ._get_current_object()
@@ -528,33 +796,52 @@ def run_inspection_image():
 
     worker = Thread(
         target=_run_job,
+
         args=(
             app,
             job_id,
             image_bytes,
         ),
+
         daemon=True,
+
         name=(
             f"inspection-{job_id[:8]}"
         ),
     )
 
+
     worker.start()
 
 
+    # -----------------------------------------------------
+    # Return job endpoints
+    # -----------------------------------------------------
+
     return jsonify(
         ok=True,
+
         job_id=job_id,
+
         status_url=url_for(
             "main.inspection_job_status",
+
             job_id=job_id,
         ),
+
         cancel_url=url_for(
             "main.cancel_inspection_job",
+
             job_id=job_id,
         ),
     ), 202
 
+
+# =========================================================
+# INSPECTION JOB STATUS
+#
+# GET /inspection/job/<job_id>
+# =========================================================
 
 @main_bp.route(
     "/inspection/job/<job_id>",
@@ -570,8 +857,10 @@ def inspection_job_status(
     _cleanup_jobs()
 
 
-    job = _job_for_user(
-        job_id
+    job = (
+        _job_for_user(
+            job_id
+        )
     )
 
 
@@ -579,6 +868,7 @@ def inspection_job_status(
 
         return jsonify(
             ok=False,
+
             message=(
                 "Inspection job was not found."
             ),
@@ -588,6 +878,7 @@ def inspection_job_status(
     with _INSPECTION_JOBS_LOCK:
 
         payload = {
+
             "ok":
                 True,
 
@@ -618,6 +909,10 @@ def inspection_job_status(
         }
 
 
+        # -------------------------------------------------
+        # Only send full inference result once completed
+        # -------------------------------------------------
+
         if (
             job[
                 "status"
@@ -638,6 +933,12 @@ def inspection_job_status(
     )
 
 
+# =========================================================
+# CANCEL INSPECTION
+#
+# POST /inspection/job/<job_id>/cancel
+# =========================================================
+
 @main_bp.route(
     "/inspection/job/<job_id>/cancel",
     methods=[
@@ -649,8 +950,10 @@ def cancel_inspection_job(
     job_id,
 ):
 
-    job = _job_for_user(
-        job_id
+    job = (
+        _job_for_user(
+            job_id
+        )
     )
 
 
@@ -658,6 +961,7 @@ def cancel_inspection_job(
 
         return jsonify(
             ok=False,
+
             message=(
                 "Inspection job was not found."
             ),
@@ -665,6 +969,10 @@ def cancel_inspection_job(
 
 
     with _INSPECTION_JOBS_LOCK:
+
+        # -------------------------------------------------
+        # Already finished
+        # -------------------------------------------------
 
         if (
             job[
@@ -679,21 +987,34 @@ def cancel_inspection_job(
 
             return jsonify(
                 ok=True,
-                status=job[
-                    "status"
-                ],
+
+                status=(
+                    job[
+                        "status"
+                    ]
+                ),
             )
 
+
+        # -------------------------------------------------
+        # Signal cancellation
+        #
+        # GPU work cannot necessarily stop in the middle of
+        # one stage. Pipeline checks cancellation between
+        # stages.
+        # -------------------------------------------------
 
         job[
             "cancel_event"
         ].set()
+
 
         job[
             "stage"
         ] = (
             "Cancelling after current stage"
         )
+
 
         job[
             "updated_at"
@@ -702,5 +1023,6 @@ def cancel_inspection_job(
 
     return jsonify(
         ok=True,
+
         status="cancelling",
     ), 202

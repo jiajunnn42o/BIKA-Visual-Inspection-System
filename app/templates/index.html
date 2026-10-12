@@ -1,41 +1,976 @@
 {% extends "base.html" %}
 
+
+
+{% set active_page = "dashboard" %}
+
+{% set current_page = "dashboard" %}
+
+
+
+{% macro pct(value) -%}
+
+{{ ("%.1f"|format(value or 0)).rstrip("0").rstrip(".") }}%
+
+{%- endmacro %}
+
+
+
+{% macro signed_pct(value) -%}
+
+{{ ("%+.1f"|format(value or 0)).rstrip("0").rstrip(".") }}%
+
+{%- endmacro %}
+
+
+
 {% block title %}
-BIKA Visual Inspection System
+
+Dashboard | BIKA
+
 {% endblock %}
+
+
+
+{% block extra_css %}
+
+<link
+
+    rel="stylesheet"
+
+    href="{{ url_for('static', filename='css/dashboard.css') }}"
+
+>
+
+{% endblock %}
+
+
 
 {% block content %}
 
-<h1>BIKA Visual Inspection System</h1>
 
-<p>
-    Logged in as:
-    {{ current_user.full_name }}
-</p>
 
-<p>
-    Role:
-    {{ current_user.role }}
-</p>
+<div
 
-<p>
-    Status:
-    {{ current_user.status }}
-</p>
+    class="dashboard-page"
 
-<form
-    method="POST"
-    action="{{ url_for('auth.logout') }}"
+    data-dashboard-page
+
+    data-dashboard-url="{{ url_for('main.dashboard_data') }}"
+
 >
-    <input
-        type="hidden"
-        name="csrf_token"
-        value="{{ csrf_token() }}"
-    >
 
-    <button type="submit">
-        Logout
-    </button>
-</form>
+
+
+    <header class="dashboard-header">
+
+
+
+        <div class="dashboard-heading">
+
+            <h1>Dashboard</h1>
+
+            <p>Today at a glance, aggregated live</p>
+
+        </div>
+
+
+
+
+
+        <div class="dashboard-filter-wrap">
+
+
+
+            <button
+
+                type="button"
+
+                class="dashboard-filter-button"
+
+                data-dashboard-filter-button
+
+                aria-expanded="false"
+
+            >
+
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+
+                     stroke="currentColor" stroke-width="1.6"
+
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+
+                    <rect x="3.5" y="5" width="17" height="15.5" rx="3"></rect>
+
+                    <path d="M8 3v4M16 3v4M3.5 10h17"></path>
+
+                    <path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"></path>
+
+                </svg>
+
+
+
+                <span data-dashboard-filter-label>
+
+                    {{ dashboard.filter.label }} · {{ dashboard.kpi.total_batches }} batches
+
+                </span>
+
+            </button>
+
+
+
+
+
+            <div
+
+                class="dashboard-filter-menu"
+
+                data-dashboard-filter-menu
+
+                hidden
+
+            >
+
+
+
+                <button
+
+                    type="button"
+
+                    class="dashboard-filter-option is-active"
+
+                    data-dashboard-range="all"
+
+                >
+
+                    All runs to date
+
+                </button>
+
+
+
+                <button
+
+                    type="button"
+
+                    class="dashboard-filter-option"
+
+                    data-dashboard-range="7d"
+
+                >
+
+                    Last 7 days
+
+                </button>
+
+
+
+                <button
+
+                    type="button"
+
+                    class="dashboard-filter-option"
+
+                    data-dashboard-range="30d"
+
+                >
+
+                    Last 30 days
+
+                </button>
+
+
+
+                <div class="dashboard-custom-range">
+
+
+
+                    <span>Custom range</span>
+
+
+
+                    <div class="dashboard-custom-range-grid">
+
+
+
+                        <label>
+
+                            <small>From</small>
+
+                            <input
+
+                                type="date"
+
+                                value="{{ dashboard.filter.from }}"
+
+                                min="{{ dashboard.filter.minimum_date }}"
+
+                                max="{{ dashboard.filter.maximum_date }}"
+
+                                data-dashboard-from
+
+                            >
+
+                        </label>
+
+
+
+                        <label>
+
+                            <small>To</small>
+
+                            <input
+
+                                type="date"
+
+                                value="{{ dashboard.filter.to }}"
+
+                                min="{{ dashboard.filter.minimum_date }}"
+
+                                max="{{ dashboard.filter.maximum_date }}"
+
+                                data-dashboard-to
+
+                            >
+
+                        </label>
+
+
+
+                    </div>
+
+
+
+                    <button
+
+                        type="button"
+
+                        class="dashboard-custom-apply"
+
+                        data-dashboard-custom-apply
+
+                    >
+
+                        Apply range
+
+                    </button>
+
+
+
+                </div>
+
+
+
+            </div>
+
+
+
+        </div>
+
+
+
+    </header>
+
+
+
+
+
+    <section class="dashboard-summary-strip">
+
+
+
+        <svg class="dashboard-summary-icon" width="28" height="28" viewBox="0 0 28 28"
+
+             fill="none" stroke="currentColor" stroke-width="1.5"
+
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+
+            <path d="M3 24.5h22"></path>
+
+            <rect x="5.5" y="14" width="4" height="10.5" rx="1.2"></rect>
+
+            <rect x="12" y="4.5" width="4" height="20" rx="1.2"></rect>
+
+            <rect x="18.5" y="10" width="4" height="14.5" rx="1.2"></rect>
+
+        </svg>
+
+
+
+        <p>
+
+            <span>
+
+                Across
+
+                <strong data-summary-batches>{{ dashboard.kpi.total_batches }}</strong>
+
+                batches and
+
+                <strong data-summary-products>{{ "{:,}".format(dashboard.kpi.total_products) }}</strong>
+
+                products inspected to date,
+
+            </span>
+
+
+
+            <span>
+
+                overall yield is
+
+                <strong data-summary-yield>{{ "%.1f"|format(dashboard.kpi.yield_percent) }}%</strong>,
+
+            </span>
+
+
+
+            <span>
+
+                <strong data-summary-gap>{{ "%.1f"|format(dashboard.kpi.yield_gap|abs) }}%</strong>
+
+                <span data-summary-direction>{% if dashboard.kpi.yield_gap >= 0 %}above{% else %}below{% endif %}</span>
+
+                the
+
+                <span data-summary-target>{{ "%.0f"|format(dashboard.targets.yield_percent) }}%</span>
+
+                target.
+
+            </span>
+
+        </p>
+
+
+
+    </section>
+
+
+
+
+
+    <section class="dashboard-top-grid">
+
+
+
+        <article class="dashboard-card dashboard-yield-card">
+
+
+
+            <h2>Overall Yield Rate</h2>
+
+
+
+            <strong
+
+                class="dashboard-yield-value"
+
+                data-kpi-yield
+
+            >{{ "%.1f"|format(dashboard.kpi.yield_percent) }}%</strong>
+
+
+
+            <div class="dashboard-yield-meta">
+
+                <span>
+
+                    Target
+
+                    <span data-target-yield>{{ "%.1f"|format(dashboard.targets.yield_percent) }}%</span>
+
+                </span>
+
+
+
+                <span>·</span>
+
+
+
+                <span>
+
+                    <span data-yield-gap-direction>{% if dashboard.kpi.yield_gap >= 0 %}above by{% else %}below by{% endif %}</span>
+
+                    <strong
+
+                        class="{% if dashboard.kpi.yield_gap < 0 %}is-negative{% else %}is-positive{% endif %}"
+
+                        data-kpi-yield-gap
+
+                    >{{ "%.1f"|format(dashboard.kpi.yield_gap|abs) }}%</strong>
+
+                </span>
+
+
+
+                <span
+
+                    class="dashboard-yield-delta"
+
+                    data-yield-delta
+
+                    hidden
+
+                >
+
+                    <span class="dashboard-yield-delta-arrow" data-yield-delta-arrow>▲</span>
+
+                    <span data-yield-delta-value></span>
+
+                    vs yesterday
+
+                </span>
+
+            </div>
+
+
+
+            <div class="dashboard-target-progress">
+
+                <span
+
+                    class="dashboard-target-progress-fill"
+
+                    data-yield-progress
+
+                ></span>
+
+
+
+                <span
+
+                    class="dashboard-target-marker"
+
+                    data-yield-target-marker
+
+                ></span>
+
+            </div>
+
+
+
+            <div class="dashboard-progress-labels">
+
+                <span>0%</span>
+
+                <span
+
+                    class="dashboard-progress-target-label"
+
+                    data-progress-target-label
+
+                >{{ "%.0f"|format(dashboard.targets.yield_percent) }}% (target)</span>
+
+                <span>100%</span>
+
+            </div>
+
+
+
+        </article>
+
+
+
+
+
+        <article class="dashboard-card dashboard-composition-card">
+
+
+
+            <div class="dashboard-card-heading">
+
+                <h2>Overall Output Composition</h2>
+
+                <p>
+
+                    <strong data-kpi-total-products>{{ "{:,}".format(dashboard.kpi.total_products) }}</strong>
+
+                    products inspected
+
+                </p>
+
+            </div>
+
+
+
+            <div
+
+                class="dashboard-composition-bar"
+
+                data-composition-bar
+
+                aria-label="Output composition"
+
+            >
+
+                {% for item in dashboard.composition %}
+
+                <span data-composition-segment="{{ item.key }}"></span>
+
+                {% endfor %}
+
+            </div>
+
+
+
+            <div
+
+                class="dashboard-composition-list"
+
+                style="--composition-rows: {{ [((dashboard.composition|length) + 1) // 2, 1]|max }};"
+
+            >
+
+
+
+                {% for item in dashboard.composition %}
+
+                <div
+
+                    class="dashboard-composition-row"
+
+                    data-composition-row="{{ item.key }}"
+
+                >
+
+                    <span
+
+                        class="dashboard-composition-dot"
+
+                        data-composition-dot="{{ item.key }}"
+
+                    ></span>
+
+
+
+                    <span class="dashboard-composition-name">{{ item.label }}</span>
+
+
+
+                    <strong data-composition-count="{{ item.key }}">{{ "{:,}".format(item.count) }}</strong>
+
+
+
+                    <small data-composition-percent="{{ item.key }}">{{ "%.1f"|format(item.percent) }}%</small>
+
+                </div>
+
+                {% endfor %}
+
+
+
+            </div>
+
+
+
+        </article>
+
+
+
+
+
+        <article class="dashboard-card dashboard-target-card">
+
+
+
+            <h2>Overall vs Target</h2>
+
+
+
+            <div class="dashboard-target-table">
+
+
+
+                <div class="dashboard-target-table-head">
+
+                    <span>Metric</span>
+
+                    <span>Overall</span>
+
+                    <span>Target</span>
+
+                    <span>Gap</span>
+
+                </div>
+
+
+
+                <div class="dashboard-target-table-row">
+
+                    <strong>Yield rate</strong>
+
+
+
+                    <span class="is-good" data-target-row-yield-overall>{{ pct(dashboard.kpi.yield_percent) }}</span>
+
+
+
+                    <span class="dashboard-target-plain" data-target-row-yield-target>{{ pct(dashboard.targets.yield_percent) }}</span>
+
+
+
+                    <span
+
+                        class="{% if dashboard.kpi.yield_gap < 0 %}is-negative{% else %}is-positive{% endif %}"
+
+                        data-target-row-yield-gap
+
+                    >{{ signed_pct(dashboard.kpi.yield_gap) }}</span>
+
+                </div>
+
+
+
+                <div class="dashboard-target-table-row">
+
+                    <strong>Defect rate</strong>
+
+
+
+                    <span class="is-risk" data-target-row-defect-overall>{{ pct(dashboard.kpi.defect_percent) }}</span>
+
+
+
+                    <span class="dashboard-target-plain" data-target-row-defect-target>{{ pct(dashboard.targets.defect_percent) }}</span>
+
+
+
+                    <span
+
+                        class="{% if dashboard.kpi.defect_gap > 0 %}is-negative{% else %}is-positive{% endif %}"
+
+                        data-target-row-defect-gap
+
+                    >{{ signed_pct(dashboard.kpi.defect_gap) }}</span>
+
+                </div>
+
+
+
+                <div class="dashboard-target-table-row">
+
+                    <strong>Batch pass rate</strong>
+
+
+
+                    <span data-target-row-pass-overall>{{ pct(dashboard.kpi.batch_pass_percent) }}</span>
+
+
+
+                    <span class="dashboard-target-plain" data-target-row-pass-target>{{ pct(dashboard.targets.batch_pass_percent) }}</span>
+
+
+
+                    <span
+
+                        class="{% if dashboard.kpi.batch_pass_gap < 0 %}is-negative{% else %}is-positive{% endif %}"
+
+                        data-target-row-pass-gap
+
+                    >{{ signed_pct(dashboard.kpi.batch_pass_gap) }}</span>
+
+                </div>
+
+
+
+            </div>
+
+
+
+        </article>
+
+
+
+    </section>
+
+
+
+
+
+    <section class="dashboard-lower-grid">
+
+
+
+        <article class="dashboard-card dashboard-trend-card">
+
+
+
+            <div class="dashboard-trend-heading">
+
+                <div class="dashboard-trend-title">
+
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+
+                         stroke="currentColor" stroke-width="1.5"
+
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+
+                        <path d="M2.5 2.5v19h19"></path>
+
+                        <path d="M6 15.5l4-4.5 3.5 3 6.5-6.5"></path>
+
+                    </svg>
+
+                    <h2>Quality Trend</h2>
+
+<div
+                        class="dashboard-trend-metric-toggle"
+                        role="group"
+                        aria-label="Quality trend metric"
+                    >
+                        <button
+                            type="button"
+                            class="dashboard-trend-metric-button is-active"
+                            data-trend-metric="bad"
+                            aria-pressed="true"
+                        >
+                            Bad Ratio
+                        </button>
+
+                        <button
+                            type="button"
+                            class="dashboard-trend-metric-button"
+                            data-trend-metric="good"
+                            aria-pressed="false"
+                        >
+                            Good Ratio
+                        </button>
+                    </div>
+
+
+                </div>
+
+
+
+                <div class="dashboard-trend-actions">
+
+                    <div class="dashboard-trend-stats" data-trend-stats>
+
+                        <span class="dashboard-trend-stat">
+
+                            <small>Average</small>
+
+                            <strong data-trend-average>—</strong>
+
+                        </span>
+
+                        <span class="dashboard-trend-stat is-best">
+
+                            <small>Best</small>
+
+                            <strong data-trend-best>—</strong>
+
+                        </span>
+
+                        <span class="dashboard-trend-stat is-worst">
+
+                            <small>Worst</small>
+
+                            <strong data-trend-worst>—</strong>
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <div class="dashboard-chart-wrap" data-dashboard-chart-wrap>
+
+
+
+                <svg
+
+                    class="dashboard-chart"
+
+                    viewBox="0 0 890 335"
+
+                    role="img"
+
+                    aria-label="Daily bad ratio quality trend"
+
+                    data-dashboard-chart
+
+                ></svg>
+
+
+
+                <div
+
+                    class="dashboard-chart-tooltip"
+
+                    data-chart-tooltip
+
+                    hidden
+
+                ></div>
+
+
+
+            </div>
+
+
+
+        </article>
+
+
+
+
+
+        <div class="dashboard-side-stack">
+
+
+
+            <article class="dashboard-card dashboard-camera-card">
+
+
+
+                <div class="dashboard-card-heading">
+
+                    <h2>Camera &amp; Runtime</h2>
+
+                    <p>Live once the camera is connected</p>
+
+                </div>
+
+
+
+                <dl class="dashboard-detail-list">
+
+                    <div>
+
+                        <dt>Total uptime</dt>
+
+                        <dd data-camera-uptime>—</dd>
+
+                    </div>
+
+
+
+                    <div>
+
+                        <dt>Frames processed</dt>
+
+                        <dd data-camera-frames>—</dd>
+
+                    </div>
+
+
+
+                    <div>
+
+                        <dt>Average pace</dt>
+
+                        <dd data-camera-fps>—</dd>
+
+                    </div>
+
+                </dl>
+
+
+
+            </article>
+
+
+
+
+
+            <article class="dashboard-card dashboard-cumulative-card">
+
+
+
+                <h2>Cumulative Totals</h2>
+
+
+
+                <dl class="dashboard-detail-list">
+
+                    <div>
+
+                        <dt>Total batches</dt>
+
+                        <dd data-cumulative-batches>{{ dashboard.kpi.total_batches }}</dd>
+
+                    </div>
+
+
+
+                    <div>
+
+                        <dt>Total products</dt>
+
+                        <dd data-cumulative-products>{{ "{:,}".format(dashboard.kpi.total_products) }}</dd>
+
+                    </div>
+
+
+
+                    <div>
+
+                        <dt>Avg per batch</dt>
+
+                        <dd data-cumulative-average>{{ "%.0f"|format(dashboard.cumulative.average_products_per_batch) }}</dd>
+
+                    </div>
+
+
+
+                    <div>
+
+                        <dt>Avg confidence</dt>
+
+                        <dd data-cumulative-detection-confidence>{{ "%.2f"|format(dashboard.cumulative.average_detection_confidence) }}</dd>
+
+                    </div>
+
+                </dl>
+
+
+
+            </article>
+
+
+
+        </div>
+
+
+
+    </section>
+
+
+
+
+
+    <script
+
+        type="application/json"
+
+        data-dashboard-initial-json
+
+    >{{ dashboard|tojson }}</script>
+
+
+
+</div>
+
+
+
+{% endblock %}
+
+
+
+{% block extra_js %}
+
+<script
+
+    src="{{ url_for('static', filename='js/dashboard.js') }}"
+
+    defer
+
+></script>
 
 {% endblock %}

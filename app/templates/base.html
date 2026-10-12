@@ -242,11 +242,19 @@
                 <!-- DASHBOARD -->
 
                 <a
-                    href="#"
-                    class="app-nav-item"
-                    draggable="false"
-                >
+                    href="{{ url_for('main.index') }}"
+                    class="
+                        app-nav-item
 
+                        {% if
+                            request.endpoint
+                            ==
+                            'main.index'
+                        %}
+                            is-active
+                        {% endif %}
+                    "
+                >
                     <iconsax-icon
                         name="category"
                         type="twotone"
@@ -257,7 +265,6 @@
                     <span>
                         Dashboard
                     </span>
-
                 </a>
 
 

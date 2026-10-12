@@ -1,6 +1,7 @@
 from flask import (
-    current_app,
+    jsonify,
     render_template,
+    request,
 )
 
 from flask_login import (
@@ -10,78 +11,55 @@ from flask_login import (
 
 from app.main import main_bp
 
-from app.services.inspection_model_metadata import (
-    get_classifier_ui_metadata,
+from app.services.dashboard_service import (
+    build_dashboard_data,
 )
 
+
+# =========================================================
+# DASHBOARD PAGE
+# =========================================================
 
 @main_bp.route("/")
 @login_required
 def index():
+
+    dashboard = build_dashboard_data(
+        range_key="all"
+    )
+
     return render_template(
         "index.html",
         user=current_user,
+        dashboard=dashboard,
     )
 
 
-@main_bp.route("/inspection")
+# =========================================================
+# DASHBOARD DATA API
+# =========================================================
+
+@main_bp.route(
+    "/dashboard/data",
+    methods=["GET"],
+)
 @login_required
-def inspection():
+def dashboard_data():
 
-    inspection_classes = []
-    inspection_model_warning = None
-
-    classifier_path = (
-        current_app.config[
-            "CLASSIFIER_PATH"
-        ]
+    dashboard = build_dashboard_data(
+        range_key=request.args.get(
+            "range",
+            "all",
+        ),
+        custom_from=request.args.get(
+            "from"
+        ),
+        custom_to=request.args.get(
+            "to"
+        ),
     )
 
-
-    try:
-
-        model_metadata = (
-            get_classifier_ui_metadata(
-                str(
-                    classifier_path
-                )
-            )
-        )
-
-        inspection_classes = (
-            model_metadata[
-                "classes"
-            ]
-        )
-
-    except Exception as exc:
-
-        current_app.logger.exception(
-            (
-                "Unable to read classifier metadata "
-                "for the Inspection page."
-            )
-        )
-
-        inspection_model_warning = str(
-            exc
-        )
-
-
-    return render_template(
-        "inspection.html",
-
-        inspection_classes=
-            inspection_classes,
-
-        inspection_model_version=
-            current_app.config[
-                "MODEL_VERSION"
-            ],
-
-        inspection_classifier_file=
-            classifier_path.name,
-
-        inspection_model_warning=
-            inspection_model_warning,
+    return jsonify(
+        ok=True,
+        dashboard=dashboard,
     )
