@@ -248,6 +248,323 @@
 
 
     /* =====================================================
+       PERSISTED INSPECTION STATE
+
+       Keeps the most recent completed Inspection result when
+       the user navigates to Dashboard / Reports / Analytics
+       and later returns to the Inspection page.
+
+       IndexedDB is used instead of localStorage because the
+       original image can be several MB and localStorage is
+       too small for reliable image/result persistence.
+
+       The persisted state is removed ONLY when the user clicks
+       Clear Result. A newly completed inspection replaces the
+       previous saved state.
+       ===================================================== */
+
+    const inspectionStateDbName =
+        "bika-inspection-state-v1";
+
+    const inspectionStateStoreName =
+        "inspection-state";
+
+    const inspectionStateKey =
+        "active";
+
+    const activeBatchStorageKey =
+        "bika-active-inspection-batch";
+
+
+    const openInspectionStateDb = () =>
+        new Promise(
+            (resolve, reject) => {
+
+                if (!window.indexedDB) {
+
+                    reject(
+                        new Error(
+                            "IndexedDB is not available in this browser."
+                        )
+                    );
+
+                    return;
+                }
+
+
+                const request =
+                    window.indexedDB.open(
+                        inspectionStateDbName,
+                        1
+                    );
+
+
+                request.onupgradeneeded = () => {
+
+                    const database =
+                        request.result;
+
+
+                    if (
+                        !database.objectStoreNames.contains(
+                            inspectionStateStoreName
+                        )
+                    ) {
+
+                        database.createObjectStore(
+                            inspectionStateStoreName
+                        );
+
+                    }
+
+                };
+
+
+                request.onsuccess = () =>
+                    resolve(
+                        request.result
+                    );
+
+
+                request.onerror = () =>
+                    reject(
+                        request.error
+                        ||
+                        new Error(
+                            "Could not open persisted inspection storage."
+                        )
+                    );
+
+            }
+        );
+
+
+    const writePersistedInspection = async (
+        file,
+        result
+    ) => {
+
+        if (
+            !file
+            ||
+            !result
+        ) {
+            return;
+        }
+
+
+        const database =
+            await openInspectionStateDb();
+
+
+        try {
+
+            await new Promise(
+                (resolve, reject) => {
+
+                    const transaction =
+                        database.transaction(
+                            inspectionStateStoreName,
+                            "readwrite"
+                        );
+
+                    const store =
+                        transaction.objectStore(
+                            inspectionStateStoreName
+                        );
+
+
+                    store.put(
+                        {
+                            mode: "image",
+                            sourceBlob: file,
+                            sourceName: file.name || "Inspection image",
+                            sourceType: file.type || "image/jpeg",
+                            result,
+                            savedAt: Date.now(),
+                        },
+                        inspectionStateKey
+                    );
+
+
+                    transaction.oncomplete = () =>
+                        resolve();
+
+                    transaction.onerror = () =>
+                        reject(
+                            transaction.error
+                            ||
+                            new Error(
+                                "Could not save the current inspection result."
+                            )
+                        );
+
+                    transaction.onabort = () =>
+                        reject(
+                            transaction.error
+                            ||
+                            new Error(
+                                "Saving the current inspection result was aborted."
+                            )
+                        );
+
+                }
+            );
+
+
+            const batchId =
+                result.record
+                    ?.batch_id;
+
+
+            if (batchId) {
+
+                window.localStorage.setItem(
+                    activeBatchStorageKey,
+                    String(
+                        batchId
+                    )
+                );
+
+            }
+
+        } finally {
+
+            database.close();
+
+        }
+
+    };
+
+
+    const readPersistedInspection = async () => {
+
+        const database =
+            await openInspectionStateDb();
+
+
+        try {
+
+            return await new Promise(
+                (resolve, reject) => {
+
+                    const transaction =
+                        database.transaction(
+                            inspectionStateStoreName,
+                            "readonly"
+                        );
+
+                    const store =
+                        transaction.objectStore(
+                            inspectionStateStoreName
+                        );
+
+                    const request =
+                        store.get(
+                            inspectionStateKey
+                        );
+
+
+                    request.onsuccess = () =>
+                        resolve(
+                            request.result
+                            ||
+                            null
+                        );
+
+                    request.onerror = () =>
+                        reject(
+                            request.error
+                            ||
+                            new Error(
+                                "Could not restore the previous inspection result."
+                            )
+                        );
+
+                }
+            );
+
+        } finally {
+
+            database.close();
+
+        }
+
+    };
+
+
+    const removePersistedInspection = async () => {
+
+        window.localStorage.removeItem(
+            activeBatchStorageKey
+        );
+
+
+        if (!window.indexedDB) {
+            return;
+        }
+
+
+        const database =
+            await openInspectionStateDb();
+
+
+        try {
+
+            await new Promise(
+                (resolve, reject) => {
+
+                    const transaction =
+                        database.transaction(
+                            inspectionStateStoreName,
+                            "readwrite"
+                        );
+
+                    const store =
+                        transaction.objectStore(
+                            inspectionStateStoreName
+                        );
+
+
+                    store.delete(
+                        inspectionStateKey
+                    );
+
+
+                    transaction.oncomplete = () =>
+                        resolve();
+
+                    transaction.onerror = () =>
+                        reject(
+                            transaction.error
+                            ||
+                            new Error(
+                                "Could not clear the saved inspection result."
+                            )
+                        );
+
+                    transaction.onabort = () =>
+                        reject(
+                            transaction.error
+                            ||
+                            new Error(
+                                "Clearing the saved inspection result was aborted."
+                            )
+                        );
+
+                }
+            );
+
+        } finally {
+
+            database.close();
+
+        }
+
+    };
+
+
+    /* =====================================================
        HELPERS
        ===================================================== */
 
@@ -1884,6 +2201,31 @@
                     const result =
                         data.result;
 
+                    const completedFile =
+                        selectedFile();
+
+
+                    if (completedFile) {
+
+                        try {
+
+                            await writePersistedInspection(
+                                completedFile,
+                                result
+                            );
+
+                        } catch (error) {
+
+                            console.warn(
+                                "Inspection completed, but browser state could not be persisted:",
+                                error
+                            );
+
+                        }
+
+                    }
+
+
                     hideLoadingModal();
 
                     setProcessing(
@@ -2468,6 +2810,151 @@
     };
 
 
+    const restorePersistedInspection = async () => {
+
+        let persisted;
+
+
+        try {
+
+            persisted =
+                await readPersistedInspection();
+
+        } catch (error) {
+
+            console.warn(
+                "Could not restore persisted inspection state:",
+                error
+            );
+
+            return;
+        }
+
+
+        if (
+            !persisted
+            ||
+            !persisted.result
+            ||
+            !persisted.sourceBlob
+        ) {
+            return;
+        }
+
+
+        activeMode =
+            "image";
+
+
+        modeButtons.forEach(
+            (button) => {
+
+                const selected =
+                    button.dataset
+                        .inspectionMode
+                    ===
+                    "image";
+
+
+                button.classList.toggle(
+                    "is-active",
+                    selected
+                );
+
+                button.setAttribute(
+                    "aria-selected",
+                    String(
+                        selected
+                    )
+                );
+
+            }
+        );
+
+
+        uploadSections.forEach(
+            (section) => {
+
+                section.hidden =
+                    section.dataset
+                        .uploadSection
+                    !==
+                    "image";
+
+            }
+        );
+
+
+        revokeActiveObjectUrl();
+
+
+        activeObjectUrl =
+            URL.createObjectURL(
+                persisted.sourceBlob
+            );
+
+
+        if (originalEmpty) {
+            originalEmpty.hidden =
+                true;
+        }
+
+
+        if (videoPreview) {
+
+            videoPreview.pause();
+            videoPreview.hidden =
+                true;
+            videoPreview.removeAttribute(
+                "src"
+            );
+
+        }
+
+
+        if (imagePreview) {
+
+            imagePreview.src =
+                activeObjectUrl;
+
+            imagePreview.hidden =
+                false;
+
+        }
+
+
+        if (
+            selectedFileLabels.image
+        ) {
+
+            selectedFileLabels
+                .image
+                .textContent =
+                persisted.sourceName
+                ||
+                "Previous inspection image";
+
+        }
+
+
+        if (mediaBadge) {
+
+            mediaBadge.textContent =
+                "Image";
+
+            mediaBadge.hidden =
+                false;
+
+        }
+
+
+        renderResult(
+            persisted.result
+        );
+
+    };
+
+
     /* =====================================================
        MODE SWITCH
        ===================================================== */
@@ -2910,6 +3397,21 @@
 
             hideLoadingModal();
 
+
+            try {
+
+                await removePersistedInspection();
+
+            } catch (error) {
+
+                console.warn(
+                    "Could not clear persisted inspection state:",
+                    error
+                );
+
+            }
+
+
             Object.values(
                 fileInputs
             ).forEach(
@@ -3065,6 +3567,13 @@
 
         }
     );
+
+
+    /* =====================================================
+       RESTORE LAST COMPLETED RESULT
+       ===================================================== */
+
+    restorePersistedInspection();
 
 
     /* =====================================================

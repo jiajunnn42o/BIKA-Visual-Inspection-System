@@ -2117,147 +2117,81 @@ html[data-theme="dark"]
 
 
 .system-pagination {
-
     display: flex;
-
     align-items: center;
-
-
-
-    gap: 7px;
-
+    gap: 8px;
 }
-
-
-
-
 
 .system-page-numbers {
-
     display: flex;
-
     align-items: center;
-
-
-
-    gap: 7px;
-
+    gap: 8px;
 }
 
-
-
-
-
 .system-page-button,
-
 .system-page-number {
-
-    width: 29px;
-
-    height: 29px;
-
-
+    width: 28px;
+    height: 28px;
 
     display: grid;
-
     place-items: center;
-
-
 
     padding: 0;
 
-
-
     border:
-
         1px solid
-
-        #E6E6E6;
-
-
+        var(--sys-border);
 
     border-radius: 50%;
 
-
-
-    background:
-
-        #FFFFFF;
-
-
+    background: transparent;
 
     color:
-
-        #333333;
-
-
+        var(--sys-muted);
 
     font-family:
-
         "Inter",
-
         Arial,
-
         sans-serif;
 
-
-
-    font-size: 11px;
-
-
-
     cursor: pointer;
-
 }
 
+.system-page-button {
+    font-size: 15px;
+    font-weight: 400;
+}
 
-
-
+.system-page-number {
+    font-size: 13px;
+    font-weight: 400;
+}
 
 .system-page-number.is-active {
-
-    border-color:
-
-        #333333;
-
-
-
-    font-weight: 600;
-
-}
-
-
-
-
-
-.system-page-button:disabled {
-
-    color: #D0D0D0;
-
-
-
-    cursor: default;
-
-}
-
-
-
-
-
-.system-page-ellipsis {
+    border:
+        1.5px solid
+        var(--sys-brand);
 
     color:
+        var(--sys-brand);
 
-        #808080;
+    background: transparent;
 
-
-
-    font-size: 11px;
-
+    font-size: 13px;
+    font-weight: 400;
 }
 
+.system-page-button:disabled {
+    opacity: 0.34;
+    cursor: default;
+}
 
+.system-page-ellipsis {
+    color:
+        var(--sys-muted);
 
+    font-size: 13px;
+}
 
 
 /* =========================================================

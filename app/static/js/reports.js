@@ -92,6 +92,20 @@ document.addEventListener(
                 "[data-export-field-grid]"
             );
 
+        const rowExportModal =
+            page.querySelector(
+                "[data-row-export-modal]"
+            );
+
+        const rowExportName =
+            page.querySelector(
+                "[data-row-export-name]"
+            );
+
+        let pendingRowExport = null;
+        let selectedRowExportFormats = new Set(["csv"]);
+        let defectEventsLoading = true;
+
 
         const integerFormat =
             new Intl.NumberFormat(
@@ -145,53 +159,10 @@ document.addEventListener(
                     ? "Video"
                     : "Image";
 
-            const icon =
+            const iconName =
                 isVideo
-                    ?
-                    `
-                        <svg
-                            class="reports-preview-glyph"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            aria-hidden="true"
-                        >
-                            <rect
-                                x="4"
-                                y="6"
-                                width="11"
-                                height="12"
-                                rx="2.5"
-                            ></rect>
-                            <path
-                                d="M15 10L20 7.5V16.5L15 14"
-                            ></path>
-                        </svg>
-                    `
-                    :
-                    `
-                        <svg
-                            class="reports-preview-glyph"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            aria-hidden="true"
-                        >
-                            <rect
-                                x="4"
-                                y="4"
-                                width="16"
-                                height="16"
-                                rx="3"
-                            ></rect>
-                            <circle
-                                cx="9"
-                                cy="9"
-                                r="1.5"
-                            ></circle>
-                            <path
-                                d="M6.5 17L11 12.5L14 15.5L16.5 13L19 15.5"
-                            ></path>
-                        </svg>
-                    `;
+                    ? "video"
+                    : "gallery";
 
             return `
                 <span
@@ -199,10 +170,540 @@ document.addEventListener(
                     aria-label="${label}"
                     title="${label}"
                 >
-                    ${icon}
+                    <iconsax-icon
+                        name="${iconName}"
+                        type="bold"
+                        size="19"
+                        color="currentColor"
+                    ></iconsax-icon>
                 </span>
             `;
         }
+
+        const defectMeta = {
+            too_dark: {
+                label: "Too Dark",
+                colour: "#D69A45",
+            },
+            too_short: {
+                label: "Too Short",
+                colour: "#8A69A8",
+            },
+            fractured: {
+                label: "Fractured",
+                colour: "#C65358",
+            },
+            bent_snack: {
+                label: "Bent Snack",
+                colour: "#6287B8",
+            },
+        };
+
+
+        function probabilityPercent(
+            value
+        ) {
+            const number =
+                Number(value);
+
+            if (!Number.isFinite(number)) {
+                return 0;
+            }
+
+            return (
+                number <= 1.00001
+                    ? number * 100
+                    : number
+            );
+        }
+
+
+        function validBbox(
+            bbox
+        ) {
+            if (!bbox) {
+                return false;
+            }
+
+            return [
+                bbox.x0,
+                bbox.y0,
+                bbox.x1,
+                bbox.y1,
+            ].every(
+                (value) =>
+                    Number.isFinite(
+                        Number(value)
+                    )
+            );
+        }
+
+
+        async function loadIndividualDefectEvents() {
+            const batches =
+                data.batches
+                ||
+                [];
+
+            const events = [];
+
+            for (const batch of batches) {
+                if (!batch.result_url) {
+                    continue;
+                }
+
+                try {
+                    const response =
+                        await fetch(
+                            batch.result_url,
+                            {
+                                credentials: "same-origin",
+                                cache: "no-store",
+                            }
+                        );
+
+                    if (!response.ok) {
+                        throw new Error(
+                            `Result JSON request failed: ${response.status}`
+                        );
+                    }
+
+                    const result =
+                        await response.json();
+
+                    const objects =
+                        Array.isArray(result?.objects)
+                            ? result.objects
+                            : [];
+
+                    objects.forEach(
+                        (object) => {
+                            const classKey =
+                                String(
+                                    object?.class_name
+                                    ||
+                                    ""
+                                );
+
+                            if (
+                                !object?.in_safe_zone
+                                ||
+                                classKey === "normal"
+                                ||
+                                !defectMeta[classKey]
+                            ) {
+                                return;
+                            }
+
+                            const meta =
+                                defectMeta[classKey];
+
+                            events.push(
+                                {
+                                    event_id:
+                                        `${batch.batch_id}-${object.object_id}`,
+                                    batch_id:
+                                        batch.batch_id,
+                                    object_id:
+                                        object.object_id,
+                                    review_id:
+                                        object.review_id,
+                                    file_name:
+                                        batch.file_name,
+                                    date_time:
+                                        batch.date_time,
+                                    date_display:
+                                        batch.date_display,
+                                    source_type:
+                                        batch.source_type,
+                                    preview_url:
+                                        batch.preview_url,
+                                    original_url:
+                                        batch.original_url,
+                                    annotated_url:
+                                        batch.annotated_url,
+                                    result_url:
+                                        batch.result_url,
+                                    class_key:
+                                        classKey,
+                                    class_name:
+                                        object.display_name
+                                        ||
+                                        meta.label,
+                                    colour:
+                                        object.mask_colour
+                                        ||
+                                        meta.colour,
+                                    class_confidence:
+                                        probabilityPercent(
+                                            object.class_confidence
+                                        ),
+                                    detection_confidence:
+                                        probabilityPercent(
+                                            object.detection_confidence
+                                        ),
+                                    bbox:
+                                        validBbox(object.bbox)
+                                            ? object.bbox
+                                            : null,
+                                    result_image_width:
+                                        Number(
+                                            result?.image?.width
+                                            ||
+                                            0
+                                        ),
+                                    result_image_height:
+                                        Number(
+                                            result?.image?.height
+                                            ||
+                                            0
+                                        ),
+                                    batch_status:
+                                        batch.status,
+                                    batch_status_key:
+                                        batch.status_key,
+                                    good_ratio:
+                                        batch.good_ratio,
+                                    model_version:
+                                        batch.model_version,
+                                }
+                            );
+                        }
+                    );
+                }
+                catch (error) {
+                    console.warn(
+                        `Could not load defect objects for ${batch.batch_id}`,
+                        error
+                    );
+                }
+            }
+
+            data.defect_events =
+                events;
+
+            defectEventsLoading = false;
+            state.defectPage = 1;
+
+            renderDefectTable();
+        }
+
+
+        function defectCropMedia(
+            row
+        ) {
+            const originalUrl =
+                row?.original_url
+                ||
+                row?.preview_url
+                ||
+                "";
+
+            if (
+                !originalUrl
+                ||
+                !validBbox(row?.bbox)
+            ) {
+                return detailMedia(row);
+            }
+
+            const annotatedUrl =
+                row?.annotated_url
+                ||
+                "";
+
+            const toggle =
+                annotatedUrl
+                    ? `
+                        <button
+                            type="button"
+                            class="reports-detail-media-toggle"
+                            data-defect-crop-toggle
+                            data-event-id="${escapeHtml(row.event_id)}"
+                            data-view="original"
+                            aria-label="Switch to mask crop"
+                        >
+                            <iconsax-icon
+                                name="layer"
+                                type="twotone"
+                                size="16"
+                                color="currentColor"
+                            ></iconsax-icon>
+
+                            <span>Mask View</span>
+                        </button>
+                    `
+                    : "";
+
+            return `
+                <div
+                    class="reports-detail-media reports-defect-crop-media"
+                    data-defect-crop-media
+                    data-event-id="${escapeHtml(row.event_id)}"
+                >
+                    <canvas
+                        class="reports-defect-crop-canvas"
+                        data-defect-crop-canvas
+                        aria-label="${escapeHtml(row.class_name)} crop"
+                    ></canvas>
+
+                    <div
+                        class="reports-defect-crop-loading"
+                        data-defect-crop-loading
+                    >
+                        Loading crop…
+                    </div>
+
+                    ${toggle}
+                </div>
+            `;
+        }
+
+
+        function drawDefectCrop(
+            row,
+            sourceUrl
+        ) {
+            if (
+                !row
+                ||
+                !sourceUrl
+                ||
+                !validBbox(row.bbox)
+            ) {
+                return;
+            }
+
+            const container =
+                detailBody?.querySelector(
+                    `[data-defect-crop-media][data-event-id="${CSS.escape(row.event_id)}"]`
+                );
+
+            const canvas =
+                container?.querySelector(
+                    "[data-defect-crop-canvas]"
+                );
+
+            const loading =
+                container?.querySelector(
+                    "[data-defect-crop-loading]"
+                );
+
+            if (!canvas) {
+                return;
+            }
+
+            if (loading) {
+                loading.hidden = false;
+            }
+
+            const image =
+                new Image();
+
+            image.onload = () => {
+                const bbox = row.bbox;
+
+                const resultWidth =
+                    Number(
+                        row.result_image_width
+                        ||
+                        image.naturalWidth
+                    );
+
+                const resultHeight =
+                    Number(
+                        row.result_image_height
+                        ||
+                        image.naturalHeight
+                    );
+
+                const scaleX =
+                    resultWidth
+                        ? image.naturalWidth / resultWidth
+                        : 1;
+
+                const scaleY =
+                    resultHeight
+                        ? image.naturalHeight / resultHeight
+                        : 1;
+
+                /*
+                 * result.json bbox coordinates refer to the
+                 * original inference image. The stored source
+                 * may have been resized to WebP after inference,
+                 * so map coordinates into the stored image here.
+                 */
+                const x0 = Number(bbox.x0) * scaleX;
+                const y0 = Number(bbox.y0) * scaleY;
+                const x1 = Number(bbox.x1) * scaleX;
+                const y1 = Number(bbox.y1) * scaleY;
+
+                const boxWidth =
+                    Math.max(
+                        1,
+                        x1 - x0
+                    );
+
+                const boxHeight =
+                    Math.max(
+                        1,
+                        y1 - y0
+                    );
+
+                const padding =
+                    Math.max(
+                        10,
+                        Math.round(
+                            Math.max(
+                                boxWidth,
+                                boxHeight
+                            )
+                            *
+                            0.28
+                        )
+                    );
+
+                const cropX =
+                    Math.max(
+                        0,
+                        Math.floor(
+                            x0 - padding
+                        )
+                    );
+
+                const cropY =
+                    Math.max(
+                        0,
+                        Math.floor(
+                            y0 - padding
+                        )
+                    );
+
+                const cropRight =
+                    Math.min(
+                        image.naturalWidth,
+                        Math.ceil(
+                            x1 + padding
+                        )
+                    );
+
+                const cropBottom =
+                    Math.min(
+                        image.naturalHeight,
+                        Math.ceil(
+                            y1 + padding
+                        )
+                    );
+
+                const cropWidth =
+                    Math.max(
+                        1,
+                        cropRight - cropX
+                    );
+
+                const cropHeight =
+                    Math.max(
+                        1,
+                        cropBottom - cropY
+                    );
+
+                canvas.width = cropWidth;
+                canvas.height = cropHeight;
+
+                const context =
+                    canvas.getContext(
+                        "2d"
+                    );
+
+                context.clearRect(
+                    0,
+                    0,
+                    cropWidth,
+                    cropHeight
+                );
+
+                context.drawImage(
+                    image,
+                    cropX,
+                    cropY,
+                    cropWidth,
+                    cropHeight,
+                    0,
+                    0,
+                    cropWidth,
+                    cropHeight
+                );
+
+                if (loading) {
+                    loading.hidden = true;
+                }
+            };
+
+            image.onerror = () => {
+                if (loading) {
+                    loading.textContent =
+                        "Crop unavailable";
+                }
+            };
+
+            image.src = sourceUrl;
+        }
+
+
+        function toggleDefectCrop(
+            button
+        ) {
+            const row =
+                findDefect(
+                    button.dataset.eventId
+                );
+
+            if (!row) {
+                return;
+            }
+
+            const currentView =
+                button.dataset.view
+                ||
+                "original";
+
+            const showMask =
+                currentView
+                ===
+                "original";
+
+            const nextUrl =
+                showMask
+                    ? row.annotated_url
+                    : row.original_url;
+
+            if (!nextUrl) {
+                return;
+            }
+
+            drawDefectCrop(
+                row,
+                nextUrl
+            );
+
+            button.dataset.view =
+                showMask
+                    ? "mask"
+                    : "original";
+
+            const label =
+                button.querySelector(
+                    "span"
+                );
+
+            if (label) {
+                label.textContent =
+                    showMask
+                        ? "Original"
+                        : "Mask View";
+            }
+        }
+
 
         function detailMedia(
             row
@@ -291,7 +792,7 @@ document.addEventListener(
                     <iconsax-icon
                         name="eye"
                         type="twotone"
-                        size="16"
+                        size="17"
                         color="currentColor"
                     ></iconsax-icon>
                 </button>
@@ -312,22 +813,12 @@ document.addEventListener(
                     data-row-export-id="${escapeHtml(id)}"
                     aria-label="Export row"
                 >
-                    <svg
-                        class="reports-export-icon"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        aria-hidden="true"
-                    >
-                        <path
-                            d="M12 15V3"
-                        ></path>
-                        <path
-                            d="M7.5 7.5L12 3L16.5 7.5"
-                        ></path>
-                        <path
-                            d="M5.5 10.5H4.75C3.23 10.5 2 11.73 2 13.25V18.25C2 19.77 3.23 21 4.75 21H19.25C20.77 21 22 19.77 22 18.25V13.25C22 11.73 20.77 10.5 19.25 10.5H18.5"
-                        ></path>
-                    </svg>
+                    <iconsax-icon
+                        name="export-arrow-01"
+                        type="twotone"
+                        size="19"
+                        color="currentColor"
+                    ></iconsax-icon>
                 </button>
             `;
         }
@@ -405,6 +896,108 @@ document.addEventListener(
                         state.pageSize
                     ),
             };
+        }
+
+
+        function pageItems(
+            currentPage,
+            totalPages
+        ) {
+
+            if (totalPages <= 4) {
+                return Array.from(
+                    { length: totalPages },
+                    (_, index) => index + 1
+                );
+            }
+
+            if (currentPage <= 3) {
+                return [
+                    1,
+                    2,
+                    3,
+                    "…",
+                    totalPages,
+                ];
+            }
+
+            if (
+                currentPage
+                >=
+                totalPages - 2
+            ) {
+                return [
+                    1,
+                    "…",
+                    totalPages - 2,
+                    totalPages - 1,
+                    totalPages,
+                ];
+            }
+
+            return [
+                1,
+                "…",
+                currentPage,
+                "…",
+                totalPages,
+            ];
+        }
+
+
+        function renderPageButtons(
+            selector,
+            kind,
+            currentPage,
+            totalPages
+        ) {
+
+            const container =
+                page.querySelector(
+                    selector
+                );
+
+            if (!container) {
+                return;
+            }
+
+            container.innerHTML =
+                pageItems(
+                    currentPage,
+                    totalPages
+                )
+                .map(
+                    (item) => {
+
+                        if (item === "…") {
+                            return `
+                                <span
+                                    class="reports-page-ellipsis"
+                                    aria-hidden="true"
+                                >…</span>
+                            `;
+                        }
+
+                        const active =
+                            Number(item)
+                            ===
+                            Number(currentPage);
+
+                        return `
+                            <button
+                                type="button"
+                                class="reports-page-button${active ? " is-active" : ""}"
+                                data-page-kind="${kind}"
+                                data-page-target="${item}"
+                                aria-label="Go to page ${item}"
+                                ${active ? 'aria-current="page"' : ""}
+                            >
+                                ${item}
+                            </button>
+                        `;
+                    }
+                )
+                .join("");
         }
 
 
@@ -498,15 +1091,17 @@ document.addEventListener(
                 rows.length
                     ?
                     (
-                        `Showing ${result.start + 1}–${result.end} of ${rows.length} runs`
+                        `Showing ${result.start + 1} – ${result.end} of ${rows.length} runs`
                     )
                     :
                     "No inspection runs"
             );
 
-            setText(
-                "[data-batch-page-number]",
-                `${result.page} / ${result.totalPages}`
+            renderPageButtons(
+                "[data-batch-page-buttons]",
+                "batch",
+                result.page,
+                result.totalPages
             );
 
 
@@ -555,7 +1150,18 @@ document.addEventListener(
             if (defectBody) {
 
                 defectBody.innerHTML =
-                    result.rows
+                    defectEventsLoading
+                        ? `
+                            <tr>
+                                <td
+                                    colspan="9"
+                                    class="reports-defect-loading"
+                                >
+                                    Loading defect events…
+                                </td>
+                            </tr>
+                        `
+                        : result.rows
                     .map(
                         (
                             row
@@ -563,6 +1169,12 @@ document.addEventListener(
                             <tr>
                                 <td>
                                     ${previewIcon(row.source_type)}
+                                </td>
+
+                                <td>
+                                    <strong class="reports-object-id">
+                                        ${escapeHtml(row.object_id)}
+                                    </strong>
                                 </td>
 
                                 <td>
@@ -589,19 +1201,12 @@ document.addEventListener(
                                     </span>
                                 </td>
 
-                                <td class="reports-bad">
-                                    ${integerFormat.format(row.count)}
+                                <td class="reports-ratio">
+                                    ${Number(row.class_confidence).toFixed(1)}%
                                 </td>
 
                                 <td class="reports-ratio">
-                                    ${Number(row.ratio).toFixed(1)}%
-                                </td>
-
-                                <td>
-                                    ${statusBadge(
-                                        row.batch_status,
-                                        row.batch_status_key
-                                    )}
+                                    ${Number(row.detection_confidence).toFixed(1)}%
                                 </td>
 
                                 <td>
@@ -626,18 +1231,23 @@ document.addEventListener(
 
             setText(
                 "[data-defect-page-summary]",
-                rows.length
+                defectEventsLoading
                     ?
-                    (
-                        `Showing ${result.start + 1}–${result.end} of ${rows.length} defect groups`
-                    )
-                    :
-                    "No defect events"
+                    "Loading defect events…"
+                    : rows.length
+                        ?
+                        (
+                            `Showing ${result.start + 1} – ${result.end} of ${rows.length} defect events`
+                        )
+                        :
+                        "No defect events"
             );
 
-            setText(
-                "[data-defect-page-number]",
-                `${result.page} / ${result.totalPages}`
+            renderPageButtons(
+                "[data-defect-page-buttons]",
+                "defect",
+                result.page,
+                result.totalPages
             );
 
 
@@ -813,33 +1423,106 @@ document.addEventListener(
                 detailTitle.textContent =
                     row.file_name;
 
-                const classRows =
+                const classItems =
                     (
                         row.classes
                         ||
                         []
+                    );
+
+                const inspectedTotal =
+                    Number(row.total)
+                    ||
+                    classItems.reduce(
+                        (sum, item) =>
+                            sum
+                            +
+                            Number(item.count || 0),
+                        0
+                    );
+
+                const classBar =
+                    classItems
+                    .filter(
+                        (item) =>
+                            Number(item.count || 0)
+                            >
+                            0
                     )
                     .map(
-                        (
-                            item
-                        ) => `
-                            <div class="reports-class-breakdown-row">
+                        (item) => {
 
+                            const percentage =
+                                inspectedTotal
+                                    ?
+                                    (
+                                        Number(item.count || 0)
+                                        /
+                                        inspectedTotal
+                                        *
+                                        100
+                                    )
+                                    :
+                                    0;
+
+                            return `
                                 <span
-                                    class="reports-defect-dot"
-                                    style="--defect-colour:${escapeHtml(item.colour)}"
+                                    class="reports-reason-segment"
+                                    style="
+                                        --reason-colour:${escapeHtml(item.colour)};
+                                        --reason-width:${percentage.toFixed(4)}%;
+                                    "
+                                    title="${escapeHtml(item.label)}: ${percentage.toFixed(1)}%"
                                 ></span>
+                            `;
+                        }
+                    )
+                    .join("");
 
-                                <span>
-                                    ${escapeHtml(item.label)}
-                                </span>
+                const classRows =
+                    classItems
+                    .map(
+                        (item) => {
 
-                                <strong>
-                                    ${integerFormat.format(item.count)}
-                                </strong>
+                            const count =
+                                Number(item.count || 0);
 
-                            </div>
-                        `
+                            const percentage =
+                                inspectedTotal
+                                    ?
+                                    (
+                                        count
+                                        /
+                                        inspectedTotal
+                                        *
+                                        100
+                                    )
+                                    :
+                                    0;
+
+                            return `
+                                <div class="reports-reason-row">
+
+                                    <span
+                                        class="reports-defect-dot"
+                                        style="--defect-colour:${escapeHtml(item.colour)}"
+                                    ></span>
+
+                                    <span class="reports-reason-label">
+                                        ${escapeHtml(item.label)}
+                                    </span>
+
+                                    <strong class="reports-reason-count">
+                                        ${integerFormat.format(count)}
+                                    </strong>
+
+                                    <span class="reports-reason-percent">
+                                        ${percentage.toFixed(1)}%
+                                    </span>
+
+                                </div>
+                            `;
+                        }
                     )
                     .join("");
 
@@ -847,33 +1530,39 @@ document.addEventListener(
                 detailBody.innerHTML = `
                     ${detailMedia(row)}
 
-                    <div class="reports-detail-grid">
+                    <section class="reports-reason-breakdown">
 
-                        ${detailItem(
-                            "Date / Time",
-                            row.date_display
-                        )}
+                        <h3 class="reports-detail-section-title">
+                            Reason Breakdown
+                        </h3>
+
+                        <div class="reports-reason-summary">
+                            <strong>
+                                ${integerFormat.format(inspectedTotal)}
+                            </strong>
+                            <span>products inspected</span>
+                        </div>
+
+                        <div
+                            class="reports-reason-bar"
+                            aria-label="Inspection class distribution"
+                        >
+                            ${classBar}
+                        </div>
+
+                        <div class="reports-reason-legend">
+                            ${classRows}
+                        </div>
+
+                    </section>
+
+                    <div class="reports-detail-grid">
 
                         ${detailItem(
                             "Source Type",
                             row.source_type === "video"
                                 ? "Video"
                                 : "Image"
-                        )}
-
-                        ${detailItem(
-                            "Products Judged",
-                            integerFormat.format(row.total)
-                        )}
-
-                        ${detailItem(
-                            "Good Ratio",
-                            `${Number(row.good_ratio).toFixed(1)}%`
-                        )}
-
-                        ${detailItem(
-                            "Status",
-                            row.status
                         )}
 
                         ${detailItem(
@@ -912,14 +1601,6 @@ document.addEventListener(
                         )}
 
                     </div>
-
-                    <h3 class="reports-detail-section-title">
-                        Class Breakdown
-                    </h3>
-
-                    <div class="reports-class-breakdown">
-                        ${classRows}
-                    </div>
                 `;
             }
 
@@ -941,43 +1622,13 @@ document.addEventListener(
                     row.class_name;
 
                 detailBody.innerHTML = `
-                    ${detailMedia(row)}
+                    ${defectCropMedia(row)}
 
-                    <div class="reports-detail-grid">
-
-                        ${detailItem(
-                            "File Name",
-                            row.file_name
-                        )}
+                    <div class="reports-detail-grid reports-detail-grid-compact">
 
                         ${detailItem(
-                            "Date / Time",
-                            row.date_display
-                        )}
-
-                        ${detailItem(
-                            "Defect Class",
-                            row.class_name
-                        )}
-
-                        ${detailItem(
-                            "Defect Count",
-                            integerFormat.format(row.count)
-                        )}
-
-                        ${detailItem(
-                            "Share of Batch",
-                            `${Number(row.ratio).toFixed(1)}%`
-                        )}
-
-                        ${detailItem(
-                            "Good Ratio",
-                            `${Number(row.good_ratio).toFixed(1)}%`
-                        )}
-
-                        ${detailItem(
-                            "Batch Status",
-                            row.batch_status
+                            "Object ID",
+                            row.object_id
                         )}
 
                         ${detailItem(
@@ -985,8 +1636,25 @@ document.addEventListener(
                             row.model_version
                         )}
 
+                        ${detailItem(
+                            "Class Confidence",
+                            `${Number(row.class_confidence).toFixed(1)}%`
+                        )}
+
+                        ${detailItem(
+                            "Detection Confidence",
+                            `${Number(row.detection_confidence).toFixed(1)}%`
+                        )}
+
                     </div>
                 `;
+
+                drawDefectCrop(
+                    row,
+                    row.original_url
+                    ||
+                    row.preview_url
+                );
             }
 
 
@@ -1282,9 +1950,146 @@ document.addEventListener(
         }
 
 
-        function exportSingleRow(
+        function updateRowExportFormatUI() {
+
+            page
+                .querySelectorAll(
+                    "[data-row-export-format]"
+                )
+                .forEach(
+                    (
+                        button
+                    ) => {
+
+                        const selected =
+                            selectedRowExportFormats.has(
+                                button.dataset.rowExportFormat
+                            );
+
+                        button.classList.toggle(
+                            "is-selected",
+                            selected
+                        );
+
+                        button.setAttribute(
+                            "aria-checked",
+                            selected
+                                ?
+                                "true"
+                                :
+                                "false"
+                        );
+                    }
+                );
+
+            const confirmButton =
+                page.querySelector(
+                    "[data-row-export-confirm]"
+                );
+
+            if (confirmButton) {
+                confirmButton.disabled =
+                    selectedRowExportFormats.size === 0;
+            }
+        }
+
+
+        function toggleRowExportFormat(
+            format
+        ) {
+
+            const normalizedFormat =
+                format === "json"
+                    ?
+                    "json"
+                    :
+                    "csv";
+
+            if (
+                selectedRowExportFormats.has(
+                    normalizedFormat
+                )
+            ) {
+                selectedRowExportFormats.delete(
+                    normalizedFormat
+                );
+            } else {
+                selectedRowExportFormats.add(
+                    normalizedFormat
+                );
+            }
+
+            updateRowExportFormatUI();
+        }
+
+
+        function openRowExportModal(
             kind,
             id
+        ) {
+
+            const row =
+                kind
+                ===
+                "batch"
+                ?
+                findBatch(
+                    id
+                )
+                :
+                findDefect(
+                    id
+                );
+
+            if (
+                !row
+                ||
+                !rowExportModal
+            ) {
+                return;
+            }
+
+            pendingRowExport = {
+                kind,
+                id,
+            };
+
+            if (rowExportName) {
+                rowExportName.textContent =
+                    kind
+                    ===
+                    "batch"
+                    ?
+                    (row.batch_id || "Selected batch")
+                    :
+                    (row.event_id || "Selected event");
+            }
+
+            selectedRowExportFormats =
+                new Set([
+                    "csv",
+                ]);
+
+            updateRowExportFormatUI();
+
+            rowExportModal.hidden = false;
+        }
+
+
+        function closeRowExportModal() {
+
+            if (rowExportModal) {
+                rowExportModal.hidden = true;
+            }
+
+            pendingRowExport = null;
+        }
+
+
+        function exportSingleRow(
+            kind,
+            id,
+            format
         ) {
 
             const row =
@@ -1305,6 +2110,65 @@ document.addEventListener(
                 return;
             }
 
+            const baseName =
+                kind
+                ===
+                "batch"
+                ?
+                (row.batch_id || "bika_batch")
+                :
+                (row.event_id || "bika_defect_event");
+
+            if (
+                format
+                ===
+                "csv"
+            ) {
+
+                const fields =
+                    Object.keys(
+                        row
+                    );
+
+                const csvRow = {};
+
+                fields.forEach(
+                    (
+                        field
+                    ) => {
+
+                        const value =
+                            row[field];
+
+                        csvRow[field] =
+                            (
+                                value
+                                !==
+                                null
+                                &&
+                                typeof value
+                                ===
+                                "object"
+                            )
+                                ?
+                                JSON.stringify(
+                                    value
+                                )
+                                :
+                                value;
+                    }
+                );
+
+                downloadData(
+                    [csvRow],
+                    fields,
+                    "csv",
+                    baseName
+                );
+
+                return;
+            }
+
 
             downloadBlob(
                 JSON.stringify(
@@ -1312,15 +2176,7 @@ document.addEventListener(
                     null,
                     2
                 ),
-                (
-                    kind
-                    ===
-                    "batch"
-                    ?
-                    `${row.batch_id}.json`
-                    :
-                    `${row.event_id}.json`
-                ),
+                `${baseName}.json`,
                 "application/json;charset=utf-8"
             );
         }
@@ -1641,6 +2497,61 @@ document.addEventListener(
                 event
             ) => {
 
+                const pageButton =
+                    event.target.closest(
+                        "[data-page-target]"
+                    );
+
+                if (pageButton) {
+
+                    const targetPage =
+                        Number(
+                            pageButton.dataset.pageTarget
+                        );
+
+                    if (
+                        Number.isFinite(targetPage)
+                        &&
+                        targetPage > 0
+                    ) {
+
+                        if (
+                            pageButton.dataset.pageKind
+                            ===
+                            "batch"
+                        ) {
+                            state.batchPage =
+                                targetPage;
+
+                            renderBatchTable();
+                        }
+                        else {
+                            state.defectPage =
+                                targetPage;
+
+                            renderDefectTable();
+                        }
+                    }
+
+                    return;
+                }
+
+
+                const defectCropToggle =
+                    event.target.closest(
+                        "[data-defect-crop-toggle]"
+                    );
+
+                if (defectCropToggle) {
+
+                    toggleDefectCrop(
+                        defectCropToggle
+                    );
+
+                    return;
+                }
+
+
                 const mediaToggle =
                     event.target.closest(
                         "[data-detail-media-toggle]"
@@ -1679,7 +2590,7 @@ document.addEventListener(
 
                 if (rowExport) {
 
-                    exportSingleRow(
+                    openRowExportModal(
                         rowExport.dataset.rowExportKind,
                         rowExport.dataset.rowExportId
                     );
@@ -1775,6 +2686,118 @@ document.addEventListener(
 
 
         page
+            .querySelector(
+                "[data-row-export-close]"
+            )
+            ?.addEventListener(
+                "click",
+                closeRowExportModal
+            );
+
+
+        rowExportModal
+            ?.addEventListener(
+                "click",
+                (
+                    event
+                ) => {
+
+                    if (
+                        event.target
+                        ===
+                        rowExportModal
+                    ) {
+                        closeRowExportModal();
+                    }
+                }
+            );
+
+
+        page
+            .querySelectorAll(
+                "[data-row-export-format]"
+            )
+            .forEach(
+                (
+                    button
+                ) => {
+
+                    button.addEventListener(
+                        "click",
+                        () => {
+                            toggleRowExportFormat(
+                                button.dataset.rowExportFormat
+                            );
+                        }
+                    );
+                }
+            );
+
+
+        page
+            .querySelector(
+                "[data-row-export-cancel]"
+            )
+            ?.addEventListener(
+                "click",
+                closeRowExportModal
+            );
+
+
+        page
+            .querySelector(
+                "[data-row-export-confirm]"
+            )
+            ?.addEventListener(
+                "click",
+                () => {
+
+                    if (!pendingRowExport) {
+                        return;
+                    }
+
+                    if (
+                        selectedRowExportFormats.size
+                        ===
+                        0
+                    ) {
+                        return;
+                    }
+
+                    const exportTarget = {
+                        ...pendingRowExport,
+                    };
+
+                    const formats =
+                        Array.from(
+                            selectedRowExportFormats
+                        );
+
+                    formats.forEach(
+                        (
+                            format,
+                            index
+                        ) => {
+
+                            window.setTimeout(
+                                () => {
+                                    exportSingleRow(
+                                        exportTarget.kind,
+                                        exportTarget.id,
+                                        format
+                                    );
+                                },
+                                index * 120
+                            );
+                        }
+                    );
+
+                    closeRowExportModal();
+                }
+            );
+
+
+        page
             .querySelectorAll(
                 "[data-download-format]"
             )
@@ -1812,12 +2835,21 @@ document.addEventListener(
 
                 closeDetail();
                 closeFields();
+                closeRowExportModal();
             }
         );
 
 
         renderBatchTable();
+
+        /*
+         * Defect Event Log is built from result.json objects,
+         * so every defective biscuit becomes one real event.
+         */
+        data.defect_events = [];
         renderDefectTable();
+        loadIndividualDefectEvents();
+
         setTab(
             "batches"
         );

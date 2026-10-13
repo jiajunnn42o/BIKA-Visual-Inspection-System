@@ -7,7 +7,7 @@ Reports | BIKA
 {% block extra_css %}
 <link
     rel="stylesheet"
-    href="{{ url_for('static', filename='css/reports.css', v='20261012-v8') }}"
+    href="{{ url_for('static', filename='css/reports.css', v='20261013-export-format-v3') }}"
 >
 {% endblock %}
 
@@ -217,9 +217,11 @@ Reports | BIKA
                     ‹
                 </button>
 
-                <span data-batch-page-number>
-                    1
-                </span>
+                <div
+                    class="reports-page-buttons"
+                    data-batch-page-buttons
+                    aria-label="Batch pages"
+                ></div>
 
                 <button
                     type="button"
@@ -252,6 +254,10 @@ Reports | BIKA
                             Preview
                         </th>
 
+                        <th>
+                            Object ID
+                        </th>
+
                         <th class="reports-col-file">
                             File Name
                         </th>
@@ -265,15 +271,11 @@ Reports | BIKA
                         </th>
 
                         <th>
-                            Count
+                            Class Conf.
                         </th>
 
                         <th>
-                            Ratio
-                        </th>
-
-                        <th>
-                            Batch Status
+                            Detection Conf.
                         </th>
 
                         <th>
@@ -310,9 +312,11 @@ Reports | BIKA
                     ‹
                 </button>
 
-                <span data-defect-page-number>
-                    1
-                </span>
+                <div
+                    class="reports-page-buttons"
+                    data-defect-page-buttons
+                    aria-label="Defect pages"
+                ></div>
 
                 <button
                     type="button"
@@ -460,6 +464,136 @@ Reports | BIKA
     </div>
 
 
+    <div
+        class="reports-modal-backdrop"
+        data-row-export-modal
+        hidden
+    >
+
+        <div
+            class="reports-modal reports-row-export-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reports-row-export-title"
+        >
+
+            <header class="reports-modal-header reports-row-export-header">
+
+                <div>
+                    <h2 id="reports-row-export-title">
+                        Export Report
+                    </h2>
+
+                    <p class="reports-row-export-subtitle">
+                        Choose one or more formats for
+                        <strong data-row-export-name>Selected report</strong>
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="reports-modal-close"
+                    data-row-export-close
+                    aria-label="Close"
+                >
+                    ×
+                </button>
+
+            </header>
+
+
+            <div class="reports-row-export-body">
+
+                <div
+                    class="reports-export-format-list"
+                    role="group"
+                    aria-label="Export formats"
+                >
+
+                    <button
+                        type="button"
+                        class="reports-export-format-option is-selected"
+                        data-row-export-format="csv"
+                        role="checkbox"
+                        aria-checked="true"
+                    >
+                        <span class="reports-export-format-icon">
+                            <iconsax-icon
+                                name="document-text"
+                                type="twotone"
+                                size="21"
+                                color="currentColor"
+                            ></iconsax-icon>
+                        </span>
+
+                        <span class="reports-export-format-copy">
+                            <strong>CSV</strong>
+                            <small>Spreadsheet-compatible format</small>
+                        </span>
+
+                        <span
+                            class="reports-export-format-check"
+                            aria-hidden="true"
+                        ></span>
+                    </button>
+
+
+                    <button
+                        type="button"
+                        class="reports-export-format-option"
+                        data-row-export-format="json"
+                        role="checkbox"
+                        aria-checked="false"
+                    >
+                        <span class="reports-export-format-icon">
+                            <iconsax-icon
+                                name="code-circle"
+                                type="twotone"
+                                size="21"
+                                color="currentColor"
+                            ></iconsax-icon>
+                        </span>
+
+                        <span class="reports-export-format-copy">
+                            <strong>JSON</strong>
+                            <small>Structured data format</small>
+                        </span>
+
+                        <span
+                            class="reports-export-format-check"
+                            aria-hidden="true"
+                        ></span>
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <footer class="reports-modal-footer reports-row-export-footer">
+
+                <button
+                    type="button"
+                    class="reports-secondary-button"
+                    data-row-export-cancel
+                >
+                    Cancel
+                </button>
+
+                <button
+                    type="button"
+                    class="reports-primary-button"
+                    data-row-export-confirm
+                >
+                    Export
+                </button>
+
+            </footer>
+
+        </div>
+
+    </div>
+
     <script
         type="application/json"
         data-reports-json
@@ -472,7 +606,7 @@ Reports | BIKA
 
 {% block extra_js %}
 <script
-    src="{{ url_for('static', filename='js/reports.js', v='20261012-v8') }}"
+    src="{{ url_for('static', filename='js/reports.js', v='20261013-export-format-v3') }}"
     defer
 ></script>
 {% endblock %}
