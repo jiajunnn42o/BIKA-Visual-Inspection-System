@@ -33,3 +33,17 @@ Thumbs.db
 # About System runtime state
 instance/about_system_state.json
 instance/about_system_audit.json
+
+# BIKA local/runtime files; do not commit these
+.env
+.venv/
+node_modules/
+__pycache__/
+*.pyc
+*.bak
+*.zip
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+/data/inspections/

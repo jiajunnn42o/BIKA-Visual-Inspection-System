@@ -23,7 +23,8 @@ About System | BIKA
     href="{{ url_for('static', filename='css/about_system.css') }}"
 
 >
-
+<link rel="stylesheet" href="{{ url_for('static', filename='css/backup_schedule_pickers.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/backup_destination_picker.css') }}">
 {% endblock %}
 
 
@@ -37,6 +38,7 @@ About System | BIKA
     class="about-system-page"
 
     data-about-system-page
+    data-backup-folder-picker-url="{{ url_for('main.pick_about_backup_folder') }}"
 
     data-retention-url="{{ url_for('main.update_about_system_retention') }}"
 
@@ -452,9 +454,13 @@ About System | BIKA
 
                     <strong>
 
-                        {{ about_stats.storage_usage }} / {{ about_stats.storage_quota }}
-
-                        ({{ '%.2f'|format(about_stats.storage_percent) }}%)
+                        {{ about_stats.storage_usage }}
+                        {% if about_stats.storage_quota %}
+                            / {{ about_stats.storage_quota }}
+                            ({{ '%.2f'|format(about_stats.storage_percent) }}%)
+                        {% else %}
+                            (No quota configured)
+                        {% endif %}
 
                     </strong>
 
@@ -851,9 +857,68 @@ About System | BIKA
 
     </div>
 
-
-
-
+    <!-- Independent read-only status panel: no change to the original two-column grid. -->
+    {% set rs = about_retention_status %}
+    {% set all_count = rs.total|int %}
+    {% set overdue = rs.eligible|int %}
+    {% set current_count = [all_count - overdue, 0]|max %}
+    {% set share = ((overdue / all_count * 100) if all_count else 0) %}
+    <section class="about-panel retention-insight-panel" aria-label="Retention status">
+        <div class="about-panel-heading retention-insight-heading">
+            <div>
+                <iconsax-icon name="chart-square" type="twotone" size="19" color="currentColor"></iconsax-icon>
+                <h2>Retention Status</h2>
+            </div>
+            <span class="retention-readonly-pill">Read-only · Dry Run</span>
+        </div>
+        <div class="retention-explainer">
+            <div class="retention-policy-copy">
+                <span class="retention-eyebrow">CURRENT POLICY</span>
+                <strong>
+                    {% if rs.policy == 'archive_90' %}Archive after 90 days
+                    {% elif rs.policy == 'delete_1y' %}Delete after 1 year
+                    {% else %}Keep all records{% endif %}
+                </strong>
+                <p>
+                    {% if rs.policy == 'archive_90' %}Inspections older than 90 days are eligible for archival. No files are being moved yet.
+                    {% elif rs.policy == 'delete_1y' %}Inspections older than 365 days are eligible for deletion. Deletion is not enabled yet.
+                    {% else %}All inspection records are retained. No records qualify for an action under this policy.{% endif %}
+                </p>
+            </div>
+            <div class="retention-summary-cards">
+                <div><span>Inspection records</span><strong>{{ all_count }}</strong><small>Currently stored</small></div>
+                <div><span>Eligible now</span><strong>{{ overdue }}</strong><small>Under selected policy</small></div>
+            </div>
+        </div>
+        <div class="retention-visual-grid">
+            <div class="retention-chart-section">
+                <div class="retention-chart-head"><strong>Records under the selected policy</strong><span>{{ '%.1f'|format(share) }}% eligible</span></div>
+                <div class="retention-stacked-track" role="img" aria-label="{{ current_count }} records not eligible and {{ overdue }} eligible records">
+                    {% if all_count %}
+                    <div class="retention-stacked-current" data-retention-progress="{{ '%.3f'|format(100 - share) }}"></div>
+                    <div class="retention-stacked-eligible" data-retention-progress="{{ '%.3f'|format(share) }}"></div>
+                    {% endif %}
+                </div>
+                <div class="retention-chart-legend">
+                    <span><i class="retention-dot retention-dot-current"></i>Not eligible <b>{{ current_count }}</b></span>
+                    <span><i class="retention-dot retention-dot-eligible"></i>Eligible <b>{{ overdue }}</b></span>
+                </div>
+                <p class="retention-chart-note">Eligibility is calculated from the inspection date. Selecting a policy does not move or delete records in this version.</p>
+            </div>
+            <div class="retention-threshold-section">
+                <strong>Age threshold overview</strong>
+                <div class="retention-threshold-row"><span>90+ days <small>Archive candidates</small></span><strong>{{ rs.archive_candidates_90d }}</strong></div>
+                <div class="retention-threshold-bar"><div data-retention-progress="{{ '%.3f'|format((rs.archive_candidates_90d / all_count * 100) if all_count else 0) }}"></div></div>
+                <div class="retention-threshold-row"><span>365+ days <small>Delete candidates</small></span><strong>{{ rs.delete_candidates_365d }}</strong></div>
+                <div class="retention-threshold-bar"><div data-retention-progress="{{ '%.3f'|format((rs.delete_candidates_365d / all_count * 100) if all_count else 0) }}"></div></div>
+                <p class="retention-chart-note">These thresholds overlap: records older than 365 days are also included in the 90+ day count.</p>
+            </div>
+        </div>
+        <div class="retention-status-footer">
+            <a class="retention-preview-action" href="{{ url_for('main.preview_about_system_retention') }}" target="_blank" rel="noopener noreferrer">Preview eligible records (Dry Run)</a>
+            <span>Preview only — no records will be moved or deleted.</span>
+        </div>
+    </section>
 
     {% if about_permissions.can_view_audit_log %}
 
@@ -1010,6 +1075,15 @@ About System | BIKA
             </table>
 
         </div>
+        <footer class="about-audit-pagination" data-audit-pagination>
+            <span data-audit-page-summary aria-live="polite">Showing 0–0 of 0 logs</span>
+            <div class="about-audit-page-controls" role="navigation" aria-label="Audit log pagination">
+                <button type="button" data-audit-prev aria-label="Previous page">‹</button>
+                <div data-audit-page-buttons class="about-audit-page-buttons" aria-label="Audit log pages"></div>
+                <button type="button" data-audit-next aria-label="Next page">›</button>
+            </div>
+        </footer>
+
 
     </section>
 
@@ -1313,7 +1387,7 @@ About System | BIKA
 
 
 
-            <label
+            <div
 
                 class="about-custom-destination"
 
@@ -1331,7 +1405,8 @@ About System | BIKA
 
 
 
-                <input
+                <div class="bika-folder-picker-row">
+<input
 
                     type="text"
 
@@ -1341,9 +1416,12 @@ About System | BIKA
 
                     data-custom-destination
 
-                >
+                 readonly aria-label="Backup folder path (click to browse)">
+<button type="button" data-bika-browse-backup-folder>Browse Folder</button>
+</div>
+<p data-bika-folder-feedback aria-live="polite">Choose a folder on this Windows computer.</p>
 
-            </label>
+            </div>
 
 
 
@@ -2078,5 +2156,6 @@ About System | BIKA
 {% block extra_js %}
 
 <script src="{{ url_for('static', filename='js/about_system.js') }}"></script>
-
+<script src="{{ url_for('static', filename='js/backup_schedule_pickers.js') }}"></script>
+<script src="{{ url_for('static', filename='js/backup_destination_picker.js') }}"></script>
 {% endblock %}

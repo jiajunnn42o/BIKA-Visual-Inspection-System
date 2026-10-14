@@ -1910,161 +1910,97 @@
 
 
     /* =====================================================
+       RETENTION PROGRESS BARS
+       Keep Jinja out of inline CSS to avoid VS Code CSS lint errors.
+       ===================================================== */
+
+    page.querySelectorAll("[data-retention-progress]").forEach(bar => {
+        const percentage = Number(bar.dataset.retentionProgress);
+        const safePercentage = Number.isFinite(percentage)
+            ? Math.max(0, Math.min(100, percentage))
+            : 0;
+        bar.style.width = `${safePercentage}%`;
+    });
+
+    /* =====================================================
        AUDIT FILTER + SEARCH
        ===================================================== */
 
-    let activeAuditFilter =
-        "all";
-
-    const auditSearch =
-        page.querySelector(
-            "[data-audit-search]"
-        );
-
-    const auditRows =
-        Array.from(
-            page.querySelectorAll(
-                "[data-audit-row]"
-            )
-        );
-
-    const auditEmpty =
-        page.querySelector(
-            "[data-audit-empty]"
-        );
-
+    let activeAuditFilter = "all";
+    let auditPage = 1;
+    const auditPageSize = 10;
+    const auditSearch = page.querySelector("[data-audit-search]");
+    const auditRows = Array.from(page.querySelectorAll("[data-audit-row]"));
+    const auditEmpty = page.querySelector("[data-audit-empty]");
+    const auditPageSummary = page.querySelector("[data-audit-page-summary]");
+    const auditPageButtons = page.querySelector("[data-audit-page-buttons]");
+    const auditPrev = page.querySelector("[data-audit-prev]");
+    const auditNext = page.querySelector("[data-audit-next]");
 
     function applyAuditFilter() {
-        const query =
-            (
-                auditSearch
-                    ?.value
-                ||
-                ""
-            )
-                .trim()
-                .toLowerCase();
-
-        let visibleCount =
-            0;
-
-        auditRows.forEach(
-            (row) => {
-                const category =
-                    (
-                        row.dataset
-                            .auditCategory
-                        ||
-                        ""
-                    )
-                        .toLowerCase();
-
-                const searchText =
-                    (
-                        row.dataset
-                            .auditSearchText
-                        ||
-                        ""
-                    )
-                        .toLowerCase();
-
-                const categoryMatch =
-                    (
-                        activeAuditFilter
-                        ===
-                        "all"
-                    )
-                    ||
-                    (
-                        category
-                        ===
-                        activeAuditFilter
-                    );
-
-                const searchMatch =
-                    (
-                        !query
-                        ||
-                        searchText.includes(
-                            query
-                        )
-                    );
-
-                const visible =
-                    (
-                        categoryMatch
-                        &&
-                        searchMatch
-                    );
-
-                row.hidden =
-                    !visible;
-
-                if (
-                    visible
-                ) {
-                    visibleCount += 1;
-                }
+        const query = (auditSearch?.value || "").trim().toLowerCase();
+        const matching = auditRows.filter(row => {
+            const category = (row.dataset.auditCategory || "").toLowerCase();
+            const searchText = (row.dataset.auditSearchText || "").toLowerCase();
+            return (activeAuditFilter === "all" || category === activeAuditFilter)
+                && (!query || searchText.includes(query));
+        });
+        const count = matching.length;
+        const pageCount = Math.max(1, Math.ceil(count / auditPageSize));
+        auditPage = Math.max(1, Math.min(auditPage, pageCount));
+        const offset = (auditPage - 1) * auditPageSize;
+        const shown = new Set(matching.slice(offset, offset + auditPageSize));
+        auditRows.forEach(row => { row.hidden = !shown.has(row); });
+        if (auditEmpty) auditEmpty.classList.toggle("is-hidden", count !== 0);
+        if (auditPageSummary) {
+            auditPageSummary.textContent = count
+                ? `Showing ${offset + 1}–${Math.min(offset + auditPageSize, count)} of ${count} logs`
+                : "Showing 0–0 of 0 logs";
+        }
+        if (auditPrev) auditPrev.disabled = auditPage <= 1;
+        if (auditNext) auditNext.disabled = auditPage >= pageCount;
+        if (auditPageButtons) {
+            auditPageButtons.replaceChildren();
+            // Same compact number / ellipsis pagination as Reports.
+            function visibleAuditPages(current, total) {
+                if (total <= 4) return Array.from({ length: total }, (_, i) => i + 1);
+                if (current <= 3) return [1, 2, 3, "…", total];
+                if (current >= total - 2) return [1, "…", total - 2, total - 1, total];
+                return [1, "…", current, "…", total];
             }
-        );
-
-        if (
-            auditEmpty
-        ) {
-            auditEmpty.classList.toggle(
-                "is-hidden",
-                visibleCount !== 0
-            );
+            for (const item of visibleAuditPages(auditPage, pageCount)) {
+                if (item === "…") {
+                    const ellipsis = document.createElement("span");
+                    ellipsis.className = "about-audit-page-ellipsis";
+                    ellipsis.setAttribute("aria-hidden", "true");
+                    ellipsis.textContent = "…";
+                    auditPageButtons.appendChild(ellipsis);
+                    continue;
+                }
+                const n = item;
+                const button = document.createElement("button");
+                button.type = "button";
+                button.textContent = n;
+                button.className = "about-audit-page-button" + (n === auditPage ? " is-active" : "");
+                button.setAttribute("aria-label", `Go to page ${n}`);
+                if (n === auditPage) button.setAttribute("aria-current", "page");
+                button.addEventListener("click", () => { auditPage = n; applyAuditFilter(); });
+                auditPageButtons.appendChild(button);
+            }
         }
     }
-
-
-    page
-        .querySelectorAll(
-            "[data-audit-filter]"
-        )
-        .forEach(
-            (button) => {
-                button.addEventListener(
-                    "click",
-                    () => {
-                        activeAuditFilter =
-                            (
-                                button.dataset
-                                    .auditFilter
-                                ||
-                                "all"
-                            )
-                                .toLowerCase();
-
-                        page
-                            .querySelectorAll(
-                                "[data-audit-filter]"
-                            )
-                            .forEach(
-                                (item) => {
-                                    item.classList.remove(
-                                        "is-selected"
-                                    );
-                                }
-                            );
-
-                        button.classList.add(
-                            "is-selected"
-                        );
-
-                        applyAuditFilter();
-                    }
-                );
-            }
-        );
-
-    auditSearch
-        ?.addEventListener(
-            "input",
-            applyAuditFilter
-        );
-
+    page.querySelectorAll("[data-audit-filter]").forEach(button => {
+        button.addEventListener("click", () => {
+            activeAuditFilter = (button.dataset.auditFilter || "all").toLowerCase();
+            auditPage = 1;
+            page.querySelectorAll("[data-audit-filter]").forEach(b => b.classList.toggle("is-selected", b === button));
+            applyAuditFilter();
+        });
+    });
+    auditSearch?.addEventListener("input", () => { auditPage = 1; applyAuditFilter(); });
+    auditPrev?.addEventListener("click", () => { if (auditPage > 1) { auditPage--; applyAuditFilter(); } });
+    auditNext?.addEventListener("click", () => { auditPage++; applyAuditFilter(); });
+    applyAuditFilter();
 
     /* =====================================================
        BUTTONS RESERVED FOR NEXT BACKEND STEP

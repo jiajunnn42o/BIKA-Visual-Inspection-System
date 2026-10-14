@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from functools import wraps
 from pathlib import Path
 
@@ -20,6 +20,8 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.extensions import db
 from app.main import main_bp
 from app.models import User, UserRole
+from app.models.inspection_batch import InspectionBatch
+from app.services.storage_service import local_storage_root, storage_backend
 from app.services.about_system_audit_service import (
     load_about_system_audit,
     write_about_system_audit,
@@ -201,7 +203,7 @@ def _format_bytes(value: int | None) -> str:
 
 def _oldest_record_label() -> str:
     try:
-        value = db.session.scalar(db.select(func.min(User.created_at)))
+        value = db.session.scalar(db.select(func.min(InspectionBatch.inspection_date)))
     except SQLAlchemyError:
         value = None
 
@@ -209,6 +211,42 @@ def _oldest_record_label() -> str:
         return "—"
 
     return value.strftime("%Y-%m-%d")
+
+
+def _inspection_storage_size() -> int | None:
+    """Total bytes beneath the existing local inspection-storage root.
+
+    Read only. Does not include other files in data/ or website_models/.
+    """
+    try:
+        if storage_backend() != "local":
+            return None
+        root = local_storage_root()
+        total = 0
+        for folder, directories, filenames in os.walk(root, followlinks=False):
+            directories[:] = [
+                name for name in directories
+                if not (Path(folder) / name).is_symlink()
+            ]
+            for name in filenames:
+                file_path = Path(folder) / name
+                if not file_path.is_symlink():
+                    total += file_path.stat().st_size
+        return total
+    except (OSError, ValueError, RuntimeError):
+        return None
+
+
+def _storage_quota_bytes() -> int | None:
+    """Optional inspection + database quota, in GiB; unset means unlimited."""
+    raw = os.getenv("BIKA_STORAGE_QUOTA_GB", "").strip()
+    if not raw:
+        return None
+    try:
+        gib = float(raw)
+        return int(gib * 1024 ** 3) if gib > 0 else None
+    except (ValueError, OverflowError):
+        return None
 
 
 def _normalise_audit(events: list[dict]) -> list[dict]:
@@ -243,6 +281,67 @@ def _normalise_audit(events: list[dict]) -> list[dict]:
     return output
 
 
+def _retention_preview(policy: str, *, limit: int = 50) -> dict:
+    """Read-only inspection eligibility. No mutation or filesystem writes."""
+    now = datetime.now(timezone.utc)
+    cutoff = (now - timedelta(days=90) if policy == "archive_90"
+              else now - timedelta(days=365) if policy == "delete_1y"
+              else None)
+    total = db.session.scalar(db.select(func.count(InspectionBatch.id))) or 0
+    archive_eligible = db.session.scalar(
+        db.select(func.count(InspectionBatch.id)).where(
+            InspectionBatch.inspection_date < now - timedelta(days=90)
+        )
+    ) or 0
+    delete_eligible = db.session.scalar(
+        db.select(func.count(InspectionBatch.id)).where(
+            InspectionBatch.inspection_date < now - timedelta(days=365)
+        )
+    ) or 0
+    rows = []
+    eligible = 0
+    if cutoff is not None:
+        clause = InspectionBatch.inspection_date < cutoff
+        eligible = archive_eligible if policy == "archive_90" else delete_eligible
+        for record in db.session.scalars(
+            db.select(InspectionBatch).where(clause)
+            .order_by(InspectionBatch.inspection_date.asc(), InspectionBatch.id.asc())
+            .limit(limit)
+        ):
+            rows.append({
+                "batch_id": record.batch_id,
+                "inspection_date": record.inspection_date.isoformat(),
+                "storage_backend": record.storage_backend,
+                "filename": record.original_filename,
+            })
+    return {
+        "policy": policy,
+        "cutoff_utc": cutoff.isoformat() if cutoff else None,
+        "total": total,
+        "archive_candidates_90d": archive_eligible,
+        "delete_candidates_365d": delete_eligible,
+        "eligible": eligible,
+        "preview_rows": rows,
+        "more_rows": max(0, eligible - len(rows)),
+        "dry_run": True,
+        "execution_enabled": False,
+    }
+
+
+@main_bp.route("/about-system/retention/preview", methods=["GET"])
+@about_system_required
+def preview_about_system_retention():
+    policy = request.args.get("policy", "").strip() or _load_state().get("retention_policy", "keep_all")
+    if policy not in RETENTION_POLICIES:
+        return jsonify(ok=False, message="Unknown retention policy"), 400
+    try:
+        result = _retention_preview(policy)
+    except SQLAlchemyError:
+        current_app.logger.exception("Retention preview failed")
+        return jsonify(ok=False, message="Unable to read inspection records"), 500
+    return jsonify(ok=True, **result)
+
+
 def _page_context() -> dict:
     state = _load_state()
 
@@ -265,6 +364,7 @@ def _page_context() -> dict:
     )
 
     database_size = _database_size_bytes()
+    retention_preview = _retention_preview(state["retention_policy"], limit=0)
 
     today_utc = datetime.now(timezone.utc).date()
     audit_today = 0
@@ -289,15 +389,23 @@ def _page_context() -> dict:
     if isinstance(accuracy, (int, float)):
         accuracy_label = f"{accuracy:.3f} ({accuracy * 100:.1f}%)"
 
-    quota_bytes = 1024 * 1024 * 1024
+    inspection_storage_size = _inspection_storage_size()
+    # Do not present a partial measurement as a verified total.
+    total_storage = (
+        database_size + inspection_storage_size
+        if database_size is not None and inspection_storage_size is not None
+        else None
+    )
+    quota_bytes = _storage_quota_bytes()
     usage_percent = (
-        min(100.0, (database_size / quota_bytes) * 100)
-        if database_size is not None
+        min(100.0, (total_storage / quota_bytes) * 100)
+        if total_storage is not None and quota_bytes
         else 0.0
     )
 
     return {
         "about_state": state,
+        "about_retention_status": retention_preview,
         "about_model_accuracy": accuracy_label,
         "about_retention_options": RETENTION_POLICIES,
         "about_backup_types": BACKUP_TYPES,
@@ -309,8 +417,9 @@ def _page_context() -> dict:
             "backup_status": "Healthy" if backup_healthy else "No backup yet",
             "backup_status_key": "healthy" if backup_healthy else "pending",
             "oldest_record": _oldest_record_label(),
-            "storage_usage": _format_bytes(database_size),
-            "storage_quota": "1 GB",
+            "storage_usage": _format_bytes(total_storage),
+            "inspection_storage": _format_bytes(inspection_storage_size),
+            "storage_quota": _format_bytes(quota_bytes) if quota_bytes else None,
             "storage_percent": round(usage_percent, 2),
         },
         "about_permissions": {
@@ -402,6 +511,7 @@ def update_about_system_backup_settings():
     backup_type = str(data.get("backup_type") or "").strip()
     auto_enabled = bool(data.get("auto_enabled"))
     schedule = str(data.get("schedule") or "").strip()
+    destination = str(data.get("destination") or "").strip()
 
     if backup_type not in BACKUP_TYPES:
         return jsonify(
@@ -421,8 +531,17 @@ def update_about_system_backup_settings():
             message="Backup schedule is too long.",
         ), 400
 
+    if len(destination) > 260:
+        return jsonify(ok=False, message="Backup folder path is too long."), 400
+
+    if destination not in {"Local Storage (Default)", "Project Backup Folder"}:
+        candidate = Path(destination) if destination else None
+        if candidate is None or not candidate.is_absolute() or not candidate.is_dir():
+            return jsonify(ok=False, message="Select an existing local backup folder."), 400
+
     state = _load_state()
     state["backup"]["type"] = backup_type
+    state["backup"]["destination"] = destination
     state["backup"]["auto_enabled"] = auto_enabled
     state["backup"]["schedule"] = schedule
     _save_state(state)

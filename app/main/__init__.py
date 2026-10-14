@@ -20,6 +20,7 @@ main_bp = Blueprint(
 
 from app.main import routes
 from app.main import about_system
+from app.main import backup_destination_picker
 from app.main import inspection_routes
 from app.main import model_management
 from app.main import reports_routes
