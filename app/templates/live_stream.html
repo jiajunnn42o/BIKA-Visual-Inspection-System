@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Live Stream Inspection | BIKA{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/live_stream.css', v='phase1-4') }}">
+{% endblock %}
+
+{% block content %}
+<div class="lsi-page" data-live-stream-page data-can-control-camera="{{ 'true' if can_control_camera else 'false' }}"
+     data-status-url="{{ url_for('main.live_inspection_status') }}"
+     data-connect-url="{{ url_for('main.live_inspection_connect') }}"
+     data-disconnect-url="{{ url_for('main.live_inspection_disconnect') }}"
+     data-video-url="{{ url_for('main.live_inspection_video_feed') }}"
+     data-snapshot-url="{{ url_for('main.live_inspection_snapshot') }}">
+
+  <header class="lsi-header">
+    <div class="lsi-heading">
+      <h1>Live Stream Inspection</h1>
+      <p>Connect your Hikvision camera and monitor the live feed before enabling AI inspection.</p>
+    </div>
+  </header>
+
+  <section class="lsi-stats" aria-label="Camera statistics">
+    <article class="lsi-stat lsi-stat-online"><span class="lsi-stat-icon"><iconsax-icon name="video" type="twotone" size="23" color="currentColor"></iconsax-icon></span><div><p>Stream Status</p><strong data-stat-connection>Disconnected</strong><small data-stat-connection-note>Camera not connected</small></div><span class="lsi-status-dot" data-online-dot></span></article>
+    <article class="lsi-stat"><span class="lsi-stat-icon"><iconsax-icon name="speedometer" type="twotone" size="23" color="currentColor"></iconsax-icon></span><div><p>Camera FPS</p><strong data-stat-fps>—</strong><small>Measured incoming frames</small></div></article>
+    <article class="lsi-stat"><span class="lsi-stat-icon"><iconsax-icon name="chart-2" type="twotone" size="23" color="currentColor"></iconsax-icon></span><div><p>Current Reject Rate</p><strong>—</strong><small>Available when AI is enabled</small></div></article>
+    <article class="lsi-stat"><span class="lsi-stat-icon"><iconsax-icon name="box" type="twotone" size="23" color="currentColor"></iconsax-icon></span><div><p>Today's Inspections</p><strong>—</strong><small>Live inference not started</small></div></article>
+  </section>
+
+  <div class="lsi-primary-grid">
+    <section class="lsi-panel lsi-viewer-card" aria-labelledby="lsi-viewer-title">
+      <div class="lsi-card-heading"><div><h2 id="lsi-viewer-title">Live Camera Feed</h2><p>Raw camera preview · Detection overlays will be added in Phase 2</p></div><span class="lsi-mini-status" data-live-badge>Offline</span></div>
+      <div class="lsi-video-stage" data-video-stage>
+        <div class="lsi-video-top"><span class="lsi-live-tag"><i></i><span data-live-label>NOT CONNECTED</span></span><span class="lsi-video-tag">Hikvision · <span data-feed-stream-label>Main Stream</span></span></div>
+        <img class="lsi-video-image" data-video-image alt="Live camera view from Hikvision network camera" hidden>
+        <div class="lsi-video-empty" data-video-empty>
+          <span class="lsi-empty-symbol"><iconsax-icon name="video-slash" type="twotone" size="44" color="currentColor"></iconsax-icon></span>
+          <h3 data-placeholder-title>Camera not connected</h3>
+          <p data-placeholder-message>Configure your Hikvision camera in <code>.env</code>, then choose Connect Camera.</p>
+        </div>
+        <div class="lsi-video-bottom"><span data-video-resolution>Resolution —</span><span class="lsi-video-separator"></span><span data-video-fps>FPS —</span><span class="lsi-video-separator"></span><span>RTSP → MJPEG preview</span></div>
+      </div>
+      <div class="lsi-viewer-footer"><span><span class="lsi-foot-dot"></span><span data-viewer-foot-status>Waiting for camera connection</span></span><span>AI overlays: <b>Not enabled</b></span></div>
+      <!-- Camera-only metrics: use real worker status, never sample/generated AI results. -->
+      <section class="lsi-feed-monitor" aria-label="Live camera monitoring">
+        <div class="lsi-monitor-header">
+          <h3>Live Feed Monitoring</h3>
+          <span class="lsi-monitor-live" data-monitor-state>Waiting for camera</span>
+        </div>
+        <div class="lsi-monitor-grid">
+          <div class="lsi-fps-trend">
+            <div class="lsi-trend-heading">
+              <span>FPS Stability <small>Last 60 seconds</small></span>
+              <strong data-monitor-fps>—</strong>
+            </div>
+            <div class="lsi-trend-visual" data-trend-visual>
+              <svg data-fps-chart class="lsi-trend-svg" viewBox="0 0 320 58" preserveAspectRatio="none" role="img" aria-label="No FPS readings yet">
+                <line x1="0" x2="320" y1="10" y2="10" class="lsi-trend-gridline"/>
+                <line x1="0" x2="320" y1="29" y2="29" class="lsi-trend-gridline"/>
+                <line x1="0" x2="320" y1="48" y2="48" class="lsi-trend-gridline"/>
+                <path data-fps-path class="lsi-trend-path" d=""/>
+                <circle data-fps-point class="lsi-trend-point" cx="0" cy="0" r="3" hidden/>
+              </svg>
+              <span class="lsi-trend-empty" data-trend-empty>Waiting for FPS samples</span>
+            </div>
+          </div>
+          <div class="lsi-health-metric">
+            <div class="lsi-health-heading">
+              <span class="lsi-health-icon"><iconsax-icon name="clock" type="twotone" size="17" color="currentColor"></iconsax-icon></span>
+              <small>Stream Uptime</small>
+            </div>
+            <div class="lsi-health-body">
+              <strong data-monitor-uptime>—</strong>
+              <span>Current connection</span>
+            </div>
+          </div>
+          <div class="lsi-health-metric">
+            <div class="lsi-health-heading">
+              <span class="lsi-health-icon"><iconsax-icon name="video-tick" type="twotone" size="17" color="currentColor"></iconsax-icon></span>
+              <small>Last Frame</small>
+            </div>
+            <div class="lsi-health-body">
+              <strong data-monitor-last-frame>—</strong>
+              <span>Time since received</span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <aside class="lsi-panel lsi-controls-card" aria-labelledby="lsi-controls-title">
+      <div class="lsi-card-heading"><div><h2 id="lsi-controls-title">Inspection Controls</h2><p>Hikvision DS-2CD1123G0E-I(L)</p></div><iconsax-icon name="setting-2" type="twotone" size="21" color="currentColor"></iconsax-icon></div>
+      <label class="lsi-field-label" for="lsi-camera-stream">Camera Source</label>
+      <div class="lsi-select-shell"><iconsax-icon name="video" type="twotone" size="18" color="currentColor"></iconsax-icon><select id="lsi-camera-stream" data-camera-stream {% if not can_control_camera %}disabled{% endif %}><option value="main" selected>Hikvision · Main Stream (101)</option><option value="sub">Hikvision · Sub Stream (102)</option></select></div>
+      <p class="lsi-helper">Camera IP and credentials are read securely from server-side <code>.env</code>.</p>
+      <div class="lsi-auto-connect-row">
+        <div class="lsi-auto-connect-copy">
+          <label for="lsi-auto-connect">Auto connect camera</label>
+          <small>Connect when this page opens · AI detection stays off</small>
+        </div>
+        <label class="lsi-auto-switch" for="lsi-auto-connect">
+          <input id="lsi-auto-connect" data-auto-connect type="checkbox" role="switch" aria-label="Auto connect camera on page load" {% if not can_control_camera %}disabled{% endif %}>
+          <span class="lsi-auto-switch-track" aria-hidden="true"></span>
+        </label>
+      </div>
+      <div class="lsi-action-row">
+        <button class="lsi-button lsi-button-primary" type="button" data-connect-button {% if not can_control_camera %}disabled title="Admin access required"{% endif %}><iconsax-icon name="link" type="linear" size="17" color="currentColor"></iconsax-icon><span>Connect Camera</span></button>
+        <button class="lsi-button lsi-button-outline" type="button" data-disconnect-button disabled><iconsax-icon name="stop-circle" type="linear" size="17" color="currentColor"></iconsax-icon><span>Disconnect</span></button>
+      </div>
+      <div class="lsi-action-row lsi-action-secondary">
+        <button class="lsi-button lsi-button-muted" disabled title="AI inference is planned for the next phase" type="button"><iconsax-icon name="play" type="linear" size="17" color="currentColor"></iconsax-icon><span>Start Detection</span></button>
+        <button class="lsi-button lsi-button-white" type="button" data-snapshot-button disabled><iconsax-icon name="camera" type="linear" size="17" color="currentColor"></iconsax-icon><span>Snapshot</span></button>
+      </div>
+      <div class="lsi-inline-message" data-control-message role="status" aria-live="polite">Camera status will appear here.</div>
+      <div class="lsi-controls-divider"></div>
+      <div class="lsi-mini-heading">Inspection Configuration <span class="lsi-small-tag">Coming next</span></div>
+      <div class="lsi-slider-line"><label for="lsi-ai-confidence">Confidence Threshold</label><strong>0.50</strong></div>
+      <input id="lsi-ai-confidence" type="range" value="50" min="0" max="100" disabled aria-label="AI confidence threshold, unavailable during preview phase">
+      <p class="lsi-helper">AI Detection will reuse the validated model pipeline after the camera feed is stable.</p>
+      <div class="lsi-controls-divider"></div>
+      <div class="lsi-mini-heading">Stream Information</div>
+      <dl class="lsi-detail-grid"><div><dt>Connection</dt><dd data-detail-connection>Offline</dd></div><div><dt>Source</dt><dd>RTSP · Hikvision</dd></div><div><dt>Resolution</dt><dd data-detail-resolution>—</dd></div><div><dt>AI Inference</dt><dd>Not running</dd></div></dl>
+      {% if not can_control_camera %}<div class="lsi-operator-note">You can view an existing camera feed. Only Admin and SuperAdmin can connect or disconnect the source.</div>{% endif %}
+    </aside>
+  </div>
+
+  <div class="lsi-bottom-grid">
+    <section class="lsi-panel lsi-events-card"><div class="lsi-card-heading"><div><h2>Recent Live Defect Events</h2><p>Event tracking will be enabled with AI processing.</p></div><span class="lsi-small-tag">Not collecting</span></div><div class="lsi-table-scroll"><table class="lsi-events-table"><thead><tr><th>Time</th><th>Preview</th><th>Defect Type</th><th>Confidence</th><th>Action</th></tr></thead><tbody><tr><td colspan="5" class="lsi-no-events"><iconsax-icon name="document-text" type="twotone" size="26" color="currentColor"></iconsax-icon><strong>No live defect events yet</strong><span>Events, cropped previews and classifications will appear here after AI integration.</span></td></tr></tbody></table></div></section>
+    <div class="lsi-right-bottom">
+      <section class="lsi-panel lsi-alerts-card"><div class="lsi-card-heading"><h2>Current Alerts</h2><span class="lsi-small-tag">Waiting</span></div><div class="lsi-muted-line"><iconsax-icon name="notification" type="twotone" size="20" color="currentColor"></iconsax-icon><span>Alerts activate when live defect detection is enabled.</span></div></section>
+      <section class="lsi-panel lsi-distribution-card"><div class="lsi-card-heading"><h2>Defect Distribution (Live)</h2><span class="lsi-small-tag">No data</span></div><div class="lsi-chart-empty"><span class="lsi-empty-ring"><span>—<small>Inspected</small></span></span><p>Connect the camera first.<br>AI inference and statistics are planned for Phase 2.</p></div></section>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}<script src="{{ url_for('static', filename='js/live_stream.js', v='phase1-4') }}" defer></script>{% endblock %}

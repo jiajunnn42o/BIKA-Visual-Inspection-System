@@ -1,0 +1,323 @@
+/* BIKA Live Stream Inspection — isolated styles; no changes to existing pages. */
+.lsi-page {
+  --lsi-wine: var(--bika-red, #741f2e);
+  --lsi-wine-dark: var(--bika-red-dark, #5e1825);
+  --lsi-ink: var(--text-primary, #292929);
+  --lsi-muted: var(--text-secondary, #888);
+  --lsi-border: var(--border-light, #e9e9e9);
+  --lsi-card: var(--surface-strong, #fff);
+  --lsi-soft: rgba(116,31,46,.052);
+  color: var(--lsi-ink);
+  max-width: 1600px;
+  margin: 0 auto;
+}
+.lsi-page [hidden] { display: none !important; }
+.lsi-page button, .lsi-page select { font-family: inherit; }
+/* Header matches the 29px/500 BIKA Reports and Inspection headers. */
+.lsi-header { margin: 0 0 20px; }
+.lsi-heading { display: block; min-width: 0; }
+.lsi-heading h1 {
+  color: var(--lsi-ink);
+  margin: 0;
+  font-size: 29px;
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+.lsi-heading p {
+  color: var(--lsi-muted);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.35;
+  margin: 4px 0 0;
+}
+.lsi-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; margin-bottom: 13px; }
+.lsi-stat { min-width: 0; display: flex; align-items: center; gap: 13px; padding: 18px 17px; background: var(--lsi-card); border: 1px solid var(--lsi-border); border-radius: 15px; box-shadow: var(--surface-shadow); position: relative; }
+.lsi-stat-icon { width: 43px; height: 43px; flex: 0 0 43px; display: grid; place-items: center; border-radius: 12px; background: var(--lsi-soft); color: var(--lsi-wine); }
+.lsi-stat p { font-size: 11px; margin: 0 0 5px; color: var(--lsi-muted); font-weight: 500; }
+.lsi-stat strong { display: block; font-size: 20px; letter-spacing: -.4px; margin-bottom: 4px; line-height: 1.2; }
+.lsi-stat small { color: var(--lsi-muted); display: block; font-size: 10.2px; line-height: 1.4; }
+.lsi-status-dot { position: absolute; top: 19px; right: 17px; width: 8px; height: 8px; border-radius: 50%; background: #bfc3c7; }
+.lsi-status-dot.is-online { background: #309968; box-shadow: 0 0 0 4px rgba(48,153,104,.14); }
+.lsi-primary-grid { display: grid; grid-template-columns: minmax(0, 1.69fr) minmax(315px, 1fr); gap: 13px; align-items: stretch; }
+.lsi-panel { min-width: 0; padding: 18px; border-radius: 17px; border: 1px solid var(--lsi-border); background: var(--lsi-card); box-shadow: var(--surface-shadow); }
+.lsi-card-heading { display: flex; align-items: start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.lsi-card-heading h2 { font-size: 14px; font-weight: 700; line-height: 1.4; margin: 0; }
+.lsi-card-heading p { color: var(--lsi-muted); font-size: 11px; line-height: 1.6; margin: 4px 0 0; }
+.lsi-mini-status { background: #f4f4f4; color: #777; letter-spacing: .06em; }
+.lsi-mini-status.is-online { background: #eaf6ee; color: #28754c; }
+.lsi-video-stage { background: radial-gradient(circle at 40% 30%, #303841, #141a21 67%); aspect-ratio: 16 / 9; border-radius: 13px; overflow: hidden; position: relative; isolation: isolate; }
+.lsi-video-stage::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.024) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.024) 1px, transparent 1px); background-size: 30px 30px; pointer-events: none; z-index: 0; }
+.lsi-video-image { display: block; width: 100%; height: 100%; object-fit: contain; position: relative; z-index: 1; background: #0e1117; }
+.lsi-video-top { position: absolute; z-index: 3; top: 13px; left: 13px; right: 13px; display: flex; justify-content: space-between; gap: 9px; pointer-events: none; }
+.lsi-live-tag, .lsi-video-tag { display: flex; align-items: center; gap: 7px; border-radius: 8px; background: rgba(10,13,18,.78); color: #fff; font-size: 10px; font-weight: 600; padding: 8px 10px; backdrop-filter: blur(7px); }
+.lsi-live-tag i { width: 7px; height: 7px; background: #a4acb6; border-radius: 50%; }
+.lsi-live-tag.is-online i { background: #f83a50; box-shadow: 0 0 0 4px rgba(248,58,80,.14); }
+.lsi-video-empty { position: absolute; z-index: 1; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; gap: 10px; padding: 34px; color: #eef0f3; }
+.lsi-empty-symbol { color: #c7ccd1; background: rgba(255,255,255,.07); width: 88px; height: 88px; border-radius: 22px; display: grid; place-items: center; margin-bottom: 4px; }
+.lsi-video-empty h3 { font-weight: 650; margin: 0; font-size: 19px; }
+.lsi-video-empty p { font-size: 12px; line-height: 1.7; color: #bac3ce; max-width: 300px; margin: 0; }
+.lsi-video-empty code { font-family: monospace; background: rgba(255,255,255,.09); border-radius: 4px; padding: 1px 4px; }
+.lsi-video-bottom { position: absolute; bottom: 10px; left: 12px; right: 12px; z-index: 3; color: #e9eef4; display: flex; gap: 11px; font-size: 10px; align-items: center; text-shadow: 0 1px 4px #000; pointer-events: none; }
+.lsi-video-separator { height: 13px; width: 1px; background: rgba(255,255,255,.4); }
+.lsi-viewer-footer { display: flex; justify-content: space-between; gap: 10px; padding-top: 14px; color: var(--lsi-muted); font-size: 11px; }
+.lsi-viewer-footer > span:first-child { display: flex; align-items: center; gap: 7px; }
+.lsi-viewer-footer b { color: var(--lsi-ink); font-weight: 600; }
+.lsi-foot-dot { width: 6px; height: 6px; border-radius: 50%; background: #a9b0b9; }
+.lsi-foot-dot.is-online { background: #3a9b73; }
+.lsi-controls-card .lsi-card-heading { margin-bottom: 20px; }
+.lsi-controls-card > .lsi-card-heading > iconsax-icon { color: var(--lsi-wine); }
+.lsi-field-label { font-size: 11px; font-weight: 650; display: block; margin-bottom: 8px; }
+.lsi-select-shell { display: flex; align-items: center; gap: 10px; padding: 0 13px; border-radius: 11px; border: 1px solid var(--lsi-border); background: transparent; color: var(--lsi-wine); height: 43px; }
+.lsi-select-shell:focus-within { border-color: var(--lsi-wine); box-shadow: 0 0 0 3px rgba(116,31,46,.085); }
+.lsi-select-shell select { color: var(--lsi-ink); background: transparent; border: 0; width: 100%; min-width: 0; outline: none; font-size: 12px; cursor: pointer; }
+.lsi-page select option { color: #222; }
+.lsi-helper { font-size: 10.5px; color: var(--lsi-muted); line-height: 1.6; margin: 9px 0 15px; }
+.lsi-helper code { font-family: monospace; color: var(--lsi-ink); }
+.lsi-action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 9px; }
+.lsi-button { border-radius: 10px; border: 1px solid transparent; font-weight: 600; font-size: 11.4px; display: flex; justify-content: center; align-items: center; gap: 7px; min-height: 43px; padding: 10px 9px; cursor: pointer; transition: background .18s, transform .18s; }
+.lsi-button:not(:disabled):hover { transform: translateY(-1px); }
+.lsi-button:disabled { opacity: .49; cursor: not-allowed; }
+.lsi-button-primary { color: white; background: var(--lsi-wine); box-shadow: 0 4px 12px rgba(116,31,46,.12); }
+.lsi-button-primary:not(:disabled):hover { background: var(--lsi-wine-dark); }
+.lsi-button-outline { color: var(--lsi-wine); border-color: rgba(116,31,46,.42); background: transparent; }
+.lsi-button-muted { background: var(--lsi-soft); color: var(--lsi-muted); border-color: var(--lsi-border); }
+.lsi-button-white { background: transparent; border-color: var(--lsi-border); color: var(--lsi-ink); }
+.lsi-inline-message { color: var(--lsi-muted); background: var(--lsi-soft); border: 1px solid rgba(116,31,46,.08); border-radius: 10px; padding: 11px 12px; min-height: 38px; font-size: 10.8px; line-height: 1.6; }
+.lsi-inline-message.is-error { border-color: rgba(194,45,71,.3); color: #b1394d; }
+.lsi-controls-divider { height: 1px; background: var(--lsi-border); margin: 18px 0; }
+.lsi-mini-heading { font-size: 11.5px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 14px; }
+.lsi-small-tag { background: var(--lsi-soft); color: var(--lsi-wine); font-size: 9.2px; }
+.lsi-slider-line { display: flex; justify-content: space-between; gap: 9px; font-size: 10.9px; color: var(--lsi-muted); }
+.lsi-slider-line strong { color: var(--lsi-ink); }
+.lsi-controls-card input[type=range] { display: block; width: 100%; margin: 15px 0 0; accent-color: var(--lsi-wine); }
+.lsi-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px 10px; margin: 0; }
+.lsi-detail-grid dt { font-size: 10px; color: var(--lsi-muted); margin-bottom: 4px; }
+.lsi-detail-grid dd { margin: 0; color: var(--lsi-ink); font-size: 11.4px; font-weight: 650; overflow-wrap: anywhere; }
+.lsi-operator-note { font-size: 10.6px; color: var(--lsi-muted); line-height: 1.6; padding: 11px; border-radius: 10px; background: var(--lsi-soft); margin-top: 16px; }
+.lsi-bottom-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.69fr) minmax(315px, 1fr);
+    align-items: stretch;
+    gap: 13px;
+    margin-top: 13px;
+}
+.lsi-right-bottom {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 13px;
+    height: 100%;
+}
+.lsi-events-card .lsi-card-heading { margin-bottom: 15px; }
+.lsi-table-scroll { overflow-x: auto; }
+.lsi-events-table { width: 100%; text-align: left; border-collapse: collapse; }
+.lsi-events-table thead { background: var(--lsi-soft); }
+.lsi-events-table th { color: var(--lsi-muted); padding: 12px 10px; font-size: 10.4px; font-weight: 600; white-space: nowrap; }
+.lsi-no-events { text-align: center; height: 185px; padding: 34px 12px !important; }
+.lsi-no-events iconsax-icon { display: block; margin: 0 auto 12px; color: var(--lsi-muted); }
+.lsi-no-events strong { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+.lsi-no-events span { color: var(--lsi-muted); font-size: 10.6px; line-height: 1.6; }
+.lsi-muted-line { display: flex; align-items: start; gap: 11px; padding: 7px 0 12px; color: var(--lsi-muted); font-size: 11px; line-height: 1.6; }
+.lsi-muted-line iconsax-icon { color: var(--lsi-wine); }
+.lsi-chart-empty { display: flex; align-items: center; gap: 18px; }
+.lsi-empty-ring { width: 105px; height: 105px; display: grid; place-items: center; flex: 0 0 105px; border-radius: 50%; background: conic-gradient(var(--lsi-border) 0 360deg); position: relative; }
+.lsi-empty-ring::before { content: ''; position: absolute; inset: 14px; background: var(--lsi-card); border-radius: 50%; }
+.lsi-empty-ring > span { z-index: 1; font-size: 22px; font-weight: 650; text-align: center; }
+.lsi-empty-ring small { display: block; font-size: 9px; font-weight: 400; color: var(--lsi-muted); }
+.lsi-chart-empty p { color: var(--lsi-muted); line-height: 1.65; font-size: 10.8px; margin: 0; }
+html[data-theme=dark] .lsi-page { --lsi-soft: rgba(154,65,84,.14); }
+html[data-theme=dark] .lsi-mini-status { background: #38383b; color: #d2d2d2; }
+html[data-theme=dark] .lsi-mini-status.is-online { background: rgba(56,154,105,.2); color: #96ddae; }
+html[data-theme=dark] .lsi-button-outline { border-color: rgba(198,108,123,.5); color: #e4a7b1; }
+html[data-theme=dark] .lsi-inline-message.is-error { color: #e79aa7; }
+@media (max-width: 1300px) {
+    .lsi-primary-grid,
+    .lsi-bottom-grid {
+        grid-template-columns: minmax(0, 1.5fr) minmax(290px, 1fr);
+    }
+}
+@media (max-width: 1070px) { .lsi-stats { grid-template-columns: repeat(2, minmax(0,1fr)); } .lsi-primary-grid, .lsi-bottom-grid { grid-template-columns: minmax(0,1fr); } .lsi-controls-card { max-width: none; } .lsi-controls-card .lsi-detail-grid { grid-template-columns: repeat(4, minmax(0,1fr)); } .lsi-right-bottom { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (max-width: 650px) { .lsi-heading h1 { font-size: 24px; } .lsi-page .lsi-stat { padding: 13px; gap: 9px; } .lsi-stat-icon { width: 33px; height: 33px; flex-basis: 33px; } .lsi-stat strong { font-size: 16px; } .lsi-stat small { font-size: 9px; } .lsi-panel { padding: 13px; } .lsi-video-stage { aspect-ratio: 4/3; } .lsi-video-bottom { font-size: 9px; gap: 6px; } .lsi-video-tag { display: none; } .lsi-right-bottom { grid-template-columns: 1fr; } .lsi-controls-card .lsi-detail-grid { grid-template-columns: 1fr 1fr; } .lsi-viewer-footer { flex-direction: column; } }
+
+
+/* Feed status: compact pill, isolated to the live-stream page. */
+.lsi-page .lsi-mini-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  min-height: 23px;
+  border: 1px solid #e9e2e4;
+  border-radius: 999px;
+  background: #f7f4f5;
+  color: #8b7f83;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .015em;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-transform: none;
+  box-sizing: border-box;
+}
+.lsi-page .lsi-mini-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: #b1b3b9;
+}
+.lsi-page .lsi-mini-status.is-connecting { background: #fff8ed; color: #a76b17; border-color: #f5dfbc; }
+.lsi-page .lsi-mini-status.is-connecting::before { background: #d49435; }
+.lsi-page .lsi-mini-status.is-online { background: #eef8f1; color: #277249; border-color: #d3eadb; }
+.lsi-page .lsi-mini-status.is-online::before { background: #309968; }
+.lsi-page .lsi-mini-status.is-error { background: #fff1f2; color: #ae3649; border-color: #f1d6dc; }
+.lsi-page .lsi-mini-status.is-error::before { background: #c3485e; }
+
+/* Saved per-browser preference. No effect on other BIKA switches. */
+.lsi-page .lsi-auto-connect-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 13px;
+  margin: 0 0 15px;
+  background: var(--lsi-soft);
+  border: 1px solid var(--lsi-border);
+  border-radius: 11px;
+}
+.lsi-page .lsi-auto-connect-copy { min-width: 0; }
+.lsi-page .lsi-auto-connect-copy label {
+  display: block;
+  font-size: 11.8px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--lsi-ink);
+  cursor: pointer;
+}
+.lsi-page .lsi-auto-connect-copy small {
+  display: block;
+  color: var(--lsi-muted);
+  font-size: 10.3px;
+  line-height: 1.55;
+  margin-top: 2px;
+}
+.lsi-page .lsi-auto-switch { display: inline-flex; flex: 0 0 39px; width: 39px; height: 23px; position: relative; cursor: pointer; }
+.lsi-page .lsi-auto-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.lsi-page .lsi-auto-switch-track { width: 100%; height: 100%; border-radius: 999px; background: #d8d5d7; transition: background .2s ease; pointer-events: none; }
+.lsi-page .lsi-auto-switch-track::before { content: ''; position: absolute; top: 3px; left: 3px; width: 17px; height: 17px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.15); transition: transform .2s ease; }
+.lsi-page .lsi-auto-switch input:checked + .lsi-auto-switch-track { background: var(--lsi-wine); }
+.lsi-page .lsi-auto-switch input:checked + .lsi-auto-switch-track::before { transform: translateX(16px); }
+.lsi-page .lsi-auto-switch input:focus-visible + .lsi-auto-switch-track { outline: 3px solid rgba(116,31,46,.25); outline-offset: 3px; }
+.lsi-page .lsi-auto-switch input:disabled + .lsi-auto-switch-track { opacity: .5; }
+.lsi-page .lsi-auto-switch:has(input:disabled) { cursor: not-allowed; }
+html[data-theme=dark] .lsi-page .lsi-mini-status { background: #393538; color: #d3c9ce; border-color: #50474b; }
+html[data-theme=dark] .lsi-page .lsi-mini-status.is-online { background: #203c2e; color: #a6e2bd; border-color: #325940; }
+html[data-theme=dark] .lsi-page .lsi-mini-status.is-connecting { background: #473a23; color: #f2c582; border-color: #5c492a; }
+html[data-theme=dark] .lsi-page .lsi-mini-status.is-error { background: #4b2930; color: #f2b8c1; border-color: #62404a; }
+
+
+/* Phase 1.4 — camera monitoring fills the viewer's existing space, without
+   stretching/cropping the 16:9 video or altering the adjacent control card. */
+.lsi-page .lsi-viewer-card { display: flex; flex-direction: column; min-height: 0; }
+.lsi-page .lsi-feed-monitor { margin-top: auto; padding-top: 15px; min-width: 0; }
+.lsi-page .lsi-monitor-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.lsi-page .lsi-monitor-header h3 { margin: 0; font-size: 11.7px; font-weight: 650; line-height: 1.3; color: var(--lsi-ink); }
+.lsi-page .lsi-monitor-live { display: inline-flex; align-items: center; gap: 5px; color: var(--lsi-muted); font-size: 10px; font-weight: 500; }
+.lsi-page .lsi-monitor-live::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #afb6bd; }
+.lsi-page .lsi-monitor-live.is-online::before { background: #329969; }
+.lsi-page .lsi-monitor-live.is-online { color: #358260; }
+.lsi-page .lsi-monitor-grid { display: grid; grid-template-columns: minmax(0,1.7fr) minmax(0,.95fr) minmax(0,.95fr); gap: 9px; align-items: stretch; min-width: 0; }
+.lsi-page .lsi-fps-trend, .lsi-page .lsi-health-metric { border: 1px solid var(--lsi-border); border-radius: 11px; background: var(--lsi-soft); min-width: 0; min-height: 108px; box-sizing: border-box; }
+.lsi-page .lsi-fps-trend { padding: 11px 12px 8px; }
+.lsi-page .lsi-trend-heading { display: flex; align-items: center; justify-content: space-between; gap: 9px; }
+.lsi-page .lsi-trend-heading > span { color: var(--lsi-ink); font-size: 11px; font-weight: 600; }
+.lsi-page .lsi-trend-heading small { display: inline; margin-left: 5px; color: var(--lsi-muted); font-size: 9.5px; font-weight: 400; white-space: nowrap; }
+.lsi-page .lsi-trend-heading strong { color: #448b6d; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.lsi-page .lsi-trend-visual { height: 60px; margin-top: 4px; position: relative; }
+.lsi-page .lsi-trend-svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.lsi-page .lsi-trend-gridline { stroke: currentColor; opacity: .09; stroke-dasharray: 3 5; stroke-width: 1; }
+.lsi-page .lsi-trend-path { fill: none; stroke: #589b79; stroke-width: 2.3; vector-effect: non-scaling-stroke; stroke-linecap: round; stroke-linejoin: round; }
+.lsi-page .lsi-trend-point { fill: #448b6d; }
+.lsi-page .lsi-trend-empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--lsi-muted); font-size: 10px; pointer-events: none; }
+/* Balanced monitoring metrics: heading stays level with FPS title; value and hint sit centered below. */
+.lsi-page .lsi-health-metric {
+  padding: 11px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 8px;
+}
+.lsi-page .lsi-health-heading {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+.lsi-page .lsi-health-icon {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border-radius: 8px;
+  background: var(--lsi-card);
+  color: var(--lsi-wine);
+  display: grid;
+  place-items: center;
+}
+.lsi-page .lsi-health-heading small {
+  color: var(--lsi-muted);
+  font-size: 10.4px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+.lsi-page .lsi-health-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  text-align: center;
+}
+.lsi-page .lsi-health-body strong {
+  color: var(--lsi-ink);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.lsi-page .lsi-health-body span {
+  color: var(--lsi-muted);
+  font-size: 9.5px;
+  line-height: 1.25;
+}
+html[data-theme=dark] .lsi-page .lsi-trend-heading strong { color: #83c9a4; }
+html[data-theme=dark] .lsi-page .lsi-trend-path { stroke: #83c9a4; }
+html[data-theme=dark] .lsi-page .lsi-trend-point { fill: #83c9a4; }
+html[data-theme=dark] .lsi-page .lsi-monitor-live.is-online { color: #94d1aa; }
+@media (min-width: 1071px) and (max-width: 1240px) {
+  .lsi-page .lsi-monitor-grid { grid-template-columns: minmax(0,1.15fr) repeat(2,minmax(0,1fr)); gap: 6px; }
+  .lsi-page .lsi-health-metric { padding: 10px 8px; gap: 7px; }
+  .lsi-page .lsi-health-heading { gap: 6px; }
+  .lsi-page .lsi-health-icon { width: 22px; height: 22px; flex-basis: 22px; }
+  .lsi-page .lsi-health-heading small { font-size: 9.7px; }
+  .lsi-page .lsi-trend-heading small { display: block; margin: 2px 0 0; }
+}
+@media (max-width: 700px) {
+  .lsi-page .lsi-monitor-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .lsi-page .lsi-fps-trend { grid-column: 1/-1; }
+  .lsi-page .lsi-feed-monitor { margin-top: 0; }
+  .lsi-page .lsi-health-metric { min-height: 95px; }
+}
+@media (max-width: 390px) {
+  .lsi-page .lsi-health-metric { padding: 10px 8px; gap: 7px; }
+  .lsi-page .lsi-health-heading { gap: 5px; }
+  .lsi-page .lsi-health-icon { width: 21px; height: 21px; flex-basis: 21px; }
+  .lsi-page .lsi-health-heading small { font-size: 9px; }
+  .lsi-page .lsi-health-body strong { font-size: 16px; }
+}

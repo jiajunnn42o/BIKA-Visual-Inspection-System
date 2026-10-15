@@ -302,6 +302,17 @@
                 </a>
 
 
+                <!-- LIVE STREAM INSPECTION: Phase 1 -->
+                <a
+                    href="{{ url_for('main.live_inspection') }}"
+                    class="app-nav-item {% if request.endpoint and request.endpoint.startswith('main.live_inspection') %}is-active{% endif %}"
+                    draggable="false"
+                >
+                    <iconsax-icon name="video" type="twotone" size="22" color="currentColor"></iconsax-icon>
+                    <span>Live Stream</span>
+                </a>
+
+
                 <!-- REPORTS -->
 
                 <a

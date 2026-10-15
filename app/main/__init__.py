@@ -25,3 +25,4 @@ from app.main import inspection_routes
 from app.main import model_management
 from app.main import reports_routes
 from app.main import media_routes
+from app.main import live_stream_routes
