@@ -1,0 +1,129 @@
+{
+  "adopt": true,
+  "edge_min_yellow": 0.15,
+  "edge_border_px": 2,
+  "detector": "D:\\BDS\\FYP2\\sam2_large_project\\runs\\yolov8_detect\\np_all_s42\\weights\\best.pt",
+  "rule": "0 GT defects and <= max(2, 0.2%) GT biscuits removed in the safe zone; most extra masks removed; ties -> milder",
+  "chosen_on": "3 validation frames + 9 new photos + task 16 (no test frames)",
+  "n_gt_safe_zone": 3304,
+  "frames_filter_off": 13,
+  "sweep": {
+    "off": {
+      "n_gt": 3304,
+      "n_defect": 2109,
+      "recall_all": 0.964588377723971,
+      "recall_defect": 0.9535324798482693,
+      "extra": 280,
+      "recall_none": 0.9932885906040269,
+      "recall_partial": 0.9247967479674797,
+      "recall_heavy": 0.6705882352941176,
+      "removed_total": 0,
+      "removed_gt": 0,
+      "removed_gt_edge": 0,
+      "removed_defect": 0,
+      "removed_extra": 0,
+      "types": {
+        "background": 137,
+        "piece_of_missed": 36,
+        "piece_of_found": 107
+      },
+      "removed_by_split": {}
+    },
+    "yellow0.15": {
+      "n_gt": 3304,
+      "n_defect": 2109,
+      "recall_all": 0.964588377723971,
+      "recall_defect": 0.9535324798482693,
+      "extra": 268,
+      "recall_none": 0.9932885906040269,
+      "recall_partial": 0.9247967479674797,
+      "recall_heavy": 0.6705882352941176,
+      "removed_total": 29,
+      "removed_gt": 0,
+      "removed_gt_edge": 1,
+      "removed_defect": 0,
+      "removed_extra": 28,
+      "types": {
+        "background": 125,
+        "piece_of_missed": 36,
+        "piece_of_found": 107
+      },
+      "removed_by_split": {
+        "photos": 1,
+        "task16": 28
+      }
+    },
+    "yellow0.3": {
+      "n_gt": 3304,
+      "n_defect": 2109,
+      "recall_all": 0.964588377723971,
+      "recall_defect": 0.9535324798482693,
+      "extra": 268,
+      "recall_none": 0.9932885906040269,
+      "recall_partial": 0.9247967479674797,
+      "recall_heavy": 0.6705882352941176,
+      "removed_total": 29,
+      "removed_gt": 0,
+      "removed_gt_edge": 1,
+      "removed_defect": 0,
+      "removed_extra": 28,
+      "types": {
+        "background": 125,
+        "piece_of_missed": 36,
+        "piece_of_found": 107
+      },
+      "removed_by_split": {
+        "photos": 1,
+        "task16": 28
+      }
+    },
+    "yellow0.5": {
+      "n_gt": 3304,
+      "n_defect": 2109,
+      "recall_all": 0.964588377723971,
+      "recall_defect": 0.9535324798482693,
+      "extra": 268,
+      "recall_none": 0.9932885906040269,
+      "recall_partial": 0.9247967479674797,
+      "recall_heavy": 0.6705882352941176,
+      "removed_total": 29,
+      "removed_gt": 0,
+      "removed_gt_edge": 1,
+      "removed_defect": 0,
+      "removed_extra": 28,
+      "types": {
+        "background": 125,
+        "piece_of_missed": 36,
+        "piece_of_found": 107
+      },
+      "removed_by_split": {
+        "photos": 1,
+        "task16": 28
+      }
+    },
+    "all_border": {
+      "n_gt": 3304,
+      "n_defect": 2109,
+      "recall_all": 0.9434019370460048,
+      "recall_defect": 0.9464201043148411,
+      "extra": 266,
+      "recall_none": 0.9816554809843401,
+      "recall_partial": 0.8810975609756098,
+      "recall_heavy": 0.6588235294117647,
+      "removed_total": 290,
+      "removed_gt": 71,
+      "removed_gt_edge": 145,
+      "removed_defect": 15,
+      "removed_extra": 74,
+      "types": {
+        "background": 124,
+        "piece_of_missed": 36,
+        "piece_of_found": 106
+      },
+      "removed_by_split": {
+        "photos": 258,
+        "task16": 32
+      }
+    }
+  }
+}

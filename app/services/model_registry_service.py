@@ -28,6 +28,7 @@ MODEL_REQUIRED_FILES = (
 MODEL_OPTIONAL_FILES = (
     "README.txt",
     "manifest.json",
+    "02_edge_filter.json",
 )
 
 MODEL_MANIFEST_FILENAME = "manifest.json"
@@ -1539,6 +1540,22 @@ def install_uploaded_model(
                         )
 
                     break
+
+                # Preserve experimental edge filter when included beside the
+                # required weights; never take a file from another ZIP folder.
+                edge_candidates = [
+                    info for info in by_basename.get("02_edge_filter.json", [])
+                    if str(Path(info.filename.replace("\\", "/")).parent) == package_parent
+                ]
+                if len(edge_candidates) > 1:
+                    raise ModelRegistryError(
+                        "Model ZIP contains duplicate 02_edge_filter.json files."
+                    )
+                if edge_candidates:
+                    with archive.open(edge_candidates[0], "r") as source, (
+                        staging / "02_edge_filter.json"
+                    ).open("wb") as destination:
+                        shutil.copyfileobj(source, destination)
 
             from app.services.inspection_model_metadata import (
                 get_classifier_ui_metadata,

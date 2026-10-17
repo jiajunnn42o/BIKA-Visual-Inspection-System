@@ -305,6 +305,52 @@ def filter_gaps(preds, image_np, det_cfg):
     return kept
 
 
+# Edge-object filtering adopted in experiment 34; no-op unless the active model config
+# explicitly enables it. Functions ported from revised 09b (uint8 LAB to reduce temporary RAM).
+
+def edge_object_flags(preds, image_np, border_px=2, min_contrast=8.0, min_ref=5):
+    """Per mask: does it touch the image border, and which fraction of its pixels is
+    biscuit-coloured in THIS image. Biscuit colour = Lab b* (yellowness) above the middle
+    between the background (pixels outside every mask) and the typical biscuit (median of
+    the confident masks that do not touch the border). Returns (touch, frac); frac is None
+    (= filter off for this image) with < min_ref reference biscuits or when background and
+    biscuits are not clearly different (e.g. a yellowish tray)."""
+    import cv2
+    H, W = image_np.shape[:2]
+    b = cv2.cvtColor(np.ascontiguousarray(image_np[..., :3]), cv2.COLOR_RGB2LAB)[..., 2]
+    covered = np.zeros((H, W), bool)
+    values, touch = [], []
+    bp = int(border_px)
+    for p in preds:
+        x0, y0, x1, y1 = (int(v) for v in p["box"])
+        loc = np.asarray(p["local"], bool)
+        covered[y0:y1 + 1, x0:x1 + 1] |= loc
+        values.append(b[y0:y1 + 1, x0:x1 + 1][loc])
+        touch.append(bool(x0 <= bp or y0 <= bp or x1 >= W - 1 - bp or y1 >= H - 1 - bp))
+    ref = [i for i, p in enumerate(preds) if not touch[i] and float(p.get("conf", 1.0)) >= 0.5 and values[i].size]
+    if len(ref) < min_ref or covered.all():
+        return touch, None
+    biscuit = float(np.median([np.median(values[i]) for i in ref]))
+    background = float(np.median(b[~covered]))
+    if biscuit - background < min_contrast:
+        return touch, None
+    thr = background + 0.5 * (biscuit - background)
+    return touch, [float((v > thr).mean()) if v.size else 0.0 for v in values]
+
+
+def filter_edge_objects(preds, image_np, det_cfg):
+    """Edge-object filter chosen by 34: drop masks that touch the image border and have
+    fewer than det_cfg["edge_min_yellow"] biscuit-coloured pixels. Biscuits cut by the
+    border are yellow and stay. No-op unless det_cfg["edge_min_yellow"] is set."""
+    y_min = det_cfg.get("edge_min_yellow")
+    if y_min is None or not preds:
+        return list(preds)
+    touch, frac = edge_object_flags(preds, image_np, det_cfg.get("edge_border_px", 2))
+    if frac is None:
+        return list(preds)
+    return [p for p, t, f in zip(preds, touch, frac) if not (t and f < float(y_min))]
+
+
 def classify(preds, inside, image, image_np, model, ckpt, s02, s13, s16, reference, device):
     """Same code path as 15.classify_new, plus the new-photo calibration of 16.
     Returns labels, probabilities, raw and calibrated geometry, and the

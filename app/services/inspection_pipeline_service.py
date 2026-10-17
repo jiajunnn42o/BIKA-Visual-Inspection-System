@@ -484,6 +484,36 @@ def _build_context(
         detector_path
     )
 
+    # Optional experiment-34 edge filter, scoped strictly to the ACTIVE model.
+    # V1 without 02_edge_filter.json remains unchanged. Do not use the global
+    # research-project path from the standalone 09b script.
+    edge_filter_path = detector_path.parent / "02_edge_filter.json"
+    if edge_filter_path.is_file():
+        try:
+            edge_cfg = json.loads(edge_filter_path.read_text(encoding="utf-8"))
+            if not isinstance(edge_cfg, dict) or not isinstance(edge_cfg.get("adopt"), bool):
+                raise ValueError("'adopt' must be a boolean")
+            if edge_cfg["adopt"]:
+                yellow = float(edge_cfg["edge_min_yellow"])
+                border = int(edge_cfg.get("edge_border_px", 2))
+                if not (0.0 <= yellow <= 1.0 and 0 <= border <= 64):
+                    raise ValueError("invalid edge_min_yellow or edge_border_px")
+                det_cfg["edge_min_yellow"] = yellow
+                det_cfg["edge_border_px"] = border
+        except (OSError, json.JSONDecodeError, ValueError, TypeError, KeyError) as exc:
+            raise InspectionPipelineError(
+                f"Invalid edge filter settings for model {cfg['model_version']}: "
+                f"{edge_filter_path} ({exc})"
+            ) from exc
+
+    current_app.logger.info(
+        "BIKA model %s | edge filter: %s | config: %s",
+        cfg["model_version"],
+        (f"ON (min_yellow={det_cfg['edge_min_yellow']}, border_px={det_cfg['edge_border_px']})"
+         if det_cfg.get("edge_min_yellow") is not None else "OFF"),
+        str(edge_filter_path) if edge_filter_path.is_file() else "none",
+    )
+
 
     # -----------------------------------------------------
     # Calibration reference from active website model package.
@@ -1774,6 +1804,14 @@ def _run_system_with_progress(
     )
 
     kept = pipeline09b.filter_gaps(
+        kept,
+        image_np,
+        ctx["det_cfg"],
+    )
+
+    # After mask deduplication and gap filtering, before safe-zone / classifier.
+    # When edge_min_yellow is absent (V1), the function is a no-op.
+    kept = pipeline09b.filter_edge_objects(
         kept,
         image_np,
         ctx["det_cfg"],
