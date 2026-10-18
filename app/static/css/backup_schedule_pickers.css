@@ -1,0 +1,191 @@
+/* Backup Schedule ONLY. Loaded after about_system.css. */
+[data-schedule-modal] .bika-schedule-native {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  clip-path: inset(50%) !important;
+  pointer-events: none !important;
+}
+[data-schedule-modal] .bika-schedule-select { position: relative; width: 100%; min-width: 0; }
+[data-schedule-modal] .bika-schedule-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 48px;
+  padding: 0 17px;
+  border: 1px solid #DCDCDF;
+  border-radius: 13px;
+  background: #FFF;
+  color: #343437;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+[data-schedule-modal] .bika-schedule-trigger:hover { border-color: #C7C7CB; }
+[data-schedule-modal] .bika-schedule-select.is-open .bika-schedule-trigger,
+[data-schedule-modal] .bika-schedule-trigger:focus-visible {
+  outline: 0;
+  border-color: #741F2E;
+  box-shadow: 0 0 0 3px rgba(116,31,46,.08);
+}
+[data-schedule-modal] .bika-schedule-trigger-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+[data-schedule-modal] .bika-schedule-chevron {
+  display: block;
+  flex: 0 0 8px;
+  width: 8px;
+  height: 8px;
+  margin: -4px 5px 0 14px;
+  border-right: 1.7px solid #77777B;
+  border-bottom: 1.7px solid #77777B;
+  transform: rotate(45deg);
+  transition: transform .15s ease, margin-top .15s ease;
+}
+[data-schedule-modal] .bika-schedule-select.is-open .bika-schedule-chevron { transform: rotate(225deg); margin-top: 4px; border-color: #741F2E; }
+[data-schedule-modal] .bika-schedule-clock { display: flex; align-items: center; flex-shrink: 0; color: #77777B; }
+
+/* Menus are portalled to document.body, so they cannot be cut off by the modal. */
+.bika-schedule-popover {
+  position: fixed;
+  z-index: 20050;
+  box-sizing: border-box;
+  border: 1px solid #E6E3E4;
+  border-radius: 14px;
+  background: #FFF;
+  color: #343437;
+  box-shadow: 0 18px 38px rgba(30,24,26,.15);
+  font-family: inherit;
+  animation: bikaScheduleAppear .14s ease both;
+}
+@keyframes bikaScheduleAppear { from { opacity: 0; } to { opacity: 1; } }
+.bika-schedule-options { display: flex; flex-direction: column; gap: 2px; padding: 6px; overflow-y: auto; overscroll-behavior: contain; }
+.bika-schedule-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 36px;
+  flex: 0 0 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #454548;
+  text-align: left;
+  font: inherit;
+  font-size: 12.8px;
+  cursor: pointer;
+}
+.bika-schedule-option:hover, .bika-schedule-option:focus-visible { outline: 0; background: #FAF4F5; color: #741F2E; }
+.bika-schedule-option.is-selected { background: #F5E9EB; color: #741F2E; font-weight: 600; }
+.bika-schedule-option.is-selected::after {
+  content: '✓';
+  display: grid;
+  place-items: center;
+  width: 19px; height: 19px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: rgba(116,31,46,.1);
+  font-size: 10px;
+}
+.bika-schedule-options::-webkit-scrollbar { width: 5px; }
+.bika-schedule-options::-webkit-scrollbar-thumb { background: #D7D3D4; border-radius: 99px; }
+
+.bika-schedule-time-panel { padding: 14px; overflow: visible; }
+.bika-schedule-time-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr) 1.35fr; gap: 9px; align-items: start; }
+.bika-schedule-time-field, .bika-schedule-time-ampm { display: flex; flex-direction: column; min-width: 0; gap: 7px; }
+.bika-schedule-time-field > span, .bika-schedule-time-ampm > span { color: #77777A; font-size: 11px; font-weight: 500; line-height: 1.2; }
+/* Selection-only, scrollable hour / minute lists (no typing). */
+.bika-schedule-time-choice { display: flex; flex-direction: column; min-width: 0; gap: 7px; }
+.bika-schedule-time-heading { color: #77777A; font-size: 11px; font-weight: 500; line-height: 1.2; }
+.bika-schedule-time-list {
+  height: 138px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 5px;
+  border: 1px solid #DDDDE0;
+  border-radius: 10px;
+  background: #FFF;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: #D7D3D4 transparent;
+}
+.bika-schedule-time-list::-webkit-scrollbar { width: 5px; }
+.bika-schedule-time-list::-webkit-scrollbar-thumb { background: #D7D3D4; border-radius: 99px; }
+.bika-schedule-time-choice-option {
+  flex: 0 0 36px;
+  width: 100%;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #454548;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.bika-schedule-time-choice-option:hover,
+.bika-schedule-time-choice-option:focus-visible {
+  outline: 0;
+  background: #FAF4F5;
+  color: #741F2E;
+}
+.bika-schedule-time-choice-option.is-selected {
+  background: #741F2E;
+  color: #FFF;
+  font-weight: 650;
+}
+.bika-schedule-time-period { display: flex; gap: 4px; height: 39px; }
+.bika-schedule-period-button {
+  flex: 1 1 50%; min-width: 0;
+  padding: 0;
+  border: 1px solid #DDDDE0;
+  border-radius: 9px;
+  background: transparent;
+  color: #55555A;
+  font: inherit; font-size: 11px; cursor: pointer;
+}
+.bika-schedule-period-button[aria-pressed=true] { border-color: #741F2E; background: #741F2E; color: #FFF; }
+.bika-schedule-time-done {
+  display: block; height: 34px; margin: 13px 0 0 auto; padding: 0 17px;
+  border: 0; border-radius: 999px;
+  background: #741F2E; color: #FFF;
+  font: inherit; font-size: 11.5px; cursor: pointer;
+}
+.bika-schedule-time-done:hover { background: #5E1825; }
+
+html[data-theme="dark"] [data-schedule-modal] .bika-schedule-trigger,
+html[data-theme="dark"] .bika-schedule-popover { border-color: rgba(255,255,255,.1); background: #29292C; color: #ECECEE; }
+html[data-theme="dark"] .bika-schedule-option { color: #DFDFE2; }
+html[data-theme="dark"] .bika-schedule-option:hover, html[data-theme="dark"] .bika-schedule-option:focus-visible { background: rgba(164,62,80,.13); color: #F0C5CD; }
+html[data-theme="dark"] .bika-schedule-option.is-selected { background: rgba(164,62,80,.19); color: #F2C1CA; }
+html[data-theme="dark"] .bika-schedule-time-list { border-color: rgba(255,255,255,.11); background: #202022; scrollbar-color: #555 transparent; }
+html[data-theme="dark"] .bika-schedule-time-choice-option { color: #EEE; }
+html[data-theme="dark"] .bika-schedule-time-choice-option:hover,
+html[data-theme="dark"] .bika-schedule-time-choice-option:focus-visible { background: rgba(164,62,80,.13); color: #F0C5CD; }
+html[data-theme="dark"] .bika-schedule-time-choice-option.is-selected { background: #741F2E; color: #FFF; }
+html[data-theme="dark"] .bika-schedule-time-heading { color: #A0A0A4; }
+html[data-theme="dark"] .bika-schedule-period-button { border-color: rgba(255,255,255,.12); color: #EEE; }
+html[data-theme="dark"] .bika-schedule-period-button[aria-pressed=true] { border-color: #A84859; background: #741F2E; color: #FFF; }
+html[data-theme="dark"] [data-schedule-modal] .bika-schedule-chevron { border-color: #BABAC0; }
+html[data-theme="dark"] [data-schedule-modal] .bika-schedule-clock { color: #BBBBC0; }
+html[data-theme="dark"] .bika-schedule-time-field > span, html[data-theme="dark"] .bika-schedule-time-ampm > span { color: #A0A0A4; }
+
+@media (max-width: 420px) {
+  .bika-schedule-time-panel { padding: 10px; }
+  .bika-schedule-time-grid { gap: 6px; grid-template-columns: minmax(0,1fr) minmax(0,1fr) 1.35fr; }
+  .bika-schedule-time-list { height: 122px; padding: 3px; }
+}

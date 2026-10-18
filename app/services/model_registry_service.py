@@ -34,7 +34,7 @@ MODEL_OPTIONAL_FILES = (
 MODEL_MANIFEST_FILENAME = "manifest.json"
 
 DEFAULT_MODEL_NAME = (
-    "BIKA Biscuit Inspection Model"
+    "BIKA Snack Inspection Model"
 )
 
 MODEL_STAGE_OPTIONS = (

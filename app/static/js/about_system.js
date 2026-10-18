@@ -524,7 +524,7 @@
                     modelUploadName.dataset
                         .defaultValue
                     ||
-                    "BIKA Biscuit Inspection Model"
+                    "BIKA Snack Inspection Model"
                 );
         }
 

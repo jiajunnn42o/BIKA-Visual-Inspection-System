@@ -1622,3 +1622,198 @@ html[data-theme="dark"]
     }
 
 }
+
+
+/* ---------------------------------------------------------
+   Video sampled-frame result, scoped to Inspection only.
+   Does not affect Image Inspection or other pages.
+   --------------------------------------------------------- */
+.inspection-video-hint {
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--inspection-muted);
+    margin: 10px 0 0;
+}
+.inspection-video-analysis {
+    width: 100%;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--inspection-surface-strong, #fff);
+    color: var(--inspection-text, #29272a);
+    line-height: 1.4;
+    box-sizing: border-box;
+}
+.inspection-video-analysis-frame {
+    width: 100%;
+    max-height: 480px;
+    object-fit: contain;
+    background: #171717;
+    border-radius: 10px;
+}
+.inspection-video-analysis-controls {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+}
+.inspection-video-analysis-controls button,
+.inspection-video-analysis-controls select {
+    font: inherit;
+    font-size: 12px;
+    border-radius: 9px;
+    border: 1px solid var(--inspection-border, #e6dfe2);
+    padding: 9px 10px;
+    background: var(--inspection-surface-strong, #fff);
+    color: inherit;
+    min-width: 0;
+    cursor: pointer;
+}
+.inspection-video-analysis-controls button:disabled { opacity: .4; cursor: default; }
+.inspection-video-analysis-info { font-size: 12px; font-weight: 500; }
+.inspection-video-analysis-detail,
+.inspection-video-analysis-note {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.55;
+    color: var(--inspection-muted, #777);
+}
+.inspection-video-analysis-note { border-left: 3px solid #7b2334; padding-left: 10px; }
+@media (max-width: 540px) {
+    .inspection-video-analysis-controls { grid-template-columns: 1fr 1fr; }
+    .inspection-video-analysis-controls select { grid-column: 1 / -1; grid-row: 1; }
+}
+
+/* Phase 2B annotated MP4 result, scoped to Inspection */
+.inspection-video-analysis-heading {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--inspection-text, #29272a);
+}
+.inspection-video-analysis-movie {
+    display: block;
+    width: 100%;
+    max-height: 480px;
+    background: #171717;
+    border-radius: 10px;
+    object-fit: contain;
+}
+.inspection-video-analysis-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--inspection-muted, #777);
+}
+.inspection-video-analysis-download {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border-radius: 9px;
+    padding: 9px 12px;
+    color: white;
+    background: #7b2334;
+    font-size: 12px;
+    font-weight: 650;
+    text-decoration: none;
+}
+.inspection-video-analysis-download:hover {
+    background: #61202d;
+    color: white;
+}
+
+/* Phase 3A: scoped colour-only video mask selection */
+.inspection-active-model-note {
+    margin: 12px 0 0;
+    font-size: 11px;
+    color: var(--inspection-muted, #777);
+    overflow-wrap: anywhere;
+}
+.inspection-video-player-wrap {
+    position: relative;
+    line-height: 0;
+    width: 100%;
+    border-radius: 10px;
+    background: #171717;
+    overflow: hidden;
+}
+.inspection-video-player-wrap > .inspection-video-analysis-movie {
+    display: block;
+    width: 100%;
+    max-height: none;
+    border-radius: 0;
+    height: auto;
+}
+.inspection-video-hit-area {
+    position: absolute;
+    inset: 0 0 43px;
+    cursor: crosshair;
+    background: transparent;
+    pointer-events: none;
+}
+.inspection-video-hit-area.is-ready { pointer-events: auto; }
+.inspection-video-hit-area:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: -4px;
+}
+.inspection-video-select-hint {
+    margin: 0;
+    font-size: 11px;
+    color: var(--inspection-muted, #777);
+    line-height: 1.5;
+}
+.inspection-video-evidence {
+    border: 1px solid var(--inspection-border, #e6dfe2);
+    padding: 12px;
+    border-radius: 10px;
+}
+.inspection-video-evidence > summary {
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 650;
+    margin: 0;
+}
+.inspection-video-evidence[open] > summary { margin-bottom: 12px; }
+
+/* Phase 3D: Video Safe Zone is an independent left-column card. */
+.inspection-safezone-config {
+    color: var(--inspection-text);
+}
+.inspection-safezone-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+.inspection-safezone-fields label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    color: var(--inspection-text);
+    font-size: 11.5px;
+    font-weight: 600;
+}
+.inspection-safezone-fields input {
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid var(--inspection-border);
+    border-radius: 10px;
+    background: var(--inspection-surface-strong);
+    color: var(--inspection-text);
+    padding: 10px 11px;
+    font: inherit;
+    font-size: 12px;
+}
+.inspection-safezone-fields input:focus-visible {
+    outline: 2px solid var(--inspection-brand);
+    outline-offset: 2px;
+}
+.inspection-safezone-note {
+    margin: 11px 0 0;
+    color: var(--inspection-muted);
+    font-size: 11px;
+    line-height: 1.5;
+}

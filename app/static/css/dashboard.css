@@ -2101,3 +2101,158 @@ html[data-theme="dark"] .dashboard-trend-metric-toggle {
 .dashboard-trend-actions {
     margin-left: auto;
 }
+
+/* BIKA_DASHBOARD_ADMIN_INFO_V2 — matches System Configuration info tooltips */
+.dashboard-page .dashboard-title-inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+}
+.dashboard-page .dashboard-title-inline > h2 { margin: 0; }
+.dashboard-page .config-info {
+    position: relative;
+    width: 17px;
+    height: 17px;
+    flex: 0 0 17px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: #9A9A9A;
+    cursor: help;
+    outline: none;
+    transition: color 150ms ease, transform 150ms ease;
+}
+.dashboard-page .config-info-icon {
+    width: 17px;
+    height: 17px;
+    display: block;
+}
+.dashboard-page .config-info:hover,
+.dashboard-page .config-info:focus,
+.dashboard-page .config-info:focus-visible {
+    color: #741F2E;
+    transform: translateY(-1px);
+}
+.dashboard-page .config-tooltip {
+    position: absolute;
+    z-index: 50;
+    left: 50%;
+    bottom: calc(100% + 9px);
+    width: max-content;
+    max-width: 240px;
+    padding: 8px 10px;
+    box-sizing: border-box;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    background: #FFFFFF;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.10);
+    color: #4B4B4B;
+    font-family: "Inter", Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 400;
+    line-height: 1.4;
+    text-align: left;
+    white-space: normal;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateX(-50%) translateY(3px);
+    transition: opacity 140ms ease, transform 140ms ease, visibility 140ms ease;
+}
+.dashboard-page .config-tooltip::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    transform: translateX(-50%);
+    border-width: 5px 5px 0 5px;
+    border-style: solid;
+    border-color: #FFFFFF transparent transparent transparent;
+}
+.dashboard-page .config-info:hover .config-tooltip,
+.dashboard-page .config-info:focus .config-tooltip,
+.dashboard-page .config-info:focus-visible .config-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+html[data-theme="dark"] .dashboard-page .config-info {
+    color: rgba(255, 255, 255, 0.55);
+}
+html[data-theme="dark"] .dashboard-page .config-info:hover,
+html[data-theme="dark"] .dashboard-page .config-info:focus,
+html[data-theme="dark"] .dashboard-page .config-info:focus-visible {
+    color: #FFFFFF;
+}
+html[data-theme="dark"] .dashboard-page .config-tooltip {
+    border-color: rgba(255, 255, 255, 0.10);
+    background: #28282A;
+    color: #F0F0F0;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.26);
+}
+html[data-theme="dark"] .dashboard-page .config-tooltip::after {
+    border-color: #28282A transparent transparent transparent;
+}
+.dashboard-page .dashboard-trend-title > .dashboard-title-inline { flex: 0 0 auto; }
+@media (max-width: 520px) {
+    .dashboard-page .dashboard-title-inline { gap: 6px; }
+}
+
+/* BIKA_TARGET_METRIC_INFO_V2_VISIBLE_FIX — show complete metric labels */
+.dashboard-page .dashboard-target-name-tail {
+    display: inline-block;
+    white-space: nowrap;
+}
+.dashboard-page .dashboard-target-table-row > .dashboard-target-name-cell {
+    display: block;
+    min-width: 0;
+    overflow: visible;
+    white-space: normal;
+    line-height: 1.45;
+}
+.dashboard-page .dashboard-target-name-cell strong {
+    display: inline;
+    min-width: 0;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: normal;
+    font-size: inherit;
+    font-weight: 500;
+    color: var(--dash-ink);
+}
+.dashboard-page .dashboard-target-name-cell .config-info {
+    display: inline-flex;
+    vertical-align: middle;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex: 0 0 15px;
+    width: 15px;
+    height: 15px;
+    min-width: 15px;
+    overflow: visible;
+    margin: 0 0 0 4px;
+    padding: 0;
+    cursor: help;
+}
+.dashboard-page .dashboard-target-name-cell .config-info-icon {
+    width: 15px;
+    height: 15px;
+    display: block;
+}
+.dashboard-page .dashboard-target-name-cell .config-tooltip {
+    min-width: 160px;
+    max-width: 220px;
+    font-weight: 400;
+}
+.dashboard-page .dashboard-target-table-row {
+    overflow: visible;
+    padding-top: 8px;
+    padding-bottom: 8px;
+}

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 import uuid
+from pathlib import Path
 
 from threading import (
     Event,
@@ -13,6 +14,7 @@ from flask import (
     current_app,
     jsonify,
     render_template,
+    send_file,
     request,
     url_for,
 )
@@ -35,6 +37,11 @@ from app.services.inspection_pipeline_service import (
     InspectionPipelineError,
     inspect_image_bytes_with_progress,
 )
+
+from app.services.video_inspection_service import (
+    inspect_video_bytes_with_progress,
+)
+from app.services.video_safe_zone import validate_zone
 
 from app.services.inspection_record_service import (
     persist_completed_image_inspection,
@@ -137,10 +144,14 @@ def _cleanup_jobs():
 
         for job_id in expired:
 
-            _INSPECTION_JOBS.pop(
-                job_id,
-                None,
-            )
+            expired_job = _INSPECTION_JOBS.pop(job_id, None)
+            if expired_job is not None:
+                output = expired_job.get("annotated_video_path")
+                if output:
+                    # Output paths are generated inside app.instance_path;
+                    # users cannot supply a filesystem path.
+                    Path(output).unlink(missing_ok=True)
+                    Path(output).with_suffix(".tracks.json").unlink(missing_ok=True)
 
 
 # =========================================================
@@ -985,11 +996,23 @@ def inspection_job_status(
             "complete"
         ):
 
-            payload[
-                "result"
-            ] = job[
-                "result"
-            ]
+            result = job["result"]
+            # URL generation needs the CURRENT request context, not the
+            # background inference thread's application context.
+            if result and result.get("kind") == "video" and result.get("annotated_video"):
+                annotated_meta = dict(result["annotated_video"])
+                annotated_meta["url"] = url_for(
+                    "main.inspection_annotated_video", job_id=job_id
+                )
+                annotated_meta["download_url"] = url_for(
+                    "main.inspection_annotated_video", job_id=job_id, download=1
+                )
+                annotated_meta["tracks_url"] = url_for(
+                    "main.inspection_video_tracks", job_id=job_id
+                )
+                payload["result"] = dict(result, annotated_video=annotated_meta)
+            else:
+                payload["result"] = result
 
 
     return jsonify(
@@ -1089,4 +1112,170 @@ def cancel_inspection_job(
         ok=True,
 
         status="cancelling",
+    ), 202
+
+# =========================================================
+# BOUNDED SAMPLED VIDEO INSPECTION
+# Reuses the exact 09b image model for sampled video frames.
+# Do not treat summed detections as unique biscuits.
+# =========================================================
+
+ALLOWED_VIDEO_EXTENSIONS = {".mp4", ".mov", ".avi", ".webm"}
+MAX_VIDEO_UPLOAD_BYTES = 80 * 1024 * 1024
+
+def _run_video_job(app, job_id: str, video_bytes: bytes, filename: str, safe_zone):
+    with app.app_context():
+        with _INSPECTION_JOBS_LOCK:
+            job = _INSPECTION_JOBS.get(job_id)
+            if job is None:
+                return
+            job["status"] = "running"
+            job["stage"] = "Preparing video frames"
+            job["updated_at"] = time.time()
+            cancel_event = job["cancel_event"]
+
+        # A generated, opaque job identifier is the only filename component.
+        # Output is not in /static and is accessible ONLY through the
+        # login-protected, per-user inspection video route.
+        output_path = Path(app.instance_path) / "video_inspections" / f"{job_id}.mp4"
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        completed = False
+        try:
+            result = inspect_video_bytes_with_progress(
+                video_bytes, filename=filename, output_path=output_path,
+                safe_zone=safe_zone,
+                progress_callback=lambda p, stage: _set_job_progress(job_id, p, stage),
+                cancel_check=cancel_event.is_set,
+            )
+            if cancel_event.is_set():
+                raise InspectionCancelled("Video inspection cancelled by user.")
+            with _INSPECTION_JOBS_LOCK:
+                job = _INSPECTION_JOBS.get(job_id)
+                if job is not None:
+                    job.update(status="complete", progress=100,
+                               stage="Annotated MP4 export complete", result=result,
+                               annotated_video_path=str(output_path),
+                               message="Annotated MP4 ready. New biscuit entries trigger AI and full colour masks follow tracked objects.",
+                               updated_at=time.time())
+                    completed = True
+        except InspectionCancelled:
+            with _INSPECTION_JOBS_LOCK:
+                job = _INSPECTION_JOBS.get(job_id)
+                if job is not None:
+                    job.update(status="cancelled", stage="Inspection cancelled",
+                               message="Inspection cancelled.", updated_at=time.time())
+        except InspectionPipelineError as exc:
+            current_app.logger.warning("Video inspection error: %s", exc)
+            with _INSPECTION_JOBS_LOCK:
+                job = _INSPECTION_JOBS.get(job_id)
+                if job is not None:
+                    job.update(status="failed", stage="Video inspection failed",
+                               message=str(exc), updated_at=time.time())
+        except Exception:
+            current_app.logger.exception("Unexpected video inspection failure.")
+            with _INSPECTION_JOBS_LOCK:
+                job = _INSPECTION_JOBS.get(job_id)
+                if job is not None:
+                    job.update(status="failed", stage="Video inspection failed",
+                               message="Video inspection failed unexpectedly. Check the server log.",
+                               updated_at=time.time())
+        finally:
+            if not completed:
+                output_path.unlink(missing_ok=True)
+                output_path.with_suffix(".tracks.json").unlink(missing_ok=True)
+
+
+@main_bp.route("/inspection/video/<job_id>/annotated.mp4", methods=["GET"])
+@login_required
+def inspection_annotated_video(job_id):
+    _cleanup_jobs()
+    job = _job_for_user(job_id)
+    if job is None or job.get("status") != "complete":
+        return jsonify(ok=False, message="Annotated video is not available."), 404
+    path = job.get("annotated_video_path")
+    if not path or not Path(path).is_file():
+        return jsonify(ok=False, message="Annotated video has expired."), 404
+    download = request.args.get("download") == "1"
+    response = send_file(
+        path, mimetype="video/mp4", conditional=True,
+        as_attachment=download, download_name=f"BIKA_annotated_{job_id[:8]}.mp4",
+    )
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+@main_bp.route("/inspection/video/<job_id>/tracks.json", methods=["GET"])
+@login_required
+def inspection_video_tracks(job_id):
+    """Only the originating user may read this video's clickable track data."""
+    _cleanup_jobs()
+    job = _job_for_user(job_id)
+    if job is None or job.get("status") != "complete":
+        return jsonify(ok=False, message="Tracking data is not available."), 404
+    output_path = job.get("annotated_video_path")
+    if not output_path:
+        return jsonify(ok=False, message="Tracking data has expired."), 404
+    path = Path(output_path).with_suffix(".tracks.json")
+    if not path.is_file():
+        return jsonify(ok=False, message="Tracking data has expired."), 404
+    response = send_file(path, mimetype="application/json", conditional=True)
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
+@main_bp.route("/inspection/run-video", methods=["POST"])
+@login_required
+def run_inspection_video():
+    _cleanup_jobs()
+    with _INSPECTION_JOBS_LOCK:
+        if any(str(job.get("user_id")) == str(current_user.get_id())
+               and job.get("status") in {"queued", "running"}
+               for job in _INSPECTION_JOBS.values()):
+            return jsonify(ok=False, message="Another inspection is already running. Wait for it to finish or cancel it."), 409
+    uploaded_file = request.files.get("file")
+    if not uploaded_file or not uploaded_file.filename:
+        return jsonify(ok=False, message="Please select a video first."), 400
+    filename = uploaded_file.filename.strip()
+    extension = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if extension not in ALLOWED_VIDEO_EXTENSIONS:
+        return jsonify(ok=False, message="Supported videos: MP4, MOV, AVI, WEBM."), 400
+    if request.content_length and request.content_length > MAX_VIDEO_UPLOAD_BYTES + 1024 * 1024:
+        return jsonify(ok=False, message="Video size must not exceed 80 MB."), 413
+    video_bytes = uploaded_file.read(MAX_VIDEO_UPLOAD_BYTES + 1)
+    if len(video_bytes) > MAX_VIDEO_UPLOAD_BYTES:
+        return jsonify(ok=False, message="Video size must not exceed 80 MB."), 413
+    if not video_bytes:
+        return jsonify(ok=False, message="Video file is empty."), 400
+
+    try:
+        # Only horizontal position is user-configurable. The activation
+        # region always spans the complete video height, regardless of older
+        # browser forms that may still submit top/height coordinates.
+        safe_zone = validate_zone([
+            float(request.form.get("zone_left", "5")) / 100,
+            0.0,
+            (float(request.form.get("zone_left", "5")) + float(request.form.get("zone_width", "90"))) / 100,
+            1.0,
+        ])
+    except (ValueError, TypeError) as exc:
+        return jsonify(ok=False, message=f"Invalid Safe Zone: {exc}"), 400
+
+    job_id = uuid.uuid4().hex
+    now = time.time()
+    with _INSPECTION_JOBS_LOCK:
+        _INSPECTION_JOBS[job_id] = {
+            "job_id": job_id, "user_id": str(current_user.get_id()),
+            "status": "queued", "progress": 0, "stage": "Queued",
+            "message": "", "result": None, "source_filename": filename,
+            "cancel_event": Event(), "created_at": now, "updated_at": now,
+        }
+    app = current_app._get_current_object()
+    Thread(target=_run_video_job, args=(app, job_id, video_bytes, filename, safe_zone),
+           daemon=True, name=f"video-inspection-{job_id[:8]}").start()
+    return jsonify(
+        ok=True, job_id=job_id,
+        status_url=url_for("main.inspection_job_status", job_id=job_id),
+        cancel_url=url_for("main.cancel_inspection_job", job_id=job_id),
     ), 202

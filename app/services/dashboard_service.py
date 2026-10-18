@@ -851,7 +851,7 @@ def build_dashboard_data(
         status_sentence = (
             f"Across {total_batches:,} batches and "
             f"{total_products:,} products inspected, "
-            f"overall yield is {overall_yield:.1f}%, "
+            f"the good snack rate is {overall_yield:.1f}%, "
             f"{abs(overall_yield - target_yield):.1f}% "
             f"{direction} the {target_yield:.0f}% target."
         )

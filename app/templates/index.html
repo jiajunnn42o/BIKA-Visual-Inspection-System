@@ -112,7 +112,7 @@ Dashboard | BIKA
 
                 <span data-dashboard-filter-label>
 
-                    {{ dashboard.filter.label }} · {{ dashboard.kpi.total_batches }} batches
+                    {{ dashboard.filter.label }} · {{ dashboard.kpi.total_batches }} inspections
 
                 </span>
 
@@ -306,7 +306,7 @@ Dashboard | BIKA
 
                 <strong data-summary-batches>{{ dashboard.kpi.total_batches }}</strong>
 
-                batches and
+                inspections and
 
                 <strong data-summary-products>{{ "{:,}".format(dashboard.kpi.total_products) }}</strong>
 
@@ -318,7 +318,7 @@ Dashboard | BIKA
 
             <span>
 
-                overall yield is
+                the good snack rate is
 
                 <strong data-summary-yield>{{ "%.1f"|format(dashboard.kpi.yield_percent) }}%</strong>,
 
@@ -358,7 +358,17 @@ Dashboard | BIKA
 
 
 
-            <h2>Overall Yield Rate</h2>
+            <span class="dashboard-title-inline">
+                <h2>Overall Good Snack Rate</h2>
+                <span class="config-info" role="button" tabindex="0" aria-label="Percentage of inspected snacks marked Normal. Higher is better.">
+                    <svg class="config-info-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+                        <path d="M12 10.8V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                        <circle cx="12" cy="7.6" r="0.9" fill="currentColor"/>
+                    </svg>
+                    <span class="config-tooltip" role="tooltip">Percentage of inspected snacks marked Normal. Higher is better.</span>
+                </span>
+            </span>
 
 
 
@@ -480,7 +490,17 @@ Dashboard | BIKA
 
             <div class="dashboard-card-heading">
 
-                <h2>Overall Output Composition</h2>
+                <span class="dashboard-title-inline">
+                    <h2>Overall Output Composition</h2>
+                    <span class="config-info" role="button" tabindex="0" aria-label="Shows how inspected snacks are split across Normal and defect categories.">
+                        <svg class="config-info-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+                            <path d="M12 10.8V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                            <circle cx="12" cy="7.6" r="0.9" fill="currentColor"/>
+                        </svg>
+                        <span class="config-tooltip" role="tooltip">Shows how inspected snacks are split across Normal and defect categories.</span>
+                    </span>
+                </span>
 
                 <p>
 
@@ -574,7 +594,17 @@ Dashboard | BIKA
 
 
 
-            <h2>Overall vs Target</h2>
+            <span class="dashboard-title-inline">
+                <h2>Overall vs Target</h2>
+                <span class="config-info" role="button" tabindex="0" aria-label="Compare actual quality results with targets. Gap = actual minus target.">
+                    <svg class="config-info-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+                        <path d="M12 10.8V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                        <circle cx="12" cy="7.6" r="0.9" fill="currentColor"/>
+                    </svg>
+                    <span class="config-tooltip" role="tooltip">Compare actual quality results with targets. Gap = actual minus target.</span>
+                </span>
+            </span>
 
 
 
@@ -598,7 +628,18 @@ Dashboard | BIKA
 
                 <div class="dashboard-target-table-row">
 
-                    <strong>Yield rate</strong>
+                    <div class="dashboard-target-name-cell">
+    <strong>Good Snack </strong><span class="dashboard-target-name-tail"><strong>Rate</strong>
+    <span class="config-info" role="button" tabindex="0" aria-label="Percentage of inspected snacks marked Normal. Higher is better.">
+    <svg class="config-info-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M12 10.8V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="12" cy="7.6" r="0.9" fill="currentColor"/>
+    </svg>
+    <span class="config-tooltip" role="tooltip">Percentage of inspected snacks marked Normal. Higher is better.</span>
+</span>
+</span>
+</div>
 
 
 
@@ -624,7 +665,18 @@ Dashboard | BIKA
 
                 <div class="dashboard-target-table-row">
 
-                    <strong>Defect rate</strong>
+                    <div class="dashboard-target-name-cell">
+    <strong>Defect </strong><span class="dashboard-target-name-tail"><strong>Rate</strong>
+    <span class="config-info" role="button" tabindex="0" aria-label="Percentage of inspected snacks marked defective. Lower is better.">
+    <svg class="config-info-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M12 10.8V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="12" cy="7.6" r="0.9" fill="currentColor"/>
+    </svg>
+    <span class="config-tooltip" role="tooltip">Percentage of inspected snacks marked defective. Lower is better.</span>
+</span>
+</span>
+</div>
 
 
 
@@ -650,7 +702,18 @@ Dashboard | BIKA
 
                 <div class="dashboard-target-table-row">
 
-                    <strong>Batch pass rate</strong>
+                    <div class="dashboard-target-name-cell">
+    <strong>Inspections Meeting </strong><span class="dashboard-target-name-tail"><strong>Standard</strong>
+    <span class="config-info" role="button" tabindex="0" aria-label="Percentage of inspections that meet the minimum required Good Snack Rate.">
+    <svg class="config-info-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M12 10.8V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="12" cy="7.6" r="0.9" fill="currentColor"/>
+    </svg>
+    <span class="config-tooltip" role="tooltip">Percentage of inspections that meet the minimum required Good Snack Rate.</span>
+</span>
+</span>
+</div>
 
 
 
@@ -712,7 +775,17 @@ Dashboard | BIKA
 
                     </svg>
 
-                    <h2>Quality Trend</h2>
+                    <span class="dashboard-title-inline">
+                        <h2>Quality Trend</h2>
+                        <span class="config-info" role="button" tabindex="0" aria-label="See how the Good or Bad Ratio changes over time.">
+                            <svg class="config-info-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+                                <path d="M12 10.8V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                <circle cx="12" cy="7.6" r="0.9" fill="currentColor"/>
+                            </svg>
+                            <span class="config-tooltip" role="tooltip">See how the Good or Bad Ratio changes over time.</span>
+                        </span>
+                    </span>
 
 <div
                         class="dashboard-trend-metric-toggle"
@@ -831,7 +904,17 @@ Dashboard | BIKA
 
                 <div class="dashboard-card-heading">
 
-                    <h2>Camera &amp; Runtime</h2>
+                    <span class="dashboard-title-inline">
+                        <h2>Camera &amp; Runtime</h2>
+                        <span class="config-info" role="button" tabindex="0" aria-label="See camera uptime, processed frames and average speed when available.">
+                            <svg class="config-info-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+                                <path d="M12 10.8V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                                <circle cx="12" cy="7.6" r="0.9" fill="currentColor"/>
+                            </svg>
+                            <span class="config-tooltip" role="tooltip">See camera uptime, processed frames and average speed when available.</span>
+                        </span>
+                    </span>
 
                     <p>Live once the camera is connected</p>
 
@@ -883,7 +966,17 @@ Dashboard | BIKA
 
 
 
-                <h2>Cumulative Totals</h2>
+                <span class="dashboard-title-inline">
+                    <h2>Cumulative Totals</h2>
+                    <span class="config-info" role="button" tabindex="0" aria-label="Totals and averages for inspections in the selected date range.">
+                        <svg class="config-info-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+                            <path d="M12 10.8V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                            <circle cx="12" cy="7.6" r="0.9" fill="currentColor"/>
+                        </svg>
+                        <span class="config-tooltip" role="tooltip">Totals and averages for inspections in the selected date range.</span>
+                    </span>
+                </span>
 
 
 
@@ -891,7 +984,7 @@ Dashboard | BIKA
 
                     <div>
 
-                        <dt>Total batches</dt>
+                        <dt>Total inspections</dt>
 
                         <dd data-cumulative-batches>{{ dashboard.kpi.total_batches }}</dd>
 
@@ -911,7 +1004,7 @@ Dashboard | BIKA
 
                     <div>
 
-                        <dt>Avg per batch</dt>
+                        <dt>Avg per inspection</dt>
 
                         <dd data-cumulative-average>{{ "%.0f"|format(dashboard.cumulative.average_products_per_batch) }}</dd>
 

@@ -62,6 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
+
     /* =====================================================
 
        FORMATTERS
@@ -530,7 +531,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             filterLabel.textContent =
 
-                `${data.filter.label} · ${num(kpi.total_batches)} batches`;
+                `${data.filter.label} · ${num(kpi.total_batches)} inspections`;
 
         }
 
@@ -1584,7 +1585,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     `${metricValue(point).toFixed(1)}%</span>` +
 
-                    `<br>Batches: ${point.batches ?? "—"}` +
+                    `<br>Inspections: ${point.batches ?? "—"}` +
 
                     `<br>Products: ${integerFormat.format(num(point.judged))}`;
 

@@ -18,6 +18,10 @@
         page.dataset
             .runImageUrl;
 
+    const runVideoUrl =
+        page.dataset
+            .runVideoUrl;
+
     const csrfToken =
         document.querySelector(
             'meta[name="csrf-token"]'
@@ -38,6 +42,11 @@
     const uploadSections =
         page.querySelectorAll(
             "[data-upload-section]"
+        );
+
+    const videoSafeZoneCard =
+        page.querySelector(
+            "[data-safezone-config]"
         );
 
     const fileInputs = {
@@ -245,6 +254,8 @@
 
     let cancelRequested =
         false;
+
+    let inspectionRunning = false;
 
 
     /* =====================================================
@@ -600,6 +611,8 @@
         processing
     ) => {
 
+        inspectionRunning = Boolean(processing);
+
         if (runButton) {
 
             runButton.disabled =
@@ -792,6 +805,8 @@
         mode
     ) => {
 
+        if (inspectionRunning) return;
+
         if (
             mode !== "image"
             &&
@@ -841,6 +856,10 @@
 
             }
         );
+
+        if (videoSafeZoneCard) {
+            videoSafeZoneCard.hidden = mode !== "video";
+        }
 
 
         hideMedia();
@@ -982,6 +1001,11 @@
                     "Image size must not exceed 10 MB.",
             };
 
+        }
+
+
+        if (mode === "video" && file.size > 80 * 1024 * 1024) {
+            return { ok: false, message: "Video size must not exceed 80 MB." };
         }
 
 
@@ -1525,20 +1549,16 @@
 
 
     const drawSelectedObjectCrops = (
-        object
+        object,
+        sourceMedia = null,
+        dimensions = null
     ) => {
 
-        if (
-            !object
-            ||
-            !imagePreview
-            ||
-            !imagePreview.complete
-            ||
-            !imagePreview.naturalWidth
-            ||
-            !imagePreview.naturalHeight
-        ) {
+        const cropSource = sourceMedia || imagePreview;
+        const mediaWidth = Number(cropSource?.videoWidth || cropSource?.naturalWidth || 0);
+        const mediaHeight = Number(cropSource?.videoHeight || cropSource?.naturalHeight || 0);
+
+        if (!object || !cropSource || !mediaWidth || !mediaHeight) {
 
             clearCanvas(
                 cropOriginalCanvas
@@ -1565,32 +1585,20 @@
 
         const backendWidth =
             Number(
-                lastResult
-                ?.image
-                ?.width
-                ||
-                imagePreview.naturalWidth
+                dimensions?.width || lastResult?.image?.width || mediaWidth
             );
 
         const backendHeight =
             Number(
-                lastResult
-                ?.image
-                ?.height
-                ||
-                imagePreview.naturalHeight
+                dimensions?.height || lastResult?.image?.height || mediaHeight
             );
 
 
         const sourceScaleX =
-            imagePreview.naturalWidth
-            /
-            backendWidth;
+            mediaWidth / backendWidth;
 
         const sourceScaleY =
-            imagePreview.naturalHeight
-            /
-            backendHeight;
+            mediaHeight / backendHeight;
 
 
         /* -------------------------------------------------
@@ -1918,7 +1926,7 @@
 
 
             context.drawImage(
-                imagePreview,
+                cropSource,
                 sourceX,
                 sourceY,
                 sourceWidth,
@@ -2059,7 +2067,9 @@
 
 
     const renderSelectedObject = (
-        object
+        object,
+        sourceMedia = null,
+        dimensions = null
     ) => {
 
         if (!object) {
@@ -2123,7 +2133,9 @@
 
 
         drawSelectedObjectCrops(
-            object
+            object,
+            sourceMedia,
+            dimensions
         );
 
 
@@ -2205,7 +2217,7 @@
                         selectedFile();
 
 
-                    if (completedFile) {
+                    if (completedFile && result?.kind !== "video") {
 
                         try {
 
@@ -2232,9 +2244,11 @@
                         false
                     );
 
-                    renderResult(
-                        result
-                    );
+                    if (result?.kind === "video") {
+                        renderVideoResult(result);
+                    } else {
+                        renderResult(result);
+                    }
 
                     return;
 
@@ -2810,6 +2824,219 @@
     };
 
 
+    /* =====================================================
+       VIDEO: click coloured moving masks to inspect a biscuit.
+       09b provides class only on keyframes; interim masks
+       are optical-flow estimates, not per-frame AI predictions.
+       ===================================================== */
+
+    const insidePolygon = (x, y, points) => {
+        let inside = false;
+        for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+            const [xi, yi] = points[i];
+            const [xj, yj] = points[j];
+            if (((yi > y) !== (yj > y)) &&
+                x < (xj - xi) * (y - yi) / (yj - yi) + xi) {
+                inside = !inside;
+            }
+        }
+        return inside;
+    };
+
+    const renderVideoResult = async (data) => {
+        lastResult = data;
+        if (!resultStage) return;
+        resultStage.innerHTML = "";
+        resultStage.hidden = false;
+        resultEmpty && (resultEmpty.hidden = true);
+        if (selectedObjectCard) selectedObjectCard.hidden = true;
+
+        const frames = Array.isArray(data.frames) ? data.frames : [];
+        if (resultCount) {
+            resultCount.textContent = `${data.video?.ai_inspection_frames ?? frames.length} AI inspection frames`;
+            resultCount.hidden = false;
+        }
+        const wrapper = document.createElement("div");
+        wrapper.className = "inspection-video-analysis";
+        const media = data.annotated_video || {};
+
+        resultStage.appendChild(wrapper);
+        if (media.url) {
+            const title = document.createElement("div");
+            title.className = "inspection-video-analysis-heading";
+            title.textContent = "Tracked Colour Mask Video (MP4)";
+            const movieWrap = document.createElement("div");
+            movieWrap.className = "inspection-video-player-wrap";
+            const movie = document.createElement("video");
+            movie.className = "inspection-video-analysis-movie";
+            movie.controls = true;
+            movie.preload = "metadata";
+            movie.playsInline = true;
+            movie.src = media.url;
+            const hitArea = document.createElement("div");
+            hitArea.className = "inspection-video-hit-area";
+            hitArea.setAttribute("role", "button");
+            hitArea.setAttribute("tabindex", "0");
+            hitArea.setAttribute("aria-label", "Select a biscuit by clicking its coloured mask");
+            hitArea.title = "Click a coloured biscuit to view its crop and class on the right";
+            const selectHint = document.createElement("p");
+            selectHint.className = "inspection-video-select-hint";
+            selectHint.textContent = "Click a coloured biscuit in the video to see its original crop and defect class. The horizontal Safe Zone is an invisible activation boundary; whole masks are shown without clipping.";
+            movieWrap.append(movie, hitArea);
+            wrapper.append(title, movieWrap, selectHint);
+            const actions = document.createElement("div");
+            actions.className = "inspection-video-analysis-actions";
+            const download = document.createElement("a");
+            download.className = "inspection-video-analysis-download";
+            download.href = media.download_url || media.url;
+            download.download = "BIKA_annotated_video.mp4";
+            download.textContent = "↓ Download Annotated MP4";
+            const specification = document.createElement("span");
+            specification.textContent = `${media.width}×${media.height} · ${media.fps} FPS · ${(Number(media.size_bytes || 0) / 1048576).toFixed(1)} MB`;
+            actions.append(download, specification);
+            const warning = document.createElement("p");
+            warning.className = "inspection-video-analysis-note";
+            warning.textContent = media.note || "Tracked masks between AI keyframes are estimates; no per-frame classification.";
+            wrapper.append(actions, warning);
+
+            if (media.tracks_url) {
+                let tracking = null;
+                const selectAt = (event) => {
+                    if (!tracking || movie.readyState < 2) return;
+                    const r = movie.getBoundingClientRect();
+                    const clickX = Number(media.width) * (event.clientX - r.left) / r.width;
+                    const clickY = Number(media.height) * (event.clientY - r.top) / r.height;
+                    const index = Math.min(tracking.frames.length - 1,
+                        Math.max(0, Math.round(movie.currentTime * Number(tracking.fps))));
+                    const visible = tracking.frames[index]?.[1] || [];
+                    // Prefer the exact mask outline (not just the rectangular bbox).
+                    const match = [...visible].reverse().find((candidate) => {
+                        const [, box, polygons] = candidate;
+                        if (!box || clickX < box[0] || clickX > box[2] ||
+                            clickY < box[1] || clickY > box[3]) return false;
+                        return (polygons || []).some(points => insidePolygon(clickX, clickY, points));
+                    });
+                    if (!match) return;
+                    const [trackId, bbox, polygons] = match;
+                    const metaHistory = tracking.tracks[String(trackId)] || [];
+                    const meta = [...metaHistory].reverse()
+                        .find(entry => entry[0] <= index)?.[1];
+                    if (!meta) return;
+                    movie.pause();
+                    const object = {
+                        ...meta,
+                        object_id: `Track #${trackId} · ${movie.currentTime.toFixed(2)}s`,
+                        bbox: {x0: bbox[0], y0: bbox[1], x1: bbox[2], y1: bbox[3]},
+                        polygons,
+                    };
+                    const dimensions = {
+                        width: Number(tracking.width),
+                        height: Number(tracking.height),
+                    };
+                    // Crop from the ORIGINAL uploaded video, not from the
+                    // MP4 which already contains coloured masks.
+                    if (videoPreview && videoPreview.readyState >= 1 && videoPreview.src) {
+                        videoPreview.pause();
+                        const drawOriginal = () => {
+                            renderSelectedObject(object, videoPreview, dimensions);
+                        };
+                        if (Math.abs(videoPreview.currentTime - movie.currentTime) > 0.04 ||
+                            videoPreview.readyState < 2) {
+                            videoPreview.addEventListener("seeked", drawOriginal, {once: true});
+                            try {
+                                videoPreview.currentTime = movie.currentTime;
+                            } catch (error) {
+                                videoPreview.removeEventListener("seeked", drawOriginal);
+                                renderSelectedObject(object, movie, dimensions);
+                            }
+                        } else {
+                            drawOriginal();
+                        }
+                    } else {
+                        // If the source player is unavailable, keep click details
+                        // working rather than making the right panel disappear.
+                        renderSelectedObject(object, movie, dimensions);
+                    }
+                };
+                hitArea.addEventListener("click", selectAt);
+                hitArea.addEventListener("keydown", (event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        // Keyboard users can select via Enter at video centre if a mask is there.
+                        const r = movie.getBoundingClientRect();
+                        selectAt({clientX: r.left + r.width / 2, clientY: r.top + r.height / 2});
+                    }
+                });
+                try {
+                    const response = await fetch(media.tracks_url, {
+                        credentials: "same-origin", cache: "no-store",
+                        headers: requestHeaders(),
+                    });
+                    if (!response.ok) throw new Error("Tracking metadata could not be loaded");
+                    tracking = await response.json();
+                    if (!resultStage.contains(wrapper)) return;
+                    hitArea.classList.add("is-ready");
+                } catch (error) {
+                    console.warn(error);
+                    selectHint.textContent = "Video ready, but selection data could not load. Please rerun inspection.";
+                }
+            }
+        }
+
+        if (frames.length) {
+            // Keep original keyframe evidence in a collapsible area rather than
+            // filling the result panel with constant labels and still images.
+            const evidence = document.createElement("details");
+            evidence.className = "inspection-video-evidence";
+            const evidenceHeading = document.createElement("summary");
+            evidenceHeading.textContent = `09b AI Inspection Evidence (${frames.length} preview frames of ${data.video?.ai_inspection_frames ?? frames.length} total)`;
+            const picture = document.createElement("img");
+            picture.className = "inspection-video-analysis-frame";
+            picture.alt = "09b AI keyframe evidence";
+            const controls = document.createElement("div");
+            controls.className = "inspection-video-analysis-controls";
+            const prev = document.createElement("button");
+            prev.type = "button";
+            prev.textContent = "← Previous";
+            const select = document.createElement("select");
+            select.setAttribute("aria-label", "Select inspected frame");
+            frames.forEach((frame, index) => {
+                const option = document.createElement("option");
+                option.value = String(index);
+                option.textContent = `Frame ${index + 1} · ${Number(frame.time_seconds).toFixed(1)}s`;
+                select.appendChild(option);
+            });
+            const next = document.createElement("button");
+            next.type = "button";
+            next.textContent = "Next →";
+            const info = document.createElement("span");
+            info.className = "inspection-video-analysis-info";
+            controls.append(prev, select, next);
+            let selected = 0;
+            const show = (index) => {
+                selected = Math.max(0, Math.min(frames.length - 1, index));
+                const frame = frames[selected];
+                picture.src = frame.annotated_preview;
+                select.value = String(selected);
+                prev.disabled = selected === 0;
+                next.disabled = selected === frames.length - 1;
+                info.textContent = `At ${Number(frame.time_seconds).toFixed(1)}s · ${frame.summary?.judged ?? 0} judged · ${frame.summary?.defect ?? 0} defect observations`;
+            };
+            prev.addEventListener("click", () => show(selected - 1));
+            next.addEventListener("click", () => show(selected + 1));
+            select.addEventListener("change", () => show(Number(select.value)));
+            evidence.append(evidenceHeading, picture, controls, info);
+            wrapper.append(evidence);
+            show(0);
+        }
+        const note = document.createElement("p");
+        note.className = "inspection-video-analysis-note";
+        note.textContent = data.counting_note || "Only AI keyframes contribute to statistical counts.";
+        wrapper.append(note);
+        renderSummary(data);
+        setStatus(`Annotated MP4 ready · ${media.zone_triggered_tracks ?? 0} mask activations · ${data.video?.ai_inspection_frames ?? frames.length} 09b inference frames (not unique biscuit counts).`, "success");
+    };
+
     const restorePersistedInspection = async () => {
 
         let persisted;
@@ -2883,6 +3110,10 @@
 
             }
         );
+
+        if (videoSafeZoneCard) {
+            videoSafeZoneCard.hidden = true;
+        }
 
 
         revokeActiveObjectUrl();
@@ -3139,23 +3370,10 @@
             }
 
 
-            if (
-                activeMode
-                ===
-                "video"
-            ) {
+            const isVideo = activeMode === "video";
+            const targetUrl = isVideo ? runVideoUrl : runImageUrl;
 
-                setStatus(
-                    "Image inference is connected first. Video frame inference will be added after image parity is verified.",
-                    "error"
-                );
-
-                return;
-
-            }
-
-
-            if (!runImageUrl) {
+            if (!targetUrl) {
 
                 setStatus(
                     "Inspection API URL is not configured.",
@@ -3174,6 +3392,24 @@
                 "file",
                 file
             );
+            if (isVideo) {
+                const zone = {};
+                page.querySelectorAll("[data-zone-input]").forEach((input) => {
+                    zone[input.dataset.zoneInput] = Number(input.value);
+                });
+                const {left, width} = zone;
+                if (![left, width].every(Number.isFinite) ||
+                    left < 0 || width < 5 || left + width > 100) {
+                    setStatus("Horizontal Safe Zone must fit within video width (Left + Width ≤ 100).", "error");
+                    return;
+                }
+                // No top/bottom limit. Activation spans the full frame height.
+                zone.top = 0;
+                zone.height = 100;
+                for (const [name, value] of Object.entries(zone)) {
+                    formData.append(`zone_${name}`, String(value));
+                }
+            }
 
 
             clearResultArea();
@@ -3184,7 +3420,7 @@
 
             showLoadingModal(
                 0,
-                "Uploading image"
+                isVideo ? "Uploading video" : "Uploading image"
             );
 
 
@@ -3197,7 +3433,7 @@
 
                 const response =
                     await fetch(
-                        runImageUrl,
+                        targetUrl,
                         {
                             method:
                                 "POST",

@@ -17,6 +17,7 @@ Inspection | BIKA
     class="inspection-page"
     data-inspection-page
     data-run-image-url="{{ url_for('main.run_inspection_image') }}"
+    data-run-video-url="{{ url_for('main.run_inspection_video') }}"
 >
 
     <!-- =====================================================
@@ -181,7 +182,7 @@ Inspection | BIKA
                         </strong>
 
                         <span>
-                            MP4, MOV, AVI, WEBM
+                            MP4, MOV, AVI, WEBM · up to 80 MB / 2 minutes
                         </span>
 
                     </div>
@@ -228,6 +229,9 @@ Inspection | BIKA
                         data-selected-file="video"
                     >
                         No video selected.
+                    </p>
+                    <p class="inspection-video-hint">
+                        Counts are AI frame observations, not unique snacks. Video results are not yet saved to Reports.
                     </p>
 
                 </section>
@@ -281,108 +285,28 @@ Inspection | BIKA
                     aria-live="polite"
                 ></p>
 
+                <p class="inspection-active-model-note" title="{{ inspection_classifier_file }}">
+                    Active Model: {{ inspection_model_version }}
+                </p>
+
             </article>
 
 
-            <!-- MASK LEGEND -->
-
-            <article class="inspection-card inspection-legend-card">
-
+            <!-- VIDEO SAFE ZONE: occupies the former left-column legend position. -->
+            <article class="inspection-card inspection-safezone-config" data-safezone-config hidden>
                 <div class="inspection-card-heading inspection-card-heading-compact">
-
-                    <h2>
-                        Class Mask Legend
-                    </h2>
-
-                    <p>
-                        Each class uses a fixed mask colour
-                    </p>
-
+                    <h2>Video Safe Zone</h2>
+                    <p>Masks appear when snacks enter the zone.</p>
                 </div>
-
-
-                <div
-                    class="inspection-class-list"
-                    data-class-legend
-                >
-
-                    {% if inspection_classes %}
-
-                        {% for item in inspection_classes %}
-
-                            <div
-                                class="inspection-class-row"
-                                data-class-name="{{ item.name }}"
-                                data-class-display-name="{{ item.display_name or item.name }}"
-                                data-class-index="{{ item.index }}"
-                                data-mask-colour="{{ item.colour }}"
-                                style="--mask-colour: {{ item.colour }};"
-                            >
-
-                                <span
-                                    class="inspection-class-dot"
-                                    aria-hidden="true"
-                                ></span>
-
-                                <span>
-                                    {{ item.display_name or item.name }}
-                                </span>
-
-                                <strong>
-                                    {{ item.decision }}
-                                </strong>
-
-                            </div>
-
-                        {% endfor %}
-
-                    {% else %}
-
-                        <div class="inspection-class-metadata-empty">
-
-                            <strong>
-                                Class metadata unavailable
-                            </strong>
-
-                            <span>
-                                Check the active classifier package.
-                            </span>
-
-                        </div>
-
-                    {% endif %}
-
+                <div class="inspection-safezone-fields">
+                    <label for="inspection_zone_left">Left (%)
+                        <input id="inspection_zone_left" type="number" min="0" max="95" step="1" value="5" data-zone-input="left">
+                    </label>
+                    <label for="inspection_zone_width">Width (%)
+                        <input id="inspection_zone_width" type="number" min="5" max="100" step="1" value="90" data-zone-input="width">
+                    </label>
                 </div>
-
-
-                <div class="inspection-model-meta">
-
-                    <span>
-                        Active Model
-                    </span>
-
-                    <strong>
-                        {{ inspection_model_version }}
-                    </strong>
-
-                    <small>
-                        {{ inspection_classifier_file }}
-                    </small>
-
-                </div>
-
-
-                {% if inspection_model_warning %}
-
-                    <p
-                        class="inspection-model-warning"
-                        title="{{ inspection_model_warning }}"
-                    >
-                        Class names could not be read from the active classifier.
-                    </p>
-
-                {% endif %}
-
+                <p class="inspection-safezone-note">Default: 5%–95% width · Full video height</p>
             </article>
 
         </aside>
@@ -498,17 +422,18 @@ Inspection | BIKA
                         ></iconsax-icon>
 
                         <span>
-                            Annotated detection result will appear here
+                            Annotated detection results (including MP4 video) will appear here
                         </span>
 
                     </div>
 
 
                     <!--
-                        Future backend integration:
-                        Put the annotated image/video here.
+                        Result overlays are created by inspection.js.
+                        For videos, clickable objects are identified using
+                        authenticated per-frame tracking metadata.
 
-                        Every clickable mask/object may use:
+                        Legacy clickable object example:
 
                         <button
                             class="inspection-mask-hotspot"
@@ -597,7 +522,7 @@ Inspection | BIKA
 
                     <div>
                         <span>
-                            Yield
+                            Good Snack Rate
                         </span>
 
                         <strong data-summary-yield>
@@ -654,7 +579,7 @@ Inspection | BIKA
 
                     <div>
                         <small>
-                            Selected Mask
+                            Selected Snack
                         </small>
 
                         <h2 data-object-id>
@@ -685,7 +610,7 @@ Inspection | BIKA
 
                             <canvas
                                 data-object-crop-original
-                                aria-label="Original selected biscuit crop"
+                                aria-label="Original selected snack crop"
                             ></canvas>
 
                         </div>
@@ -703,7 +628,7 @@ Inspection | BIKA
 
                             <canvas
                                 data-object-crop-masked
-                                aria-label="Selected biscuit crop with segmentation mask"
+                                aria-label="Selected snack crop with segmentation mask"
                             ></canvas>
 
                         </div>
