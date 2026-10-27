@@ -321,3 +321,27 @@ html[data-theme=dark] .lsi-page .lsi-monitor-live.is-online { color: #94d1aa; }
   .lsi-page .lsi-health-heading small { font-size: 9px; }
   .lsi-page .lsi-health-body strong { font-size: 16px; }
 }
+
+/* Live AI keyframe viewer and measured sampler stats (Phase 2). Scoped to page. */
+.lsi-page .lsi-view-modes {display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lsi-page .lsi-view-toggle {padding:5px 11px;border:1px solid var(--lsi-border);background:var(--lsi-card);border-radius:999px;color:var(--lsi-wine);font:inherit;cursor:pointer}
+.lsi-page .lsi-view-toggle:disabled {opacity:.55;cursor:not-allowed}
+.lsi-page .lsi-video-image[hidden] {display:none !important}
+.lsi-page .lsi-button-muted.is-active {background:var(--lsi-wine);color:#fff;border-color:var(--lsi-wine)}
+.lsi-page .lsi-ai-performance {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0 10px}
+.lsi-page .lsi-ai-performance > div {border:1px solid var(--lsi-border);background:var(--lsi-soft);border-radius:10px;padding:10px;min-width:0}
+.lsi-page .lsi-ai-performance span {display:block;font-size:10px;color:var(--lsi-muted);margin-bottom:4px}
+.lsi-page .lsi-ai-performance strong {font-size:11px;font-weight:500;color:var(--lsi-ink);overflow-wrap:anywhere}
+.lsi-page .lsi-event-thumb {display:block;max-width:62px;max-height:51px;width:62px;height:51px;object-fit:contain;background:var(--lsi-soft);border:1px solid var(--lsi-border);border-radius:7px}
+.lsi-page .lsi-events-table tbody td {border-bottom:1px solid var(--lsi-border);padding:8px 10px;font-size:11px;color:var(--lsi-ink);vertical-align:middle}
+.lsi-page .lsi-event-link {color:var(--lsi-wine);text-decoration:none;font-weight:500}
+.lsi-page .lsi-event-link:hover {text-decoration:underline}
+
+/* Phase 2.1 — do not stretch the left viewer to match the taller controls.
+   The monitoring section follows the preview, even if controls extend further. */
+.lsi-page .lsi-primary-grid { align-items: start; }
+.lsi-page .lsi-viewer-card { align-self: start; }
+.lsi-page .lsi-feed-monitor { margin-top: 0; padding-top: 16px; }
+
+/* A sampled AI still image must not use the red LIVE indicator. */
+.lsi-page .lsi-live-tag.is-ai-frame i { background: #e2a43e; box-shadow: none; }

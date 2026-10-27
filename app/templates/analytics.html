@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}Data Analytics | BIKA{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css', v='20261019-period-today-1') }}">
+{% endblock %}
+{% block content %}
+<div class="analytics-page" data-analytics-page
+     data-data-url="{{ url_for('main.analytics_data') }}"
+     data-review-url-root="{{ url_for('main.analytics') }}/api/review/"
+     data-can-review="{{ 'true' if can_review else 'false' }}">
+
+  <header class="analytics-head">
+    <div class="analytics-page-heading">
+      <h1>Data Analytics</h1>
+      <p>Monitor inspection quality, trends and forecasting insights</p>
+    </div>
+    <!-- Same pill + dropdown pattern as Dashboard. Alignment is linked to the real global theme switch. -->
+    <div class="analytics-filter-wrap" data-range-wrap>
+      <button type="button" class="analytics-date-button" data-range-button aria-expanded="false" aria-haspopup="true" aria-controls="analytics-date-menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3.5" y="5" width="17" height="15.5" rx="3"></rect>
+          <path d="M8 3v4M16 3v4M3.5 10h17"></path>
+          <path d="M8 14h.01M12 14h.01M16 14h.01M8 17h.01M12 17h.01"></path>
+        </svg>
+        <span data-range-label>Period: Today</span>
+        <svg class="analytics-date-end-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="4" y="5" width="16" height="15" rx="2"></rect>
+          <path d="M8 3v4M16 3v4M4 10h16"></path>
+        </svg>
+      </button>
+      <div class="analytics-date-menu" id="analytics-date-menu" data-range-menu hidden>
+        <div class="analytics-date-single">
+          <label for="analytics-single-date">Select a date</label>
+          <div class="analytics-date-single-controls">
+            <input type="date" id="analytics-single-date" data-date-single aria-label="Select inspection date">
+            <button type="button" data-apply-day>Apply</button>
+          </div>
+        </div>
+        <button type="button" class="analytics-date-option is-active" data-range-option="today">Today</button>
+        <button type="button" class="analytics-date-option" data-range-option="7d">Last 7 days</button>
+        <button type="button" class="analytics-date-option" data-range-option="30d">Last 30 days</button>
+        <button type="button" class="analytics-date-option" data-range-option="90d">Last 90 days</button>
+        <button type="button" class="analytics-date-option" data-range-option="all">All runs to date</button>
+        <div class="analytics-date-custom">
+          <span>Custom range</span>
+          <div class="analytics-date-custom-grid">
+            <label>From<input type="date" data-date-from></label>
+            <label>To<input type="date" data-date-to></label>
+          </div>
+          <button type="button" class="analytics-date-apply" data-apply-range>Apply Range</button>
+        </div>
+      </div>
+      <select class="analytics-range-native" data-range aria-label="Analytics date range" tabindex="-1">
+        <option value="today" selected>Today</option><option value="7d">Last 7 days</option><option value="30d">Last 30 days</option>
+        <option value="90d">Last 90 days</option><option value="all">All time</option><option value="custom">Custom range</option>
+      </select>
+    </div>
+  </header>
+
+  <div class="analytics-system-note" data-status role="status" aria-live="polite">Loading inspection analytics…</div>
+
+  <section class="analytics-kpis" aria-label="Quality key performance indicators">
+    <article class="analytics-kpi analytics-kpi-good">
+      <span class="analytics-kpi-icon"><iconsax-icon name="chart-success" type="twotone" size="23" color="currentColor"></iconsax-icon></span>
+      <div class="analytics-kpi-body">
+        <p class="analytics-kpi-label">Good Snack Rate <span class="analytics-info" title="Good snack observations divided by all judged observations.">i</span></p>
+        <strong class="analytics-kpi-value" data-kpi-good>—</strong>
+        <small class="analytics-kpi-footer"><span class="analytics-mini-dot analytics-green"></span><span data-kpi-good-foot>Target —</span></small>
+      </div>
+    </article>
+    <article class="analytics-kpi analytics-kpi-defect">
+      <span class="analytics-kpi-icon"><iconsax-icon name="danger" type="twotone" size="23" color="currentColor"></iconsax-icon></span>
+      <div class="analytics-kpi-body">
+        <p class="analytics-kpi-label">Defect Rate <span class="analytics-info" title="Defective snack observations divided by all judged observations.">i</span></p>
+        <strong class="analytics-kpi-value" data-kpi-defect>—</strong>
+        <small class="analytics-kpi-footer"><span class="analytics-mini-dot analytics-rose"></span><span data-kpi-defect-foot>0 defective observations</span></small>
+      </div>
+    </article>
+    <article class="analytics-kpi analytics-kpi-standard">
+      <span class="analytics-kpi-icon"><iconsax-icon name="clipboard-tick" type="twotone" size="23" color="currentColor"></iconsax-icon></span>
+      <div class="analytics-kpi-body">
+        <p class="analytics-kpi-label">Inspections Meeting Standard <span class="analytics-info" title="Share of inspection runs with a Good Snack Rate at or above the Inspection Pass Requirement.">i</span></p>
+        <strong class="analytics-kpi-value" data-kpi-standard>—</strong>
+        <small class="analytics-kpi-footer"><span class="analytics-mini-dot analytics-burgundy"></span><span data-kpi-standard-foot>Requirement —</span></small>
+      </div>
+    </article>
+    <article class="analytics-kpi analytics-kpi-runs">
+      <span class="analytics-kpi-icon"><iconsax-icon name="document-text" type="twotone" size="23" color="currentColor"></iconsax-icon></span>
+      <div class="analytics-kpi-body">
+        <p class="analytics-kpi-label">Inspection Runs <span class="analytics-info" title="Number of saved inspection runs in the selected date range.">i</span></p>
+        <strong class="analytics-kpi-value" data-stat-runs>—</strong>
+        <small class="analytics-kpi-footer"><span class="analytics-mini-dot analytics-burgundy"></span><span data-stat-judged>—</span><span>judged observations</span></small>
+      </div>
+    </article>
+  </section>
+
+  <div class="analytics-top-grid">
+    <section class="analytics-card analytics-chart-card">
+      <div class="analytics-card-header analytics-card-header-wrap">
+        <div class="analytics-card-title"><span class="analytics-card-icon"><iconsax-icon name="chart-2" type="twotone" size="19" color="currentColor"></iconsax-icon></span><div><h2>Quality Trend &amp; SPC Monitoring <span class="analytics-info" title="Daily quality rates with real judged-output bars. SPC shows the sample-size-adjusted 3-sigma control limits." aria-label="Quality trend chart information">i</span></h2><p>Quality performance over time with process control indicators</p></div></div>
+        <div class="analytics-tab-group" role="tablist" aria-label="Quality chart view">
+          <button type="button" class="is-active" data-chart-mode="yield" role="tab" aria-selected="true">Good Rate</button>
+          <button type="button" data-chart-mode="defect" role="tab" aria-selected="false">Defect Rate</button>
+          <button type="button" data-chart-mode="spc" role="tab" aria-selected="false">SPC</button>
+        </div>
+      </div>
+      <div class="analytics-chart-guide" data-trend-guide>Good Snack Rate (%) · Judged Output · Target</div>
+      <div class="analytics-svg-chart" data-quality-chart></div>
+      <div class="analytics-chart-legend" data-chart-legend></div>
+      <div class="analytics-chart-caption" data-trend-caption>Control limits are calculated from the observed sample size. Days without inspections are not interpreted as zero quality.</div>
+    </section>
+
+    <div class="analytics-side-column">
+      <section class="analytics-card analytics-shift-card">
+        <div class="analytics-card-header"><div class="analytics-card-title"><span class="analytics-card-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V12h4v8M10 20V5h4v15M16 20v-9h4v9"/><path d="M2.5 20.5h19"/></svg></span><div><h2>Shift Quality Analysis <span class="analytics-info" title="Compares quality across shifts using the saved inspection runs and recorded shift information." aria-label="Shift quality information">i</span></h2><p>Based on current user profile shift</p></div></div></div>
+        <div data-shift-chart class="analytics-shift-content"></div>
+      </section>
+      <section class="analytics-card analytics-review-card">
+        <div class="analytics-card-header"><div class="analytics-card-title"><span class="analytics-card-icon"><iconsax-icon name="shield-tick" type="twotone" size="19" color="currentColor"></iconsax-icon></span><div><h2>Human Review Status <span class="analytics-info" title="Counts come from saved mask-review decisions. Pending counts flagged inspection runs that have not been fully reviewed." aria-label="Human review status explanation">i</span></h2><p>Human-in-the-loop verification of saved image inspections</p></div></div></div>
+        {% if can_review %}
+        <div class="analytics-review-panel">
+          <div class="analytics-review-panel-head">Review Cases</div>
+          <div class="analytics-review-status-row analytics-status-pending"><span><i class="analytics-status-dot"></i>Pending Review</span><strong data-review-pending>—</strong></div>
+          <div class="analytics-review-status-row analytics-status-confirmed"><span><i class="analytics-status-dot"></i>Confirmed</span><strong data-review-confirmed>—</strong></div>
+          <div class="analytics-review-status-row analytics-status-false"><span><i class="analytics-status-dot"></i>False Positive</span><strong data-review-false>—</strong></div>
+          <div class="analytics-review-status-row analytics-status-corrected"><span><i class="analytics-status-dot"></i>Other Corrections</span><strong data-review-corrected>—</strong></div>
+        </div>
+        <div class="analytics-review-summary"><span data-review-count>—</span> flagged runs · Selected by heuristics, not a validated anomaly model</div>
+        <a href="#analytics-anomalous" class="analytics-inline-link">View anomaly log <iconsax-icon name="arrow-right" type="linear" size="16" color="currentColor"></iconsax-icon></a>
+        {% else %}
+        <div class="analytics-restricted"><iconsax-icon name="shield" type="twotone" size="24" color="currentColor"></iconsax-icon><strong>Quality analytics available</strong><span>Administrative review logs are restricted to Admin and SuperAdmin.</span></div>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+
+  {% if can_review %}
+  <section class="analytics-card analytics-anomalous-card" id="analytics-anomalous" data-admin-review>
+    <div class="analytics-card-header analytics-card-header-wrap">
+      <div class="analytics-card-title"><span class="analytics-card-icon"><iconsax-icon name="eye" type="twotone" size="19" color="currentColor"></iconsax-icon></span><div><h2>Anomalous Pipeline Log <span class="analytics-admin-tag">ADMIN REVIEW</span></h2><p>Inspect flagged image predictions and verify individual segmentation masks</p></div></div>
+      <div class="analytics-review-filter"><label class="analytics-sr" for="analytics-review-mode">Review queue</label><select id="analytics-review-mode" data-review-mode><option value="flagged">Flagged runs</option><option value="recent">Recent image runs</option></select><label class="analytics-sr" for="analytics-review-search">Search inspection runs</label><input type="search" id="analytics-review-search" data-review-search placeholder="Search run or filename…"></div>
+    </div>
+    <div class="analytics-review-table-wrap"><table class="analytics-review-table"><thead><tr><th>Inspection</th><th>Observations</th><th>Flag reason</th><th>Human reviews</th><th></th></tr></thead><tbody data-review-table><tr><td colspan="5" class="analytics-table-empty">Loading review queue…</td></tr></tbody></table></div>
+    <div class="analytics-review-bottom"><span>Flags are heuristics. Saved image inspections can be reviewed; video run persistence and frame-level review will be added separately.</span><span data-review-pagination></span></div>
+  </section>
+  {% endif %}
+  <footer class="analytics-bottom-note"><iconsax-icon name="info-circle" type="twotone" size="17" color="currentColor"></iconsax-icon><span data-footer-note>Statistics reflect recorded inspection observations and are not a count of unique physical biscuits across video frames.</span></footer>
+</div>
+
+{% if can_review %}
+<div class="analytics-modal-backdrop" data-mask-modal hidden>
+  <section class="analytics-modal" role="dialog" aria-modal="true" aria-labelledby="analytics-modal-title">
+    <div class="analytics-modal-head"><div><span>HUMAN-IN-THE-LOOP REVIEW</span><h2 id="analytics-modal-title" data-modal-title>Inspect Mask</h2><p data-modal-subtitle>Loading stored prediction…</p></div><button class="analytics-modal-close" type="button" data-modal-close aria-label="Close review"><iconsax-icon name="close-circle" type="linear" size="25" color="currentColor"></iconsax-icon></button></div>
+    <div class="analytics-modal-main"><div class="analytics-mask-viewer"><div class="analytics-mask-stage" data-mask-stage><div class="analytics-mask-loading">Loading saved image…</div></div><p>Click a highlighted mask on the source image, or select an object from the list. Original AI results remain unchanged.</p></div><div class="analytics-mask-side"><div class="analytics-mask-side-heading">Detected Objects <span data-object-count>—</span></div><div data-object-list class="analytics-object-list"></div><div class="analytics-object-detail" data-object-detail><p>Select an object to inspect its prediction.</p></div><div class="analytics-feedback-form"><label for="analytics-review-decision">Review Decision</label><select id="analytics-review-decision" data-decision><option value="correct">Correct Detection &amp; Mask</option><option value="incorrect_mask">Incorrect Mask</option><option value="incorrect_class">Incorrect Classification</option><option value="false_positive">False Positive</option></select><label for="analytics-review-note">Reviewer Note (optional)</label><textarea id="analytics-review-note" data-review-note rows="2" maxlength="400" placeholder="Describe the issue or correction…"></textarea><button class="analytics-btn analytics-btn-primary" type="button" data-save-review disabled>Save Review</button><p data-save-message aria-live="polite"></p></div></div></div>
+  </section>
+</div>
+{% endif %}
+{% endblock %}
+{% block extra_js %}<script defer src="{{ url_for('static', filename='js/analytics.js', v='20261019-period-today-1') }}"></script>{% endblock %}

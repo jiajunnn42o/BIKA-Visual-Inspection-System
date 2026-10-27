@@ -134,7 +134,10 @@ def _inspection_is_active() -> bool:
             has_active_inspection_jobs,
         )
 
-        return has_active_inspection_jobs()
+        # Live AI shares the same validated 09b CUDA model context.
+        # Block model switching until the sampler has stopped.
+        from app.services.live_ai_service import live_ai
+        return has_active_inspection_jobs() or live_ai.status(include_events=False)["active"]
 
     except Exception:
         return False

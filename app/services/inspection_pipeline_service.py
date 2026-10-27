@@ -20,6 +20,12 @@ from app.inference.legacy import (
     predict_final_09b as pipeline09b,
 )
 
+# v3 (prawn): occlusion filter, only active when the model package has 03_occlusion_filter.json
+from app.inference import prawn_occlusion
+
+# v3 (prawn): SAM3.1 replaces YOLO + SAM2, only when the model package has segmenter.json
+from app.inference import sam3_segmenter
+
 from app.services.inspection_model_metadata import (
     get_classifier_ui_metadata,
 )
@@ -27,6 +33,11 @@ from app.services.inspection_model_metadata import (
 
 EDGE_LABEL = "edge (not judged)"
 EDGE_COLOUR = "#8D8D8D"
+OCCLUDED_DISPLAY = "Fragment (Not Judged)"
+
+# 09b's default training width (v1 / v2 biscuits). A model package can override it
+# through "train_median_width_px" in classifier.pt (v3 prawn sticks are ~22 px wide).
+DEFAULT_TRAIN_MEDIAN_WIDTH_PX = 64.3
 
 
 class InspectionPipelineError(
@@ -282,12 +293,35 @@ def _build_context(
         )
 
 
-    detector_path = _required_file(
-        cfg[
-            "detector_path"
-        ],
-        "Detector checkpoint",
-    )
+    # v3: segmenter.json in the model package -> SAM3.1 makes the masks,
+    # no YOLO detector, no SAM2. v1 / v2 (no segmenter.json) are unchanged.
+    model_dir = cfg["detector_path"].parent
+    segmenter_path = model_dir / "segmenter.json"
+    seg_cfg = None
+    if segmenter_path.is_file():
+        try:
+            seg_cfg = json.loads(segmenter_path.read_text(encoding="utf-8"))
+            if seg_cfg.get("type") != "sam3":
+                raise ValueError("only type 'sam3' is supported")
+            seg_ckpt = Path(seg_cfg["checkpoint"])
+            if not seg_ckpt.is_absolute():
+                seg_ckpt = (model_dir / seg_ckpt).resolve()
+            seg_cfg["checkpoint"] = str(_required_file(seg_ckpt, "SAM3 checkpoint"))
+        except (OSError, json.JSONDecodeError, ValueError, TypeError, KeyError) as exc:
+            raise InspectionPipelineError(
+                f"Invalid segmenter settings for model {cfg['model_version']}: "
+                f"{segmenter_path} ({exc})"
+            ) from exc
+
+    if seg_cfg is None:
+        detector_path = _required_file(
+            cfg[
+                "detector_path"
+            ],
+            "Detector checkpoint",
+        )
+    else:
+        detector_path = cfg["detector_path"]       # only used for the model folder
 
     detector_settings_path = (
         _required_file(
@@ -296,6 +330,8 @@ def _build_context(
             ],
             "Detector settings",
         )
+        if seg_cfg is None
+        else cfg["detector_settings_path"]
     )
 
     classifier_path = _required_file(
@@ -319,6 +355,8 @@ def _build_context(
             ],
             "SAM2 checkpoint",
         )
+        if seg_cfg is None
+        else Path(seg_cfg["checkpoint"])
     )
 
 
@@ -440,12 +478,21 @@ def _build_context(
     # active website model package.
     # -----------------------------------------------------
 
-    det_cfg = json.loads(
-        detector_settings_path
-        .read_text(
-            encoding="utf-8"
+    if seg_cfg is None:
+        det_cfg = json.loads(
+            detector_settings_path
+            .read_text(
+                encoding="utf-8"
+            )
         )
-    )
+    else:
+        # SAM3 mode: these keys are only reported in the result ("operating_point")
+        det_cfg = {
+            "conf": float(seg_cfg.get("conf_th", sam3_segmenter.DEFAULTS["conf_th"])),
+            "nms_iou": float(seg_cfg.get("nms_iou", sam3_segmenter.DEFAULTS["nms_iou"])),
+            "imgsz": 0,
+            "max_det": 0,
+        }
 
 
     required_detector_keys = (
@@ -506,6 +553,33 @@ def _build_context(
                 f"{edge_filter_path} ({exc})"
             ) from exc
 
+    # Optional v3 occlusion filter (prawn sticks), scoped to the ACTIVE model only.
+    # Without 03_occlusion_filter.json (v1 / v2) nothing changes.
+    occlusion_path = detector_path.parent / "03_occlusion_filter.json"
+    if occlusion_path.is_file():
+        try:
+            occ_cfg = json.loads(occlusion_path.read_text(encoding="utf-8"))
+            if not isinstance(occ_cfg, dict) or not isinstance(occ_cfg.get("adopt"), bool):
+                raise ValueError("'adopt' must be a boolean")
+            if occ_cfg["adopt"]:
+                det_cfg["occlusion_filter"] = dict(occ_cfg.get("rules") or {})
+                # which 02-statuses are judged; default = isolated / side_contact / end_long
+                judge = occ_cfg.get("judge", list(prawn_occlusion.USABLE))
+                if not isinstance(judge, list) or not all(isinstance(j, str) for j in judge):
+                    raise ValueError("'judge' must be a list of status names")
+                det_cfg["occlusion_judge"] = tuple(judge)
+        except (OSError, json.JSONDecodeError, ValueError, TypeError) as exc:
+            raise InspectionPipelineError(
+                f"Invalid occlusion filter settings for model {cfg['model_version']}: "
+                f"{occlusion_path} ({exc})"
+            ) from exc
+
+    current_app.logger.info(
+        "BIKA model %s | occlusion filter: %s",
+        cfg["model_version"],
+        "ON" if "occlusion_filter" in det_cfg else "OFF",
+    )
+
     current_app.logger.info(
         "BIKA model %s | edge filter: %s | config: %s",
         cfg["model_version"],
@@ -536,21 +610,35 @@ def _build_context(
     )
 
 
-    detector = YOLO(
-        str(
-            detector_path
-        )
-    )
+    detector = None
+    segmenter = None
 
-    try:
-        detector.to(
-            device
+    if seg_cfg is None:
+        detector = YOLO(
+            str(
+                detector_path
+            )
         )
-    except Exception:
-        # Ultralytics will still select CUDA during predict
-        # when available; do not fail only because .to() is
-        # unsupported by a particular wrapper version.
-        pass
+
+        try:
+            detector.to(
+                device
+            )
+        except Exception:
+            # Ultralytics will still select CUDA during predict
+            # when available; do not fail only because .to() is
+            # unsupported by a particular wrapper version.
+            pass
+    else:
+        segmenter = sam3_segmenter.build_processor(
+            seg_cfg["checkpoint"],
+            device="cuda",
+        )
+        current_app.logger.info(
+            "BIKA model %s | segmenter: SAM3 (%s)",
+            cfg["model_version"],
+            seg_cfg["checkpoint"],
+        )
 
 
     model, ckpt = (
@@ -568,34 +656,46 @@ def _build_context(
         ]
     )
 
-
-    from sam2.build_sam import (
-        build_sam2,
-    )
-
-    from sam2.sam2_image_predictor import (
-        SAM2ImagePredictor,
-    )
-
-
-    sam_model = build_sam2(
-        cfg[
-            "sam2_model_config"
-        ],
-        str(
-            sam2_checkpoint_path
-        ),
-        device="cuda",
-        mode="eval",
-        apply_postprocessing=False,
-    )
-
-
-    predictor = (
-        SAM2ImagePredictor(
-            sam_model
+    # 09b scales the edge margin and the low-resolution warning with the
+    # training object width. Module-level value, so reset it for every model.
+    pipeline09b.TRAIN_MEDIAN_WIDTH_PX = float(
+        ckpt.get(
+            "train_median_width_px",
+            DEFAULT_TRAIN_MEDIAN_WIDTH_PX,
         )
     )
+
+
+    predictor = None
+
+    if seg_cfg is None:
+        from sam2.build_sam import (
+            build_sam2,
+        )
+
+        from sam2.sam2_image_predictor import (
+            SAM2ImagePredictor,
+        )
+
+
+        sam_model = build_sam2(
+            cfg[
+                "sam2_model_config"
+            ],
+            str(
+                sam2_checkpoint_path
+            ),
+            device="cuda",
+            mode="eval",
+            apply_postprocessing=False,
+        )
+
+
+        predictor = (
+            SAM2ImagePredictor(
+                sam_model
+            )
+        )
 
 
     class_meta = (
@@ -640,6 +740,12 @@ def _build_context(
         "predictor":
             predictor,
 
+        "segmenter":
+            segmenter,
+
+        "seg_cfg":
+            seg_cfg,
+
         "model":
             model,
 
@@ -656,6 +762,9 @@ def _build_context(
             "detector":
                 str(
                     detector_path
+                    if seg_cfg is None
+                    else
+                    seg_cfg["checkpoint"]
                 ),
 
             "classifier":
@@ -723,6 +832,68 @@ def get_inspection_context() -> dict:
 
 
         return _context
+
+
+def _classify_inputs(kept, inside, image, image_np, scale):
+    """v3: when SAM3 shrank a large photo (scale < 1), classify on the shrunk
+    image too: same scale as the training frames, and much faster than
+    building full-size masks of a 5712x3213 photo for every stick.
+    Masks / boxes shown in the result stay in original coordinates."""
+    if not scale or scale >= 0.999:
+        return kept, inside, image, image_np
+    H, W = image_np.shape[:2]
+    ws, hs = max(1, int(round(W * scale))), max(1, int(round(H * scale)))
+    small_np = cv2.resize(image_np, (ws, hs), interpolation=cv2.INTER_AREA)
+    small = Image.fromarray(small_np)
+    return prawn_occlusion.scaled_preds(kept, scale, ws, hs), inside, small, small_np
+
+
+# =========================================================
+# PRELOAD AT STARTUP
+# =========================================================
+
+def preload_inspection_context_async(app) -> None:
+    """
+    Load the active model (SAM3 / YOLO+SAM2 + classifier) in a background
+    thread when the website starts, so the first inspection does not wait for
+    model loading. Models stay cached in _context until the version changes.
+    Set BIKA_PRELOAD_MODEL=0 to turn it off.
+    """
+    import os
+    import threading
+
+    if os.environ.get("BIKA_PRELOAD_MODEL", "1") == "0":
+        return
+    # Flask debug reloader starts the app twice; only load in the real worker.
+    if app.debug and os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+        return
+
+    def _run():
+        with app.app_context():
+            t0 = time.perf_counter()
+            try:
+                try:
+                    from app.services.model_registry_service import synchronise_runtime_model
+                    synchronise_runtime_model()
+                except Exception:
+                    pass
+                ctx = get_inspection_context()
+                if ctx.get("segmenter") is not None and _inference_lock.acquire(blocking=False):
+                    # warm-up: first SAM3 call is slower (CUDA kernels / autotune);
+                    # skipped if an inspection is already running
+                    try:
+                        sam3_segmenter._run_tile(
+                            ctx["segmenter"],
+                            np.zeros((512, 512, 3), np.uint8),
+                            dict(sam3_segmenter.DEFAULTS, **(ctx.get("seg_cfg") or {})),
+                        )
+                    finally:
+                        _inference_lock.release()
+                print(f"[BIKA] model preloaded in {time.perf_counter() - t0:.1f}s", flush=True)
+            except Exception as exc:
+                print(f"[BIKA] model preload failed (will load on first inspection): {exc}", flush=True)
+
+    threading.Thread(target=_run, name="bika-model-preload", daemon=True).start()
 
 
 # =========================================================
@@ -945,6 +1116,16 @@ def _serialise_result(
     inside = result[
         "inside"
     ]
+
+    occluded = result.get(
+        "occluded",
+        [False] * len(preds),
+    )
+
+    not_judged_reason = result.get(
+        "not_judged_reason",
+        [""] * len(occluded),
+    )
 
 
     classes = list(
@@ -1221,6 +1402,13 @@ def _serialise_result(
             )
 
             display_name = (
+                (
+                    f"Not Judged ({not_judged_reason[index]})"
+                    if not_judged_reason[index]
+                    else OCCLUDED_DISPLAY
+                )
+                if occluded[index]
+                else
                 "Edge (Not Judged)"
             )
 
@@ -1648,6 +1836,14 @@ def _serialise_result(
                     judged
                 ),
 
+            "occluded_not_judged":
+                int(
+                    sum(
+                        bool(occ)
+                        for occ in occluded
+                    )
+                ),
+
             "normal":
                 normal,
 
@@ -1738,42 +1934,74 @@ def _run_system_with_progress(
         cancel_check
     )
 
-    _report_progress(
-        progress_callback,
-        18,
-        "Running YOLO detector",
-    )
+    occ_scale = 1.0
+    if ctx.get("segmenter") is not None:
+        # v3: SAM3.1 (tiles + exemplar boxes) makes the masks directly
+        _report_progress(
+            progress_callback,
+            18,
+            "Running SAM3 segmentation",
+        )
 
-    pipeline09b.sync()
-    t0 = time.perf_counter()
+        pipeline09b.sync()
+        t0 = time.perf_counter()
 
-    boxes, confs = pipeline09b.detect(
-        ctx["detector"],
-        image,
-        ctx["det_cfg"],
-    )
+        seg_info = {}
+        preds = sam3_segmenter.segment(
+            ctx["segmenter"],
+            image_np,
+            ctx["seg_cfg"],
+            cancel_check=cancel_check,
+            info=seg_info,
+        )
+        boxes = preds
+        occ_scale = float(seg_info.get("scale") or 1.0)
+        print(
+            f"[SAM3] image {W}x{H} | stick length p75 {seg_info.get('stick_len_p75')} px | "
+            f"scale {seg_info.get('scale')} | masks {len(preds)} | {time.perf_counter() - t0:.1f}s",
+            flush=True,
+        )
 
-    pipeline09b.sync()
-    t1 = time.perf_counter()
+        pipeline09b.sync()
+        t1 = time.perf_counter()
 
-    _check_cancel(
-        cancel_check
-    )
+    else:
+        _report_progress(
+            progress_callback,
+            18,
+            "Running YOLO detector",
+        )
 
-    _report_progress(
-        progress_callback,
-        35,
-        "Generating SAM2 masks",
-    )
+        pipeline09b.sync()
+        t0 = time.perf_counter()
 
-    preds = pipeline09b.segment(
-        ctx["predictor"],
-        image_np,
-        boxes,
-        confs,
-        s10,
-        s15.BOX_BATCH,
-    )
+        boxes, confs = pipeline09b.detect(
+            ctx["detector"],
+            image,
+            ctx["det_cfg"],
+        )
+
+        pipeline09b.sync()
+        t1 = time.perf_counter()
+
+        _check_cancel(
+            cancel_check
+        )
+
+        _report_progress(
+            progress_callback,
+            35,
+            "Generating SAM2 masks",
+        )
+
+        preds = pipeline09b.segment(
+            ctx["predictor"],
+            image_np,
+            boxes,
+            confs,
+            s10,
+            s15.BOX_BATCH,
+        )
 
     _check_cancel(
         cancel_check
@@ -1856,6 +2084,43 @@ def _run_system_with_progress(
         in kept
     ]
 
+    # v3: masks that are occluded / incomplete are not judged. Calibration in
+    # classify() still uses every safe-zone mask (same as training), so the
+    # original `inside` is passed there and `judged` is used for the result.
+    occluded = [False] * len(kept)
+    not_judged_reason = [""] * len(kept)
+    occ_cfg = ctx["det_cfg"].get("occlusion_filter")
+    if occ_cfg is not None and kept and occ_cfg.get("mode") != "all":
+        _report_progress(
+            progress_callback,
+            66,
+            "Checking occlusion",
+        )
+        judged_flags, statuses, not_judged_reason = prawn_occlusion.judge_details(
+            kept,
+            H,
+            W,
+            occ_cfg,
+            scale=occ_scale,
+        )
+        _rc = Counter(r for r in not_judged_reason if r)
+        print(f"[BIKA] not judged: {dict(_rc)}", flush=True)
+        if occ_cfg.get("mode", "strict") == "lenient":
+            # only fragments / oversize / border are not judged
+            occluded = [not ok for ok in judged_flags]
+        else:
+            occluded = [
+                status not in ctx["det_cfg"].get("occlusion_judge", prawn_occlusion.USABLE)
+                for status in statuses
+            ]
+    judged = [
+        bool(ok and not occ)
+        for ok, occ in zip(inside, occluded)
+    ]
+    if occ_cfg is not None and occ_cfg.get("judge_image_edge"):
+        # v3 option: masks near the image edge are judged too
+        judged = [not occ for occ in occluded]
+
     pipeline09b.sync()
     t2 = time.perf_counter()
 
@@ -1877,10 +2142,7 @@ def _run_system_with_progress(
         geom_index,
         calib,
     ) = pipeline09b.classify(
-        kept,
-        inside,
-        image,
-        image_np,
+        *_classify_inputs(kept, inside, image, image_np, occ_scale),
         ctx["model"],
         ctx["ckpt"],
         s02,
@@ -1955,7 +2217,13 @@ def _run_system_with_progress(
             kept,
 
         "inside":
-            inside,
+            judged,
+
+        "occluded":
+            occluded,
+
+        "not_judged_reason":
+            not_judged_reason,
 
         "labels":
             labels,
@@ -2043,7 +2311,9 @@ def inspect_image_bytes_with_progress(
         "Loading inspection models",
     )
 
+    _t_job = time.perf_counter()
     ctx = get_inspection_context()
+    _t_ctx = time.perf_counter()
 
     _check_cancel(
         cancel_check
@@ -2124,10 +2394,20 @@ def inspect_image_bytes_with_progress(
         "Building mask data",
     )
 
+    _t_ser = time.perf_counter()
     serialised = _serialise_result(
         image_np,
         result,
         ctx,
+    )
+    _t_end = time.perf_counter()
+    _tm = result.get("timing", {})
+    print(
+        f"[BIKA timing] load models {_t_ctx - _t_job:.1f}s | wait GPU {_t_ser - _t_ctx - _tm.get('total_ms', 0) / 1000:.1f}s | "
+        f"segment {_tm.get('detector_ms', 0) / 1000:.1f}s | filters+occlusion {_tm.get('sam2_and_dedup_ms', 0) / 1000:.1f}s | "
+        f"classifier {_tm.get('classifier_ms', 0) / 1000:.1f}s | build result {_t_end - _t_ser:.1f}s | "
+        f"TOTAL {_t_end - _t_job:.1f}s",
+        flush=True,
     )
 
     _check_cancel(

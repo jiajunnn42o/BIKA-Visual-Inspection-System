@@ -1,4 +1,4 @@
-/* BIKA Live Stream Inspection · camera-only Phase 1. No fake AI results. */
+/* BIKA Live Stream Phase 2 · real sampled AI keyframes; raw RTSP preview remains independent. */
 (() => {
   'use strict';
   const page = document.querySelector('[data-live-stream-page]');
@@ -107,6 +107,115 @@
   let currentState = null;
   let currentStream = null;
   let lastCameraStatus = null;
+
+  // Latest-only HTTP JPEG preview. Fetches are strictly serialized, and each
+  // response replaces the older image; no accumulating MJPEG decoder backlog.
+  // This improves browser-side freshness, not upstream RTSP/camera latency.
+  const previewAge = get('[data-preview-age]');
+  const previewURL = page.dataset.latestFrameUrl;
+  let previewEpoch = 0;
+  let previewTimer = null;
+  let previewRequest = null;
+  let previewImageURL = null;
+  let previewSequence = null;
+  let previewRunning = false;
+  // Target approximately 10 preview requests per second. The existing fetch loop
+  // awaits the full response and JPEG decode before scheduling another request:
+  // at most one request is active, so slower networks never create a frame queue.
+  // Camera FPS and AI inference FPS remain independent of this display target.
+  const PREVIEW_INTERVAL_MS = 100;
+
+  function stopLatestPreview() {
+    previewEpoch += 1;
+    previewRunning = false;
+    if (previewTimer !== null) clearTimeout(previewTimer);
+    previewTimer = null;
+    if (previewRequest) previewRequest.abort();
+    previewRequest = null;
+    previewSequence = null;
+    if (previewImageURL) URL.revokeObjectURL(previewImageURL);
+    previewImageURL = null;
+    image.removeAttribute('src');
+    if (previewAge) previewAge.textContent = '—';
+  }
+
+  async function updateLatestPreview(epoch) {
+    if (epoch !== previewEpoch || !previewRunning) return;
+    const start = performance.now();
+    if (document.hidden) {
+      previewTimer = setTimeout(() => updateLatestPreview(epoch), 650);
+      return;
+    }
+    const request = new AbortController();
+    previewRequest = request;
+    const timeout = setTimeout(() => request.abort(), 4000);
+    try {
+      const suffix = previewSequence == null ? '' : '?seq=' + encodeURIComponent(previewSequence);
+      const response = await fetch(previewURL + suffix, {
+        credentials: 'same-origin', cache: 'no-store', signal: request.signal,
+      });
+      if (response.status === 204) {
+        // No newer frame. Retain the image but update the server-side age.
+        const ageHeader = response.headers.get('X-BIKA-Server-Frame-Age-Ms');
+        if (previewAge && ageHeader != null && Number.isFinite(Number(ageHeader))) {
+          previewAge.textContent = Math.max(0, Math.round(Number(ageHeader))) + ' ms';
+        }
+      } else if (response.ok) {
+        const nextSequence = response.headers.get('X-BIKA-Frame-Sequence');
+        const ageHeader = response.headers.get('X-BIKA-Server-Frame-Age-Ms');
+        const blob = await response.blob();
+        if (epoch !== previewEpoch || !previewRunning) return;
+        const freshURL = URL.createObjectURL(blob);
+        try {
+          const decoded = new Image();
+          decoded.src = freshURL;
+          await decoded.decode();
+          if (epoch !== previewEpoch || !previewRunning) {
+            URL.revokeObjectURL(freshURL);
+            return;
+          }
+          const prior = previewImageURL;
+          image.src = freshURL;
+          previewImageURL = freshURL;
+          if (prior) URL.revokeObjectURL(prior);
+          previewSequence = nextSequence || previewSequence;
+          if (previewAge && ageHeader != null) {
+            const age = Number(ageHeader) + (performance.now() - start);
+            previewAge.textContent = Number.isFinite(age) ? Math.max(0, Math.round(age)) + ' ms' : '—';
+          }
+        } catch (_) {
+          URL.revokeObjectURL(freshURL);
+        }
+      } else if (response.status === 409) {
+        // Camera not yet online; the regular status poll controls the UI.
+      } else {
+        throw new Error('HTTP ' + response.status);
+      }
+    } catch (error) {
+      // Abort on disconnect/pagehide is expected. A transient network failure
+      // should not interrupt the camera worker or restart the AI model.
+      if (epoch === previewEpoch && !request.signal.aborted && lastCameraStatus?.state === 'online') {
+        if (previewAge) previewAge.textContent = 'Updating…';
+      }
+    } finally {
+      clearTimeout(timeout);
+      if (previewRequest === request) previewRequest = null;
+      if (epoch === previewEpoch && previewRunning) {
+        const elapsed = performance.now() - start;
+        previewTimer = setTimeout(() => updateLatestPreview(epoch),
+          document.hidden ? 650 : Math.max(60, PREVIEW_INTERVAL_MS - elapsed));
+      }
+    }
+  }
+
+  function startLatestPreview() {
+    if (previewRunning) return;
+    if (!previewURL) return;
+    previewRunning = true;
+    const epoch = ++previewEpoch;
+    updateLatestPreview(epoch);
+  }
+
   const SOURCE_KEY = 'bika_live_preferred_source_v1';
   const AUTO_KEY = 'bika_live_auto_connect_v1';
   // Browser preferences only; credentials stay on the server.
@@ -168,12 +277,13 @@
     if (online) {
       empty.hidden = true;
       image.hidden = false;
-      if (currentStream !== camera.stream || !image.getAttribute('src')) {
-        image.src = page.dataset.videoUrl + '?stream=' + encodeURIComponent(camera.stream);
+      if (currentStream !== camera.stream) {
+        stopLatestPreview();
         currentStream = camera.stream;
       }
+      startLatestPreview();
     } else {
-      image.removeAttribute('src');
+      stopLatestPreview();
       image.hidden = true;
       currentStream = null;
       empty.hidden = false;
@@ -186,7 +296,7 @@
     }
     if (currentState !== state) {
       if (error) setMessage(camera.message || 'Camera connection failed.', true);
-      else if (online) setMessage('Camera connected. You may capture a snapshot; AI inference is not active.');
+      else if (online) setMessage('Camera connected. Start Detection when ready. Raw preview stays online during AI inference.');
       else if (connecting) setMessage('Connecting to Hikvision camera…');
       else if (!camera.configured) setMessage('Camera is not configured. Please update the local .env file.', true);
       else setMessage('Camera ready to connect.');
@@ -194,12 +304,142 @@
     currentState = state;
   }
 
+  // Phase 2: the raw RTSP preview stays independent of the single 09b worker.
+  // AI view is a LAST-ANALYSED KEYFRAME, not masks tracked onto new camera frames.
+  const aiImage = get('[data-ai-image]');
+  const aiToggle = get('[data-ai-toggle]');
+  const aiToggleLabel = get('[data-ai-toggle-label]');
+  const aiViewToggle = get('[data-ai-view-toggle]');
+  const aiViewState = get('[data-ai-view-state]');
+  let aiState = null;
+  let aiViewPreference = 'raw'; // Keep the true camera preview as the default; sampled AI images can be seconds old.
+  let aiFeedStarted = false;
+  let lastEventsSignature = '';
+  const aiField = selector => get(selector);
+
+  function paintView() {
+    const cameraOnline = lastCameraStatus?.state === 'online';
+    const ready = cameraOnline && !!aiState?.active && !!aiState?.overlay_ready;
+    const showAI = ready && aiViewPreference === 'ai';
+    image.hidden = !cameraOnline || showAI;
+    aiImage.hidden = !showAI;
+    aiViewToggle.disabled = !ready;
+    aiViewToggle.textContent = showAI ? 'Show raw feed' : 'View AI keyframe';
+    aiViewState.textContent = showAI ? 'Sampled keyframe · not live' : aiState?.active ? 'Raw camera · AI running' : 'Raw camera';
+    // Never label a frozen, previously analysed frame as a live camera image.
+    if (cameraOnline) {
+      liveLabel.textContent = showAI ? 'AI KEYFRAME · NOT LIVE' : 'LIVE';
+    }
+    liveTag.classList.toggle('is-ai-frame', showAI);
+    if (ready && !aiFeedStarted) {
+      aiImage.src = page.dataset.aiFeedUrl + '?t=' + Date.now();
+      aiFeedStarted = true;
+    }
+    if (!ready && aiFeedStarted) {
+      aiImage.removeAttribute('src');
+      aiFeedStarted = false;
+    }
+  }
+  aiViewToggle?.addEventListener('click', () => {
+    aiViewPreference = aiViewPreference === 'ai' ? 'raw' : 'ai';
+    paintView();
+  });
+  aiImage?.addEventListener('error', () => { aiFeedStarted = false; });
+
+  function renderEvents(events) {
+    const tbody = aiField('[data-ai-events-body]');
+    const signature = JSON.stringify((events || []).map(e => e.id));
+    if (signature === lastEventsSignature) return;
+    lastEventsSignature = signature;
+    tbody.replaceChildren();
+    if (!events?.length) {
+      const row = tbody.insertRow();
+      const cell = row.insertCell();
+      cell.colSpan = 5;
+      cell.className = 'lsi-no-events';
+      cell.textContent = 'No sampled defect candidates yet.';
+      return;
+    }
+    for (const ev of events) {
+      const row = tbody.insertRow();
+      const timeCell = row.insertCell();
+      timeCell.textContent = ev.time || '—';
+      const previewCell = row.insertCell();
+      const previewUrl = page.dataset.aiEventUrlBase + ev.id + '/image';
+      const thumb = document.createElement('img');
+      thumb.className = 'lsi-event-thumb';
+      thumb.loading = 'lazy';
+      thumb.alt = 'Sampled defect preview';
+      thumb.src = previewUrl;
+      previewCell.append(thumb);
+      row.insertCell().textContent = ev.label || 'Defect';
+      const conf = Number(ev.confidence);
+      row.insertCell().textContent = ev.confidence == null || !Number.isFinite(conf) ? '—' : (conf * 100).toFixed(1) + '%';
+      const action = row.insertCell();
+      const link = document.createElement('a');
+      link.href = previewUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = 'View';
+      link.className = 'lsi-event-link';
+      action.append(link);
+    }
+  }
+
+  function renderAI(ai, camera) {
+    aiState = ai || {state: 'stopped'};
+    const active = !!aiState.active;
+    const online = camera?.state === 'online';
+    aiToggle.disabled = !authorizedControl || busy || (!online && !active);
+    aiToggleLabel.textContent = active ? 'Stop Detection' : aiState.state === 'error' ? 'Restart Detection' : 'Start Detection';
+    aiToggle.title = active ? 'Stop the AI sampler; keep the camera online' : 'Start sampled 09b inference on live keyframes';
+    aiToggle.classList.toggle('is-active', active);
+    aiField('[data-ai-state]').textContent = aiState.state === 'error' ? 'Error' :
+      active ? (aiState.stage || 'Running') : 'Stopped';
+    aiField('[data-detail-ai]').textContent = active ? 'Running · sampled keyframes' : 'Stopped';
+    aiField('[data-ai-fps]').textContent = aiState.ai_fps == null ? '—' : `${Number(aiState.ai_fps).toFixed(2)} FPS`;
+    aiField('[data-ai-inference]').textContent = aiState.inference_seconds == null ? '—' : `${Number(aiState.inference_seconds).toFixed(2)} s`;
+    let age = '—';
+    if (aiState.last_sample_at) {
+      const diff = (Date.now() - Date.parse(aiState.last_sample_at)) / 1000;
+      if (Number.isFinite(diff)) age = `${Math.max(0, Math.round(diff))} s ago`;
+    }
+    aiField('[data-ai-keyframe-age]').textContent = age;
+    aiField('[data-stat-samples]').textContent = aiState.sample_count ? String(aiState.sample_count) : '—';
+    aiField('[data-stat-reject]').textContent = aiState.sampled_reject_rate == null ? '—' : `${Number(aiState.sampled_reject_rate).toFixed(1)}%`;
+    aiField('[data-ai-events-badge]').textContent = active ? 'Collecting keyframes' : aiState.event_total ? 'Last session' : 'Not collecting';
+    const events = aiState.events || [];
+    renderEvents(events);
+    aiField('[data-ai-alert-badge]').textContent = !active ? 'Waiting' : events.length ? `${events.length} candidates` : 'Monitoring';
+    aiField('[data-ai-alert-text]').textContent = aiState.state === 'error' ? (aiState.message || 'AI error') :
+      !active ? 'Start AI to monitor sampled defects.' : events.length ?
+      `${events.length} possible defect events in this session. Manual verification required.` :
+      'No sampled defect candidates yet. AI is analysing available keyframes.';
+    aiField('[data-ai-distribution-badge]').textContent = events.length ? 'Sampled events' : 'No data';
+    const categories = new Map();
+    for (const ev of events) categories.set(ev.label, (categories.get(ev.label) || 0) + 1);
+    aiField('[data-ai-ring-total]').textContent = events.length ? String(events.length) : '—';
+    aiField('[data-ai-distribution-text]').textContent = categories.size ?
+      [...categories.entries()].map(([label, count]) => `${label}: ${count}`).join(' · ') + '. Sampled candidates; not unique products.' :
+      'Waiting for sampled defect events; not unique products.';
+    paintView();
+    if (aiState.state === 'error' && aiState.message) setMessage(aiState.message, true);
+  }
+
+  aiToggle?.addEventListener('click', async () => {
+    if (!authorizedControl || busy) return;
+    const url = aiState?.active ? page.dataset.aiStopUrl : page.dataset.aiStartUrl;
+    if (!url) return;
+    await action(url);
+  });
+
   async function checkStatus() {
     try {
       const response = await fetch(page.dataset.statusUrl, {credentials:'same-origin', cache:'no-store', headers: {'Accept':'application/json'}});
       if (!response.ok) throw new Error('Camera status HTTP ' + response.status + '. Check Flask login/session.');
       const data = await response.json();
       render(data.camera);
+      renderAI(data.ai, data.camera);
       return data.camera;
     } catch (err) {
       setMessage('Camera status request failed: ' + (err.message || 'Check Flask / browser Console.'), true);
@@ -233,7 +473,28 @@
     }
   }
 
-  // Auto-connect only after the first successful status response. Never run AI inference.
+// Hardware CUDA availability is distinct from active, sampled AI inference.
+const cudaState = get('[data-live-cuda]');
+async function checkCudaSupport() {
+  if (!page.dataset.deviceStatusUrl || !cudaState) return;
+  try {
+    const response = await fetch(page.dataset.deviceStatusUrl, {
+      credentials: 'same-origin', cache: 'no-store',
+      headers: {'Accept': 'application/json'},
+    });
+    if (!response.ok) throw new Error('Device status unavailable');
+    const data = await response.json();
+    cudaState.textContent = data.models?.cuda_available == null ? 'Unknown' : (data.models.cuda_available ? 'Available' : 'Unavailable');
+    cudaState.title = data.models?.cuda_name || 'CUDA availability does not mean live AI is running.';
+  } catch (_) {
+    cudaState.textContent = 'Unavailable';
+  }
+}
+checkCudaSupport();
+const cudaRefreshInterval = setInterval(checkCudaSupport, 6000);
+window.addEventListener('pagehide', () => clearInterval(cudaRefreshInterval), {once:true});
+
+  // Auto-connect never starts AI: operator must click Start Detection.
   function canAutoConnect(camera) {
     return authorizedControl && !busy && autoConnectToggle?.checked &&
       camera?.configured && camera.state === 'disconnected';
@@ -259,7 +520,7 @@
     window.location.assign(page.dataset.snapshotUrl);
   });
   image?.addEventListener('error', () => {
-    if (currentState === 'online') setMessage('Unable to display the MJPEG preview. Check codec and network stability.', true);
+    if (currentState === 'online') setMessage('Unable to decode the latest camera frame. Check the camera codec and network.', true);
   });
   (async () => {
     const camera = await checkStatus();
@@ -268,5 +529,5 @@
     }
   })();
   const interval = setInterval(checkStatus, 1600);
-  window.addEventListener('pagehide', () => clearInterval(interval), {once:true});
+  window.addEventListener('pagehide', () => { clearInterval(interval); stopLatestPreview(); }, {once:true});
 })();

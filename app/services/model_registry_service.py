@@ -29,7 +29,44 @@ MODEL_OPTIONAL_FILES = (
     "README.txt",
     "manifest.json",
     "02_edge_filter.json",
+    "03_occlusion_filter.json",
 )
+
+# v3 (prawn): a package with segmenter.json uses SAM3.1 instead of YOLO + SAM2,
+# so it needs no detector_best.pt / detector_settings.json.
+SEGMENTER_FILENAME = "segmenter.json"
+
+SAM3_REQUIRED_FILES = (
+    "segmenter.json",
+    "classifier.pt",
+    "calibration_reference.json",
+)
+
+# folders inside website_models that hold shared weights, not model packages
+SHARED_WEIGHT_FOLDERS = {"sam2", "sam3"}
+
+
+def required_files_for(folder: Path) -> tuple:
+    return (
+        SAM3_REQUIRED_FILES
+        if (folder / SEGMENTER_FILENAME).is_file()
+        else MODEL_REQUIRED_FILES
+    )
+
+
+def _sam3_checkpoint_missing(folder: Path) -> list[str]:
+    """segmenter.json must point at an existing SAM3 checkpoint."""
+    path = folder / SEGMENTER_FILENAME
+    if not path.is_file():
+        return []
+    try:
+        cfg = json.loads(path.read_text(encoding="utf-8"))
+        checkpoint = Path(str(cfg["checkpoint"]))
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
+        return ["segmenter.json (invalid)"]
+    if not checkpoint.is_absolute():
+        checkpoint = (folder / checkpoint).resolve()
+    return [] if checkpoint.is_file() else [f"SAM3 checkpoint ({checkpoint.name})"]
 
 MODEL_MANIFEST_FILENAME = "manifest.json"
 
@@ -214,13 +251,13 @@ def missing_model_files(
 
     return [
         filename
-        for filename in MODEL_REQUIRED_FILES
+        for filename in required_files_for(folder)
         if not (
             folder
             /
             filename
         ).is_file()
-    ]
+    ] + _sam3_checkpoint_missing(folder)
 
 
 def is_complete_model_version(
@@ -654,7 +691,7 @@ def available_model_versions() -> list[str]:
         if (
             not folder.is_dir()
             or
-            folder.name == "sam2"
+            folder.name in SHARED_WEIGHT_FOLDERS
             or
             folder.name.startswith(".")
         ):
@@ -952,6 +989,7 @@ def _last_updated(
     for filename in (
         *MODEL_REQUIRED_FILES,
         *MODEL_OPTIONAL_FILES,
+        SEGMENTER_FILENAME,
     ):
         path = (
             folder
@@ -1200,7 +1238,7 @@ def validate_model_folder(
     missing = [
         filename
         for filename
-        in MODEL_REQUIRED_FILES
+        in required_files_for(folder)
         if not (
             folder
             /
@@ -1215,11 +1253,21 @@ def validate_model_folder(
             ", ".join(missing)
         )
 
-    _validate_detector_settings(
-        folder
-        /
-        "detector_settings.json"
-    )
+    if (folder / SEGMENTER_FILENAME).is_file():
+        try:
+            seg = json.loads((folder / SEGMENTER_FILENAME).read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise ModelRegistryError("segmenter.json is not valid JSON.") from exc
+        if seg.get("type") != "sam3" or not seg.get("checkpoint"):
+            raise ModelRegistryError(
+                "segmenter.json needs \"type\": \"sam3\" and a \"checkpoint\" path."
+            )
+    else:
+        _validate_detector_settings(
+            folder
+            /
+            "detector_settings.json"
+        )
 
     from app.services.inspection_model_metadata import (
         get_classifier_ui_metadata,
@@ -1433,7 +1481,13 @@ def install_uploaded_model(
 
                 selected = {}
 
-                for filename in MODEL_REQUIRED_FILES:
+                package_required = (
+                    SAM3_REQUIRED_FILES
+                    if by_basename.get(SEGMENTER_FILENAME)
+                    else MODEL_REQUIRED_FILES
+                )
+
+                for filename in package_required:
                     candidates = (
                         by_basename.get(
                             filename,
@@ -1557,6 +1611,21 @@ def install_uploaded_model(
                     ).open("wb") as destination:
                         shutil.copyfileobj(source, destination)
 
+                # v3 occlusion filter, same rule: only from the package folder
+                occ_candidates = [
+                    info for info in by_basename.get("03_occlusion_filter.json", [])
+                    if str(Path(info.filename.replace("\\", "/")).parent) == package_parent
+                ]
+                if len(occ_candidates) > 1:
+                    raise ModelRegistryError(
+                        "Model ZIP contains duplicate 03_occlusion_filter.json files."
+                    )
+                if occ_candidates:
+                    with archive.open(occ_candidates[0], "r") as source, (
+                        staging / "03_occlusion_filter.json"
+                    ).open("wb") as destination:
+                        shutil.copyfileobj(source, destination)
+
             from app.services.inspection_model_metadata import (
                 get_classifier_ui_metadata,
             )
@@ -1633,7 +1702,7 @@ def install_uploaded_model(
                 "package_files":
                     (
                         list(
-                            MODEL_REQUIRED_FILES
+                            required_files_for(staging)
                         )
                         +
                         (

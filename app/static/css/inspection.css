@@ -114,6 +114,11 @@
     gap: 22px;
 }
 
+/* Keep left-side cards closer so Video Safe Zone appears sooner. */
+.inspection-left-column {
+    row-gap: 16px;
+}
+
 
 /* =========================================================
    COMMON CARD
@@ -415,9 +420,10 @@
 }
 
 .inspection-inline-status {
-    min-height: 15px;
+    min-height: 0;
 
-    margin: 8px 2px 0;
+    /* No reserved height while the status line is empty. */
+    margin: 2px 2px 0;
 
     color: var(--inspection-muted);
 
@@ -1727,7 +1733,7 @@ html[data-theme="dark"]
 
 /* Phase 3A: scoped colour-only video mask selection */
 .inspection-active-model-note {
-    margin: 12px 0 0;
+    margin: 8px 0 0;
     font-size: 11px;
     color: var(--inspection-muted, #777);
     overflow-wrap: anywhere;
@@ -1817,3 +1823,18 @@ html[data-theme="dark"]
     font-size: 11px;
     line-height: 1.5;
 }
+
+/* Phase 1 Device Status: an independent card in the Inspection left column. */
+.inspection-device-card .inspection-card-heading {
+    margin-bottom: 15px;
+}
+.inspection-device-status {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 14px;
+}
+.inspection-device-kv { min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.inspection-device-kv > span { color: var(--inspection-muted, #888); font-size: 10.5px; }
+.inspection-device-kv > strong { color: var(--inspection-text, #303033); font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
+.inspection-device-kv > strong.is-verified { color: #388568; }
+.inspection-device-status > small { grid-column: 1 / -1; margin-top: 1px; font-size: 10.5px; line-height: 1.5; color: var(--inspection-muted, #888); }

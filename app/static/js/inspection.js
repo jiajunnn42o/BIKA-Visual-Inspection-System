@@ -30,6 +30,55 @@
         "";
 
 
+    /* Phase 1: read-only AI device diagnostics, no model loading. */
+    const deviceStatusUrl = page.dataset.deviceStatusUrl;
+    const deviceName = page.querySelector('[data-runtime-device]');
+    const deviceCuda = page.querySelector('[data-runtime-cuda]');
+    const deviceNote = page.querySelector('[data-runtime-note]');
+    
+    async function refreshInspectionDeviceStatus() {
+        if (!deviceStatusUrl) return;
+        try {
+            const response = await fetch(deviceStatusUrl, {
+                credentials: 'same-origin', cache: 'no-store',
+                headers: {'Accept': 'application/json'},
+            });
+            if (!response.ok) throw new Error('Device status unavailable');
+            const payload = await response.json();
+            const models = payload.models || {};
+            const processing = payload.inspection?.state === 'running' ||
+                               payload.inspection?.state === 'queued';
+            if (deviceName) {
+                deviceName.textContent = models.label || 'Not verified';
+                deviceName.classList.toggle('is-verified', models.device === 'gpu');
+                const parts = models.components || {};
+                deviceName.title = models.loaded
+                    ? 'YOLO: ' + (parts.YOLO || 'Unknown') + '\nSAM2: ' +
+                      (parts.SAM2 || 'Unknown') + '\nClassifier: ' +
+                      (parts.Classifier || 'Unknown')
+                    : 'Models have not yet loaded in this Flask process.';
+            }
+            if (deviceCuda) {
+                deviceCuda.textContent = models.cuda_available == null ? 'Unknown' : (models.cuda_available ? 'Available' : 'Unavailable');
+                deviceCuda.title = models.cuda_name || 'CUDA availability is not evidence of inference activity.';
+            }
+            if (deviceNote) {
+                deviceNote.textContent = processing
+                    ? 'Inspection processing · model weights device shown above (CPU steps may also run).'
+                    : models.loaded
+                        ? 'Models loaded · no inspection running. This is not live GPU utilisation.'
+                        : 'Run an inspection to verify where YOLO, SAM2 and Classifier are loaded.';
+            }
+        } catch (_) {
+            if (deviceName) deviceName.textContent = 'Unavailable';
+            if (deviceCuda) deviceCuda.textContent = '—';
+            if (deviceNote) deviceNote.textContent = 'Could not read server device status.';
+        }
+    }
+    refreshInspectionDeviceStatus();
+    const inspectionDeviceTimer = window.setInterval(refreshInspectionDeviceStatus, 2500);
+    window.addEventListener('pagehide', () => window.clearInterval(inspectionDeviceTimer), {once: true});
+
     /* =====================================================
        ELEMENTS
        ===================================================== */

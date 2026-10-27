@@ -342,8 +342,8 @@
                 <!-- DATA ANALYTICS -->
 
                 <a
-                    href="#"
-                    class="app-nav-item"
+                    href="{{ url_for('main.analytics') }}"
+                    class="app-nav-item {% if request.endpoint and request.endpoint.startswith('main.analytics') %}is-active{% endif %}"
                     draggable="false"
                 >
 

@@ -51,4 +51,8 @@ def create_app():
     from app.cli import create_superadmin
     app.cli.add_command(create_superadmin)
 
+    from app.services.inspection_pipeline_service import preload_inspection_context_async
+    preload_inspection_context_async(app)
+
     return app
+

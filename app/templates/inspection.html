@@ -18,6 +18,7 @@ Inspection | BIKA
     data-inspection-page
     data-run-image-url="{{ url_for('main.run_inspection_image') }}"
     data-run-video-url="{{ url_for('main.run_inspection_video') }}"
+    data-device-status-url="{{ url_for('main.inspection_device_status') }}"
 >
 
     <!-- =====================================================
@@ -231,7 +232,7 @@ Inspection | BIKA
                         No video selected.
                     </p>
                     <p class="inspection-video-hint">
-                        Counts are AI frame observations, not unique snacks. Video results are not yet saved to Reports.
+                        Counts are AI frame observations, not unique biscuits. Video results are not yet saved to Reports.
                     </p>
 
                 </section>
@@ -291,12 +292,31 @@ Inspection | BIKA
 
             </article>
 
+            <!-- PROCESSING DEVICE: independent card, same read-only status bindings. -->
+            <article class="inspection-card inspection-device-card" aria-labelledby="inspection-device-card-title">
+                <div class="inspection-card-heading inspection-card-heading-compact">
+                    <h2 id="inspection-device-card-title">Processing Device</h2>
+                    <p>AI model placement and CUDA support</p>
+                </div>
+                <div class="inspection-device-status" data-device-status aria-live="polite">
+                    <div class="inspection-device-kv">
+                        <span>AI Model Device</span>
+                        <strong data-runtime-device>Checking…</strong>
+                    </div>
+                    <div class="inspection-device-kv">
+                        <span>CUDA Support</span>
+                        <strong data-runtime-cuda>Checking…</strong>
+                    </div>
+                    <small data-runtime-note>Device will be verified after model loading.</small>
+                </div>
+            </article>
+
 
             <!-- VIDEO SAFE ZONE: occupies the former left-column legend position. -->
             <article class="inspection-card inspection-safezone-config" data-safezone-config hidden>
                 <div class="inspection-card-heading inspection-card-heading-compact">
                     <h2>Video Safe Zone</h2>
-                    <p>Masks appear when snacks enter the zone.</p>
+                    <p>Masks appear when biscuits enter the zone.</p>
                 </div>
                 <div class="inspection-safezone-fields">
                     <label for="inspection_zone_left">Left (%)
@@ -522,7 +542,7 @@ Inspection | BIKA
 
                     <div>
                         <span>
-                            Good Snack Rate
+                            Yield
                         </span>
 
                         <strong data-summary-yield>
@@ -579,7 +599,7 @@ Inspection | BIKA
 
                     <div>
                         <small>
-                            Selected Snack
+                            Selected Biscuit
                         </small>
 
                         <h2 data-object-id>
@@ -610,7 +630,7 @@ Inspection | BIKA
 
                             <canvas
                                 data-object-crop-original
-                                aria-label="Original selected snack crop"
+                                aria-label="Original selected biscuit crop"
                             ></canvas>
 
                         </div>
@@ -628,7 +648,7 @@ Inspection | BIKA
 
                             <canvas
                                 data-object-crop-masked
-                                aria-label="Selected snack crop with segmentation mask"
+                                aria-label="Selected biscuit crop with segmentation mask"
                             ></canvas>
 
                         </div>

@@ -3,45 +3,52 @@
 {% block title %}Live Stream Inspection | BIKA{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/live_stream.css', v='phase1-4') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/live_stream.css', v='phase2-live-latest-frame-1') }}">
 {% endblock %}
 
 {% block content %}
 <div class="lsi-page" data-live-stream-page data-can-control-camera="{{ 'true' if can_control_camera else 'false' }}"
      data-status-url="{{ url_for('main.live_inspection_status') }}"
+     data-device-status-url="{{ url_for('main.inspection_device_status') }}"
      data-connect-url="{{ url_for('main.live_inspection_connect') }}"
      data-disconnect-url="{{ url_for('main.live_inspection_disconnect') }}"
      data-video-url="{{ url_for('main.live_inspection_video_feed') }}"
-     data-snapshot-url="{{ url_for('main.live_inspection_snapshot') }}">
+     data-latest-frame-url="{{ url_for('main.live_inspection_latest_frame') }}"
+     data-snapshot-url="{{ url_for('main.live_inspection_snapshot') }}"
+     data-ai-start-url="{{ url_for('main.live_inspection_ai_start') }}"
+     data-ai-stop-url="{{ url_for('main.live_inspection_ai_stop') }}"
+     data-ai-feed-url="{{ url_for('main.live_inspection_ai_feed') }}"
+     data-ai-event-url-base="{{ url_for('main.live_inspection_status') | replace('/api/status', '/api/ai/events/') }}">
 
   <header class="lsi-header">
     <div class="lsi-heading">
       <h1>Live Stream Inspection</h1>
-      <p>Connect your Hikvision camera and monitor the live feed before enabling AI inspection.</p>
+      <p>Connect your Hikvision camera and run sampled AI inspection on live keyframes.</p>
     </div>
   </header>
 
   <section class="lsi-stats" aria-label="Camera statistics">
     <article class="lsi-stat lsi-stat-online"><span class="lsi-stat-icon"><iconsax-icon name="video" type="twotone" size="23" color="currentColor"></iconsax-icon></span><div><p>Stream Status</p><strong data-stat-connection>Disconnected</strong><small data-stat-connection-note>Camera not connected</small></div><span class="lsi-status-dot" data-online-dot></span></article>
     <article class="lsi-stat"><span class="lsi-stat-icon"><iconsax-icon name="speedometer" type="twotone" size="23" color="currentColor"></iconsax-icon></span><div><p>Camera FPS</p><strong data-stat-fps>—</strong><small>Measured incoming frames</small></div></article>
-    <article class="lsi-stat"><span class="lsi-stat-icon"><iconsax-icon name="chart-2" type="twotone" size="23" color="currentColor"></iconsax-icon></span><div><p>Current Reject Rate</p><strong>—</strong><small>Available when AI is enabled</small></div></article>
-    <article class="lsi-stat"><span class="lsi-stat-icon"><iconsax-icon name="box" type="twotone" size="23" color="currentColor"></iconsax-icon></span><div><p>Today's Inspections</p><strong>—</strong><small>Live inference not started</small></div></article>
+    <article class="lsi-stat"><span class="lsi-stat-icon"><iconsax-icon name="chart-2" type="twotone" size="23" color="currentColor"></iconsax-icon></span><div><p>Current Reject Rate</p><strong data-stat-reject>—</strong><small>Rate of analysed observations</small></div></article>
+    <article class="lsi-stat"><span class="lsi-stat-icon"><iconsax-icon name="box" type="twotone" size="23" color="currentColor"></iconsax-icon></span><div><p>AI Keyframes</p><strong data-stat-samples>—</strong><small>Sampled frames, not unique products</small></div></article>
   </section>
 
   <div class="lsi-primary-grid">
     <section class="lsi-panel lsi-viewer-card" aria-labelledby="lsi-viewer-title">
-      <div class="lsi-card-heading"><div><h2 id="lsi-viewer-title">Live Camera Feed</h2><p>Raw camera preview · Detection overlays will be added in Phase 2</p></div><span class="lsi-mini-status" data-live-badge>Offline</span></div>
+      <div class="lsi-card-heading"><div><h2 id="lsi-viewer-title">Live Camera Feed</h2><p>Continuous camera preview · sampled 09b mask keyframes</p></div><span class="lsi-mini-status" data-live-badge>Offline</span></div>
       <div class="lsi-video-stage" data-video-stage>
         <div class="lsi-video-top"><span class="lsi-live-tag"><i></i><span data-live-label>NOT CONNECTED</span></span><span class="lsi-video-tag">Hikvision · <span data-feed-stream-label>Main Stream</span></span></div>
         <img class="lsi-video-image" data-video-image alt="Live camera view from Hikvision network camera" hidden>
+        <img class="lsi-video-image" data-ai-image alt="Last analysed AI keyframe with masks" hidden>
         <div class="lsi-video-empty" data-video-empty>
           <span class="lsi-empty-symbol"><iconsax-icon name="video-slash" type="twotone" size="44" color="currentColor"></iconsax-icon></span>
           <h3 data-placeholder-title>Camera not connected</h3>
           <p data-placeholder-message>Configure your Hikvision camera in <code>.env</code>, then choose Connect Camera.</p>
         </div>
-        <div class="lsi-video-bottom"><span data-video-resolution>Resolution —</span><span class="lsi-video-separator"></span><span data-video-fps>FPS —</span><span class="lsi-video-separator"></span><span>RTSP → MJPEG preview</span></div>
+        <div class="lsi-video-bottom"><span data-video-resolution>Resolution —</span><span class="lsi-video-separator"></span><span data-video-fps>FPS —</span><span class="lsi-video-separator"></span><span>RTSP → latest-frame preview</span></div>
       </div>
-      <div class="lsi-viewer-footer"><span><span class="lsi-foot-dot"></span><span data-viewer-foot-status>Waiting for camera connection</span></span><span>AI overlays: <b>Not enabled</b></span></div>
+      <div class="lsi-viewer-footer"><span><span class="lsi-foot-dot"></span><span data-viewer-foot-status>Waiting for camera connection</span></span><span class="lsi-view-modes"><span>AI view: <b data-ai-view-state>Off</b></span><button type="button" class="lsi-view-toggle" data-ai-view-toggle disabled>View AI keyframe</button></span></div>
       <!-- Camera-only metrics: use real worker status, never sample/generated AI results. -->
       <section class="lsi-feed-monitor" aria-label="Live camera monitoring">
         <div class="lsi-monitor-header">
@@ -109,30 +116,37 @@
         <button class="lsi-button lsi-button-outline" type="button" data-disconnect-button disabled><iconsax-icon name="stop-circle" type="linear" size="17" color="currentColor"></iconsax-icon><span>Disconnect</span></button>
       </div>
       <div class="lsi-action-row lsi-action-secondary">
-        <button class="lsi-button lsi-button-muted" disabled title="AI inference is planned for the next phase" type="button"><iconsax-icon name="play" type="linear" size="17" color="currentColor"></iconsax-icon><span>Start Detection</span></button>
+        <button class="lsi-button lsi-button-muted" data-ai-toggle type="button" disabled title="Connect camera to start AI"><iconsax-icon name="play" type="linear" size="17" color="currentColor"></iconsax-icon><span data-ai-toggle-label>Start Detection</span></button>
         <button class="lsi-button lsi-button-white" type="button" data-snapshot-button disabled><iconsax-icon name="camera" type="linear" size="17" color="currentColor"></iconsax-icon><span>Snapshot</span></button>
       </div>
       <div class="lsi-inline-message" data-control-message role="status" aria-live="polite">Camera status will appear here.</div>
       <div class="lsi-controls-divider"></div>
-      <div class="lsi-mini-heading">Inspection Configuration <span class="lsi-small-tag">Coming next</span></div>
+      <div class="lsi-mini-heading">Inspection Configuration <span class="lsi-small-tag">Validated 09b</span></div>
       <div class="lsi-slider-line"><label for="lsi-ai-confidence">Confidence Threshold</label><strong>0.50</strong></div>
       <input id="lsi-ai-confidence" type="range" value="50" min="0" max="100" disabled aria-label="AI confidence threshold, unavailable during preview phase">
-      <p class="lsi-helper">AI Detection will reuse the validated model pipeline after the camera feed is stable.</p>
+      <p class="lsi-helper">Uses the saved V2 model settings. The slider is read-only; live sampling does not change validation thresholds.</p>
+      <div class="lsi-ai-performance" aria-live="polite">
+        <div><span>AI State</span><strong data-ai-state>Stopped</strong></div>
+        <div><span>AI Sampling FPS</span><strong data-ai-fps>—</strong></div>
+        <div><span>Last Inference</span><strong data-ai-inference>—</strong></div>
+        <div><span>Keyframe Age</span><strong data-ai-keyframe-age>—</strong></div>
+      </div>
+      <p class="lsi-helper">Mask overlay shows the last analysed keyframe, not tracking on every live frame. Camera FPS and AI FPS are different measurements.</p>
       <div class="lsi-controls-divider"></div>
       <div class="lsi-mini-heading">Stream Information</div>
-      <dl class="lsi-detail-grid"><div><dt>Connection</dt><dd data-detail-connection>Offline</dd></div><div><dt>Source</dt><dd>RTSP · Hikvision</dd></div><div><dt>Resolution</dt><dd data-detail-resolution>—</dd></div><div><dt>AI Inference</dt><dd>Not running</dd></div></dl>
+      <dl class="lsi-detail-grid"><div><dt>Connection</dt><dd data-detail-connection>Offline</dd></div><div><dt>Source</dt><dd>RTSP · Hikvision</dd></div><div><dt>Resolution</dt><dd data-detail-resolution>—</dd></div><div><dt>Live AI Inference</dt><dd data-detail-ai>Stopped</dd></div><div><dt>Preview Processing</dt><dd>CPU · OpenCV</dd></div><div><dt>Server Frame Age</dt><dd data-preview-age title="Age since the frame was received by Flask; not glass-to-glass camera latency.">—</dd></div><div><dt>CUDA Support</dt><dd data-live-cuda>Checking…</dd></div></dl>
       {% if not can_control_camera %}<div class="lsi-operator-note">You can view an existing camera feed. Only Admin and SuperAdmin can connect or disconnect the source.</div>{% endif %}
     </aside>
   </div>
 
   <div class="lsi-bottom-grid">
-    <section class="lsi-panel lsi-events-card"><div class="lsi-card-heading"><div><h2>Recent Live Defect Events</h2><p>Event tracking will be enabled with AI processing.</p></div><span class="lsi-small-tag">Not collecting</span></div><div class="lsi-table-scroll"><table class="lsi-events-table"><thead><tr><th>Time</th><th>Preview</th><th>Defect Type</th><th>Confidence</th><th>Action</th></tr></thead><tbody><tr><td colspan="5" class="lsi-no-events"><iconsax-icon name="document-text" type="twotone" size="26" color="currentColor"></iconsax-icon><strong>No live defect events yet</strong><span>Events, cropped previews and classifications will appear here after AI integration.</span></td></tr></tbody></table></div></section>
+    <section class="lsi-panel lsi-events-card"><div class="lsi-card-heading"><div><h2>Recent Live Defect Events</h2><p>Sampled keyframe candidates · short-term position deduplication, not persistent Reports</p></div><span class="lsi-small-tag" data-ai-events-badge>Not collecting</span></div><div class="lsi-table-scroll"><table class="lsi-events-table"><thead><tr><th>Time</th><th>Preview</th><th>Defect Type</th><th>Confidence</th><th>Action</th></tr></thead><tbody data-ai-events-body><tr><td colspan="5" class="lsi-no-events">No live defect events yet. Start Detection after connecting the camera.</td></tr></tbody></table></div></section>
     <div class="lsi-right-bottom">
-      <section class="lsi-panel lsi-alerts-card"><div class="lsi-card-heading"><h2>Current Alerts</h2><span class="lsi-small-tag">Waiting</span></div><div class="lsi-muted-line"><iconsax-icon name="notification" type="twotone" size="20" color="currentColor"></iconsax-icon><span>Alerts activate when live defect detection is enabled.</span></div></section>
-      <section class="lsi-panel lsi-distribution-card"><div class="lsi-card-heading"><h2>Defect Distribution (Live)</h2><span class="lsi-small-tag">No data</span></div><div class="lsi-chart-empty"><span class="lsi-empty-ring"><span>—<small>Inspected</small></span></span><p>Connect the camera first.<br>AI inference and statistics are planned for Phase 2.</p></div></section>
+      <section class="lsi-panel lsi-alerts-card"><div class="lsi-card-heading"><h2>Current Alerts</h2><span class="lsi-small-tag" data-ai-alert-badge>Waiting</span></div><div class="lsi-muted-line"><iconsax-icon name="notification" type="twotone" size="20" color="currentColor"></iconsax-icon><span data-ai-alert-text>Alerts activate when sampled AI detection is running.</span></div></section>
+      <section class="lsi-panel lsi-distribution-card"><div class="lsi-card-heading"><h2>Defect Distribution (Live)</h2><span class="lsi-small-tag" data-ai-distribution-badge>No data</span></div><div class="lsi-chart-empty"><span class="lsi-empty-ring" data-ai-ring><span data-ai-ring-total>—<small>Events</small></span></span><p data-ai-distribution-text>Waiting for sampled AI defect events. Counts are not unique biscuit totals.</p></div></section>
     </div>
   </div>
 </div>
 {% endblock %}
 
-{% block extra_js %}<script src="{{ url_for('static', filename='js/live_stream.js', v='phase1-4') }}" defer></script>{% endblock %}
+{% block extra_js %}<script src="{{ url_for('static', filename='js/live_stream.js', v='phase2-live-latest-frame-1') }}" defer></script>{% endblock %}
