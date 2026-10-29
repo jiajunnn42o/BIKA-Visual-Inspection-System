@@ -1,4 +1,4 @@
-"""Isolated BIKA Live Stream Inspection phase-one routes."""
+"""BIKA Live Stream routes for Hikvision RTSP and local Camo virtual webcam."""
 from __future__ import annotations
 
 import io
@@ -9,7 +9,7 @@ from flask import Response, abort, jsonify, render_template, request, send_file,
 from flask_login import current_user, login_required
 
 from app.main import main_bp
-from app.services.live_camera_service import live_camera
+from app.services.live_camera_router import camera_router as live_camera
 from app.services.live_ai_service import live_ai
 
 
@@ -168,8 +168,7 @@ def live_inspection_ai_start():
     if not can_control():
         abort(403)
     from flask import current_app
-    payload = request.get_json(silent=True) or {}
-    ok, message = live_ai.start(current_app._get_current_object(), live_camera, payload.get("inspection_zone"))
+    ok, message = live_ai.start(current_app._get_current_object(), live_camera)
     return jsonify(ok=ok, message=message, ai=live_ai.status()), 200 if ok else 409
 
 

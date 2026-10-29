@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Data Analytics | BIKA{% endblock %}
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css', v='20261019-period-today-1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css', v='20261028-analytics-review-crops-1') }}">
 {% endblock %}
 {% block content %}
 <div class="analytics-page" data-analytics-page
@@ -63,7 +63,7 @@
     <article class="analytics-kpi analytics-kpi-good">
       <span class="analytics-kpi-icon"><iconsax-icon name="chart-success" type="twotone" size="23" color="currentColor"></iconsax-icon></span>
       <div class="analytics-kpi-body">
-        <p class="analytics-kpi-label">Good Snack Rate <span class="analytics-info" title="Good snack observations divided by all judged observations.">i</span></p>
+        <p class="analytics-kpi-label">Good Snack Rate <button type="button" class="analytics-info" data-info-tooltip="Share of judged snack observations classified as Normal. Objects excluded by inspection rules are not part of the judged total." aria-label="About Good Snack Rate"><svg class="analytics-dashboard-info-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 10.8V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="7.6" r="0.9" fill="currentColor"/></svg></button></p>
         <strong class="analytics-kpi-value" data-kpi-good>—</strong>
         <small class="analytics-kpi-footer"><span class="analytics-mini-dot analytics-green"></span><span data-kpi-good-foot>Target —</span></small>
       </div>
@@ -71,7 +71,7 @@
     <article class="analytics-kpi analytics-kpi-defect">
       <span class="analytics-kpi-icon"><iconsax-icon name="danger" type="twotone" size="23" color="currentColor"></iconsax-icon></span>
       <div class="analytics-kpi-body">
-        <p class="analytics-kpi-label">Defect Rate <span class="analytics-info" title="Defective snack observations divided by all judged observations.">i</span></p>
+        <p class="analytics-kpi-label">Defect Rate <button type="button" class="analytics-info" data-info-tooltip="Share of judged observations classified as defects. Video observations, when available, may include repeated frames of the same physical product." aria-label="About Defect Rate"><svg class="analytics-dashboard-info-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 10.8V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="7.6" r="0.9" fill="currentColor"/></svg></button></p>
         <strong class="analytics-kpi-value" data-kpi-defect>—</strong>
         <small class="analytics-kpi-footer"><span class="analytics-mini-dot analytics-rose"></span><span data-kpi-defect-foot>0 defective observations</span></small>
       </div>
@@ -79,7 +79,7 @@
     <article class="analytics-kpi analytics-kpi-standard">
       <span class="analytics-kpi-icon"><iconsax-icon name="clipboard-tick" type="twotone" size="23" color="currentColor"></iconsax-icon></span>
       <div class="analytics-kpi-body">
-        <p class="analytics-kpi-label">Inspections Meeting Standard <span class="analytics-info" title="Share of inspection runs with a Good Snack Rate at or above the Inspection Pass Requirement.">i</span></p>
+        <p class="analytics-kpi-label">Inspections Meeting Standard <button type="button" class="analytics-info" data-info-tooltip="Percentage of saved inspection runs whose individual Good Snack Rate meets or exceeds the configured Inspection Pass Requirement." aria-label="About Inspections Meeting Standard"><svg class="analytics-dashboard-info-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 10.8V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="7.6" r="0.9" fill="currentColor"/></svg></button></p>
         <strong class="analytics-kpi-value" data-kpi-standard>—</strong>
         <small class="analytics-kpi-footer"><span class="analytics-mini-dot analytics-burgundy"></span><span data-kpi-standard-foot>Requirement —</span></small>
       </div>
@@ -87,7 +87,7 @@
     <article class="analytics-kpi analytics-kpi-runs">
       <span class="analytics-kpi-icon"><iconsax-icon name="document-text" type="twotone" size="23" color="currentColor"></iconsax-icon></span>
       <div class="analytics-kpi-body">
-        <p class="analytics-kpi-label">Inspection Runs <span class="analytics-info" title="Number of saved inspection runs in the selected date range.">i</span></p>
+        <p class="analytics-kpi-label">Inspection Runs <button type="button" class="analytics-info" data-info-tooltip="Number of saved inspection runs in the selected date range. An inspection run is a saved analysis, not a count of individual snacks." aria-label="About Inspection Runs"><svg class="analytics-dashboard-info-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 10.8V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="7.6" r="0.9" fill="currentColor"/></svg></button></p>
         <strong class="analytics-kpi-value" data-stat-runs>—</strong>
         <small class="analytics-kpi-footer"><span class="analytics-mini-dot analytics-burgundy"></span><span data-stat-judged>—</span><span>judged observations</span></small>
       </div>
@@ -97,7 +97,7 @@
   <div class="analytics-top-grid">
     <section class="analytics-card analytics-chart-card">
       <div class="analytics-card-header analytics-card-header-wrap">
-        <div class="analytics-card-title"><span class="analytics-card-icon"><iconsax-icon name="chart-2" type="twotone" size="19" color="currentColor"></iconsax-icon></span><div><h2>Quality Trend &amp; SPC Monitoring <span class="analytics-info" title="Daily quality rates with real judged-output bars. SPC shows the sample-size-adjusted 3-sigma control limits." aria-label="Quality trend chart information">i</span></h2><p>Quality performance over time with process control indicators</p></div></div>
+        <div class="analytics-card-title"><span class="analytics-card-icon"><iconsax-icon name="chart-2" type="twotone" size="19" color="currentColor"></iconsax-icon></span><div><h2>Quality Trend &amp; SPC Monitoring <button type="button" class="analytics-info" data-info-tooltip="The line tracks daily quality rates, while output bars show judged observations. SPC uses sample-size-adjusted 3-sigma binomial control limits." aria-label="About Quality Trend and SPC"><svg class="analytics-dashboard-info-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 10.8V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="7.6" r="0.9" fill="currentColor"/></svg></button></h2><p>Quality performance over time with process control indicators</p></div></div>
         <div class="analytics-tab-group" role="tablist" aria-label="Quality chart view">
           <button type="button" class="is-active" data-chart-mode="yield" role="tab" aria-selected="true">Good Rate</button>
           <button type="button" data-chart-mode="defect" role="tab" aria-selected="false">Defect Rate</button>
@@ -112,11 +112,11 @@
 
     <div class="analytics-side-column">
       <section class="analytics-card analytics-shift-card">
-        <div class="analytics-card-header"><div class="analytics-card-title"><span class="analytics-card-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V12h4v8M10 20V5h4v15M16 20v-9h4v9"/><path d="M2.5 20.5h19"/></svg></span><div><h2>Shift Quality Analysis <span class="analytics-info" title="Compares quality across shifts using the saved inspection runs and recorded shift information." aria-label="Shift quality information">i</span></h2><p>Based on current user profile shift</p></div></div></div>
+        <div class="analytics-card-header"><div class="analytics-card-title"><span class="analytics-card-icon"><iconsax-icon name="chart-square" type="twotone" size="21" color="currentColor" aria-hidden="true"></iconsax-icon></span><div><h2>Shift Quality Analysis <button type="button" class="analytics-info" data-info-tooltip="Each cell shows the Good Snack Rate for one inspector shift on one inspection date. Gray means no judged observations, not 0% quality. Shift comes from the inspector’s current profile, not a light or noise sensor." aria-label="About Shift Quality Analysis"><svg class="analytics-dashboard-info-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 10.8V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="7.6" r="0.9" fill="currentColor"/></svg></button></h2><p>Good Snack Rate by shift and date</p></div></div></div>
         <div data-shift-chart class="analytics-shift-content"></div>
       </section>
       <section class="analytics-card analytics-review-card">
-        <div class="analytics-card-header"><div class="analytics-card-title"><span class="analytics-card-icon"><iconsax-icon name="shield-tick" type="twotone" size="19" color="currentColor"></iconsax-icon></span><div><h2>Human Review Status <span class="analytics-info" title="Counts come from saved mask-review decisions. Pending counts flagged inspection runs that have not been fully reviewed." aria-label="Human review status explanation">i</span></h2><p>Human-in-the-loop verification of saved image inspections</p></div></div></div>
+        <div class="analytics-card-header"><div class="analytics-card-title"><span class="analytics-card-icon"><iconsax-icon name="shield-tick" type="twotone" size="19" color="currentColor"></iconsax-icon></span><div><h2>Human Review Status <button type="button" class="analytics-info" data-info-tooltip="Pending Review counts flagged runs awaiting review. Confirmed and correction counts come from saved human decisions; original AI predictions are preserved." aria-label="About Human Review Status"><svg class="analytics-dashboard-info-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 10.8V16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="7.6" r="0.9" fill="currentColor"/></svg></button></h2><p>Human-in-the-loop verification of saved image inspections</p></div></div></div>
         {% if can_review %}
         <div class="analytics-review-panel">
           <div class="analytics-review-panel-head">Review Cases</div>
@@ -125,8 +125,7 @@
           <div class="analytics-review-status-row analytics-status-false"><span><i class="analytics-status-dot"></i>False Positive</span><strong data-review-false>—</strong></div>
           <div class="analytics-review-status-row analytics-status-corrected"><span><i class="analytics-status-dot"></i>Other Corrections</span><strong data-review-corrected>—</strong></div>
         </div>
-        <div class="analytics-review-summary"><span data-review-count>—</span> flagged runs · Selected by heuristics, not a validated anomaly model</div>
-        <a href="#analytics-anomalous" class="analytics-inline-link">View anomaly log <iconsax-icon name="arrow-right" type="linear" size="16" color="currentColor"></iconsax-icon></a>
+        <div class="analytics-review-summary"><span class="analytics-static-info-glyph" aria-hidden="true">i</span><span><span data-review-count>—</span> flagged runs · Heuristic review candidates</span></div>
         {% else %}
         <div class="analytics-restricted"><iconsax-icon name="shield" type="twotone" size="24" color="currentColor"></iconsax-icon><strong>Quality analytics available</strong><span>Administrative review logs are restricted to Admin and SuperAdmin.</span></div>
         {% endif %}
@@ -138,22 +137,61 @@
   <section class="analytics-card analytics-anomalous-card" id="analytics-anomalous" data-admin-review>
     <div class="analytics-card-header analytics-card-header-wrap">
       <div class="analytics-card-title"><span class="analytics-card-icon"><iconsax-icon name="eye" type="twotone" size="19" color="currentColor"></iconsax-icon></span><div><h2>Anomalous Pipeline Log <span class="analytics-admin-tag">ADMIN REVIEW</span></h2><p>Inspect flagged image predictions and verify individual segmentation masks</p></div></div>
-      <div class="analytics-review-filter"><label class="analytics-sr" for="analytics-review-mode">Review queue</label><select id="analytics-review-mode" data-review-mode><option value="flagged">Flagged runs</option><option value="recent">Recent image runs</option></select><label class="analytics-sr" for="analytics-review-search">Search inspection runs</label><input type="search" id="analytics-review-search" data-review-search placeholder="Search run or filename…"></div>
+      <div class="analytics-review-filter">
+        <div class="analytics-queue-select" data-review-select>
+          <label class="analytics-sr" for="analytics-review-mode">Review queue</label>
+          <select id="analytics-review-mode" class="analytics-queue-native" data-review-mode tabindex="-1" aria-hidden="true"><option value="flagged">Flagged runs</option><option value="recent">Recent image runs</option></select>
+          <button type="button" class="analytics-queue-trigger" data-review-trigger aria-haspopup="listbox" aria-expanded="false" aria-controls="analytics-review-options" aria-label="Review queue: Flagged runs">
+            <iconsax-icon name="filter" type="twotone" size="17" color="currentColor" aria-hidden="true"></iconsax-icon>
+            <span data-review-selected>Flagged runs</span>
+            <svg class="analytics-queue-chevron" aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4.4 6.1 8 9.7l3.6-3.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="analytics-queue-menu" data-review-options id="analytics-review-options" role="listbox" aria-label="Review queue" hidden>
+            <button type="button" role="option" data-review-option="flagged" aria-selected="true"><iconsax-icon name="warning-2" type="twotone" size="17" color="currentColor" aria-hidden="true"></iconsax-icon><span>Flagged runs</span><iconsax-icon class="analytics-queue-check" name="tick-circle" type="twotone" size="17" color="currentColor" aria-hidden="true"></iconsax-icon></button>
+            <button type="button" role="option" data-review-option="recent" aria-selected="false"><iconsax-icon name="gallery" type="twotone" size="17" color="currentColor" aria-hidden="true"></iconsax-icon><span>Recent image runs</span><iconsax-icon class="analytics-queue-check" name="tick-circle" type="twotone" size="17" color="currentColor" aria-hidden="true"></iconsax-icon></button>
+          </div>
+        </div>
+        <label class="analytics-sr" for="analytics-review-search">Search inspection runs</label>
+        <input type="search" id="analytics-review-search" data-review-search placeholder="Search run or filename…">
+      </div>
     </div>
-    <div class="analytics-review-table-wrap"><table class="analytics-review-table"><thead><tr><th>Inspection</th><th>Observations</th><th>Flag reason</th><th>Human reviews</th><th></th></tr></thead><tbody data-review-table><tr><td colspan="5" class="analytics-table-empty">Loading review queue…</td></tr></tbody></table></div>
+    <div class="analytics-review-table-wrap"><table class="analytics-review-table" aria-label="Anomalous pipeline inspection reviews"><thead><tr><th>Inspection</th><th>Observations</th><th>Flag reason</th><th>Review status</th><th class="analytics-review-action-head">Action</th></tr></thead><tbody data-review-table><tr><td colspan="5" class="analytics-table-empty">Loading review queue…</td></tr></tbody></table></div>
     <div class="analytics-review-bottom"><span>Flags are heuristics. Saved image inspections can be reviewed; video run persistence and frame-level review will be added separately.</span><span data-review-pagination></span></div>
   </section>
   {% endif %}
-  <footer class="analytics-bottom-note"><iconsax-icon name="info-circle" type="twotone" size="17" color="currentColor"></iconsax-icon><span data-footer-note>Statistics reflect recorded inspection observations and are not a count of unique physical biscuits across video frames.</span></footer>
+  <footer class="analytics-bottom-note"><span class="analytics-static-info-glyph" aria-hidden="true">i</span><span data-footer-note>Statistics reflect recorded inspection observations and are not a count of unique physical biscuits across video frames.</span></footer>
 </div>
 
 {% if can_review %}
 <div class="analytics-modal-backdrop" data-mask-modal hidden>
   <section class="analytics-modal" role="dialog" aria-modal="true" aria-labelledby="analytics-modal-title">
-    <div class="analytics-modal-head"><div><span>HUMAN-IN-THE-LOOP REVIEW</span><h2 id="analytics-modal-title" data-modal-title>Inspect Mask</h2><p data-modal-subtitle>Loading stored prediction…</p></div><button class="analytics-modal-close" type="button" data-modal-close aria-label="Close review"><iconsax-icon name="close-circle" type="linear" size="25" color="currentColor"></iconsax-icon></button></div>
-    <div class="analytics-modal-main"><div class="analytics-mask-viewer"><div class="analytics-mask-stage" data-mask-stage><div class="analytics-mask-loading">Loading saved image…</div></div><p>Click a highlighted mask on the source image, or select an object from the list. Original AI results remain unchanged.</p></div><div class="analytics-mask-side"><div class="analytics-mask-side-heading">Detected Objects <span data-object-count>—</span></div><div data-object-list class="analytics-object-list"></div><div class="analytics-object-detail" data-object-detail><p>Select an object to inspect its prediction.</p></div><div class="analytics-feedback-form"><label for="analytics-review-decision">Review Decision</label><select id="analytics-review-decision" data-decision><option value="correct">Correct Detection &amp; Mask</option><option value="incorrect_mask">Incorrect Mask</option><option value="incorrect_class">Incorrect Classification</option><option value="false_positive">False Positive</option></select><label for="analytics-review-note">Reviewer Note (optional)</label><textarea id="analytics-review-note" data-review-note rows="2" maxlength="400" placeholder="Describe the issue or correction…"></textarea><button class="analytics-btn analytics-btn-primary" type="button" data-save-review disabled>Save Review</button><p data-save-message aria-live="polite"></p></div></div></div>
+    <div class="analytics-modal-head"><div><span>HUMAN-IN-THE-LOOP REVIEW</span><h2 id="analytics-modal-title" data-modal-title>Inspect Mask</h2><p data-modal-subtitle>Loading stored prediction…</p></div><button class="analytics-modal-close" type="button" data-modal-close aria-label="Close review"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="analytics-modal-main"><div class="analytics-mask-viewer"><div class="analytics-mask-stage" data-mask-stage><div class="analytics-mask-loading">Loading saved image…</div></div><p>Click a highlighted mask on the source image, or select an object from the list. Original AI results remain unchanged.</p>
+      <div class="analytics-selected-crops" data-crop-panel hidden>
+        <div class="analytics-selected-crops-head"><span>Selected Object Preview</span><span data-crop-object-id>—</span></div>
+        <div class="analytics-selected-crops-grid">
+          <div class="analytics-selected-crop"><span class="analytics-selected-crop-label">Original Crop</span><div class="analytics-selected-crop-image"><canvas data-crop-original aria-label="Original selected object crop"></canvas></div></div>
+          <div class="analytics-selected-crop"><span class="analytics-selected-crop-label">Masked Crop</span><div class="analytics-selected-crop-image"><canvas data-crop-masked aria-label="Selected object with original segmentation mask"></canvas></div></div>
+        </div>
+        <span class="analytics-selected-crops-note" data-crop-note>Crop is generated from the saved source image and polygon coordinates.</span>
+      </div>
+    </div><div class="analytics-mask-side"><div class="analytics-mask-side-heading">Detected Objects <span data-object-count>—</span></div><div data-object-list class="analytics-object-list"></div><div class="analytics-object-detail" data-object-detail><p>Select an object to inspect its prediction.</p></div><div class="analytics-feedback-form"><label for="analytics-review-decision">Review Decision</label><div class="analytics-decision-picker" data-decision-picker>
+          <select id="analytics-review-decision" class="analytics-decision-native" data-decision tabindex="-1" aria-hidden="true">
+            <option value="correct">Correct Detection &amp; Mask</option><option value="incorrect_mask">Incorrect Mask</option><option value="incorrect_class">Incorrect Classification</option><option value="false_positive">False Positive</option>
+          </select>
+          <button type="button" class="analytics-decision-trigger" data-decision-trigger aria-expanded="false" aria-haspopup="listbox" aria-controls="analytics-decision-menu" aria-label="Review Decision">
+            <span data-decision-selected>Correct Detection &amp; Mask</span>
+            <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 7.5 5 5 5-5"/></svg>
+          </button>
+        </div><label for="analytics-review-note">Reviewer Note (optional)</label><textarea id="analytics-review-note" data-review-note rows="2" maxlength="400" placeholder="Describe the issue or correction…"></textarea><button class="analytics-btn analytics-btn-primary" type="button" data-save-review disabled>Save Review</button><p data-save-message aria-live="polite"></p></div></div></div>
   </section>
+</div>
+<div class="analytics-decision-menu" id="analytics-decision-menu" data-decision-menu role="listbox" aria-label="Review Decision" hidden>
+  <button type="button" role="option" data-decision-option="correct" aria-selected="true"><iconsax-icon name="tick-circle" type="twotone" size="18" color="currentColor" aria-hidden="true"></iconsax-icon><span>Correct Detection &amp; Mask</span><svg class="analytics-decision-tick" viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m4 10 4 4 8-8"/></svg></button>
+  <button type="button" role="option" data-decision-option="incorrect_mask" aria-selected="false"><iconsax-icon name="warning-2" type="twotone" size="18" color="currentColor" aria-hidden="true"></iconsax-icon><span>Incorrect Mask</span><svg class="analytics-decision-tick" viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m4 10 4 4 8-8"/></svg></button>
+  <button type="button" role="option" data-decision-option="incorrect_class" aria-selected="false"><iconsax-icon name="edit-2" type="twotone" size="18" color="currentColor" aria-hidden="true"></iconsax-icon><span>Incorrect Classification</span><svg class="analytics-decision-tick" viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m4 10 4 4 8-8"/></svg></button>
+  <button type="button" role="option" data-decision-option="false_positive" aria-selected="false"><iconsax-icon name="close-circle" type="twotone" size="18" color="currentColor" aria-hidden="true"></iconsax-icon><span>False Positive</span><svg class="analytics-decision-tick" viewBox="0 0 20 20" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m4 10 4 4 8-8"/></svg></button>
 </div>
 {% endif %}
 {% endblock %}
-{% block extra_js %}<script defer src="{{ url_for('static', filename='js/analytics.js', v='20261019-period-today-1') }}"></script>{% endblock %}
+{% block extra_js %}<script defer src="{{ url_for('static', filename='js/analytics.js', v='20261028-analytics-review-crops-1') }}"></script>{% endblock %}

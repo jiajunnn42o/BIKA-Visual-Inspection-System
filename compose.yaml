@@ -1,0 +1,30 @@
+# PHASE 1: Web container only. Existing BIKA PostgreSQL is NOT modified or recreated.
+name: bika-web-phase1
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bika-inspection-web:phase1-cpu
+    container_name: bika-web-phase1
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ./.env.docker
+    environment:
+      BIKA_PRELOAD_MODEL: "0"
+      STORAGE_BACKEND: local
+      LOCAL_INSPECTION_STORAGE: /app/data
+      BIKA_PIPELINE_SOURCE_ROOT: /app/pipeline_source
+      PYTHONUNBUFFERED: "1"
+    ports:
+      - "127.0.0.1:5001:8000"
+    volumes:
+      - type: bind
+        source: ./data
+        target: /app/data
+      - type: bind
+        source: ./website_models
+        target: /app/website_models
+    # Windows Docker Desktop: DATABASE_URL should use host.docker.internal:5433
+    # if your existing PostgreSQL container publishes port 5433 on the host.

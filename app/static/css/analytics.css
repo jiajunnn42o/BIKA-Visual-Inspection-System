@@ -323,3 +323,878 @@ html[data-theme=dark] .analytics-page .analytics-status-corrected{background:#49
 html[data-theme="dark"] .analytics-page .analytics-date-single input{color-scheme:dark}
 .analytics-page .analytics-date-single button{height:35px;border:0;border-radius:9px;background:var(--an-brand);color:#fff;font-size:12px;font-weight:500}
 @media(max-width:750px){.analytics-page .analytics-date-button{min-width:218px}}
+
+
+/* ========================================================================
+   Anomalous Pipeline Log · Reports-inspired review table (2026-10-28)
+   Strictly scoped: this section only. No effect on Reports, modal or charts.
+   ======================================================================== */
+.analytics-page .analytics-anomalous-card{
+  padding-bottom:19px;
+}
+.analytics-page .analytics-anomalous-card .analytics-card-header{
+  gap:16px;
+  margin-bottom:15px;
+}
+.analytics-page .analytics-anomalous-card .analytics-card-title h2{
+  font-weight:600;
+}
+.analytics-page .analytics-anomalous-card .analytics-admin-tag{
+  vertical-align:middle;
+}
+.analytics-page .analytics-review-filter{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  flex-wrap:wrap;
+}
+.analytics-page .analytics-review-filter select,
+.analytics-page .analytics-review-filter input{
+  height:37px;
+  min-height:37px;
+  border-radius:11px;
+  border:1px solid var(--an-outline);
+  background:var(--an-card);
+  color:var(--an-ink);
+  font-size:11.5px;
+  font-weight:400;
+}
+.analytics-page .analytics-review-filter input{
+  padding:0 13px;
+}
+.analytics-page .analytics-review-table-wrap{
+  border:1px solid var(--an-outline);
+  border-radius:13px;
+  overflow-x:auto;
+  overflow-y:hidden;
+}
+.analytics-page .analytics-review-table{
+  min-width:810px;
+  border-collapse:separate;
+  border-spacing:0;
+  table-layout:auto;
+}
+.analytics-page .analytics-review-table th{
+  background:var(--an-bg);
+  color:var(--an-muted);
+  font-size:10.5px;
+  font-weight:500;
+  padding:13px 16px;
+  line-height:1.3;
+  border-bottom:1px solid var(--an-outline);
+  white-space:nowrap;
+}
+.analytics-page .analytics-review-table th:nth-child(1){width:29%}
+.analytics-page .analytics-review-table th:nth-child(2){width:12%}
+.analytics-page .analytics-review-table th:nth-child(3){width:27%}
+.analytics-page .analytics-review-table th:nth-child(4){width:15%}
+.analytics-page .analytics-review-table th:nth-child(5){width:17%;text-align:right}
+.analytics-page .analytics-review-table td{
+  height:78px;
+  padding:12px 16px;
+  border-bottom:1px solid var(--an-outline);
+  font-size:11.5px;
+  font-weight:400;
+  vertical-align:middle;
+  background:var(--an-card);
+  transition:background .15s ease;
+}
+.analytics-page .analytics-review-table tbody tr:hover td{
+  background:var(--an-bg);
+}
+.analytics-page .analytics-review-table tbody tr:last-child td{
+  border-bottom:0;
+}
+.analytics-page .analytics-review-table td:first-child{
+  min-width:230px;
+}
+.analytics-page .analytics-review-source{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.analytics-page .analytics-review-thumb,
+.analytics-page .analytics-review-thumbnail-empty{
+  width:52px;
+  height:52px;
+  border-radius:11px;
+  border:1px solid var(--an-outline);
+  flex-shrink:0;
+  object-fit:cover;
+}
+.analytics-page .analytics-review-thumbnail-empty{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--an-muted);
+  background:var(--an-bg);
+}
+.analytics-page .analytics-review-source-info{min-width:0}
+.analytics-page .analytics-review-primary{
+  font-size:11.5px;
+  font-weight:600;
+  letter-spacing:0;
+  max-width:220px;
+  line-height:1.3;
+}
+.analytics-page .analytics-review-secondary{
+  font-size:10.5px;
+  font-weight:400;
+  margin-top:3px;
+  max-width:220px;
+  line-height:1.25;
+}
+.analytics-page .analytics-review-date{
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+.analytics-page .analytics-review-date iconsax-icon{
+  display:inline-flex;
+  align-items:center;
+  color:var(--an-muted);
+}
+.analytics-page .analytics-review-quantity{
+  white-space:nowrap;
+}
+.analytics-page .analytics-review-number{
+  display:block;
+  font-size:13px;
+  font-weight:600;
+  color:var(--an-ink);
+  line-height:1.3;
+}
+.analytics-page .analytics-review-quantity small{
+  display:block;
+  margin-top:3px;
+  font-size:10px;
+  font-weight:400;
+  color:var(--an-muted);
+}
+.analytics-page .analytics-reason-stack{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:5px;
+  min-width:0;
+}
+/* Same 999px status pill silhouette used by the Reports status column. */
+.analytics-page .analytics-reason-tag,
+.analytics-page .analytics-review-status-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  min-height:27px;
+  padding:5px 12px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:600;
+  line-height:1.15;
+  letter-spacing:0;
+  white-space:nowrap;
+}
+.analytics-page .analytics-reason-tag.needs-review{
+  background:#fbebd0;
+  color:#91642b;
+}
+.analytics-page .analytics-reason-tag.routine{
+  background:#f0f0f2;
+  color:#77727a;
+}
+.analytics-page .analytics-review-status-pill.pending{
+  background:#fae8ec;
+  color:#8d3045;
+}
+.analytics-page .analytics-review-status-pill.has-reviewed{
+  background:#e5f1e8;
+  color:#477d56;
+}
+.analytics-page .analytics-reason-dot,
+.analytics-page .analytics-review-status-dot{
+  display:inline-block;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:currentColor;
+  opacity:.8;
+  flex-shrink:0;
+}
+.analytics-page .analytics-reason-detail{
+  display:block;
+  color:var(--an-muted);
+  font-size:10.5px;
+  font-weight:400;
+  line-height:1.35;
+  max-width:235px;
+  overflow-wrap:anywhere;
+}
+.analytics-page .analytics-reason-more{
+  font-size:10px;
+  color:var(--an-brand);
+}
+.analytics-page .analytics-review-action-cell{
+  text-align:right;
+  white-space:nowrap;
+}
+.analytics-page .analytics-view-button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  min-height:36px;
+  border:1px solid var(--an-outline);
+  border-radius:999px;
+  padding:8px 13px;
+  background:var(--an-card);
+  color:var(--an-brand);
+  font-size:11px;
+  font-weight:500;
+  white-space:nowrap;
+  transition:border-color .15s ease,background .15s ease,transform .15s ease;
+}
+.analytics-page .analytics-view-button iconsax-icon{
+  color:currentColor;
+  width:17px;
+  height:17px;
+  flex:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.analytics-page .analytics-view-button:not(:disabled):hover{
+  background:var(--an-brand-soft);
+  border-color:var(--an-brand);
+  transform:translateY(-1px);
+}
+.analytics-page .analytics-view-button:focus-visible{
+  outline:2px solid var(--an-brand);
+  outline-offset:3px;
+}
+.analytics-page .analytics-review-table .analytics-table-empty{
+  height:98px;
+  font-size:12px;
+  font-weight:400;
+}
+.analytics-page .analytics-review-bottom{
+  border:0;
+  margin-top:0;
+  padding:11px 2px 0;
+  font-size:10.5px;
+}
+html[data-theme="dark"] .analytics-page .analytics-reason-tag.needs-review{
+  color:#f0ca8a;background:#4b392a;
+}
+html[data-theme="dark"] .analytics-page .analytics-reason-tag.routine{
+  color:#cbc4cc;background:#363238;
+}
+html[data-theme="dark"] .analytics-page .analytics-review-status-pill.pending{
+  color:#ecb5c0;background:#4d3038;
+}
+html[data-theme="dark"] .analytics-page .analytics-review-status-pill.has-reviewed{
+  color:#a3d2b1;background:#2e4438;
+}
+@media(max-width:900px){
+  .analytics-page .analytics-review-table{min-width:790px}
+  .analytics-page .analytics-review-table td,
+  .analytics-page .analytics-review-table th{padding-left:12px;padding-right:12px}
+  .analytics-page .analytics-review-thumb,
+  .analytics-page .analytics-review-thumbnail-empty{width:46px;height:46px}
+}
+
+/* -------------------------------------------------------------------------
+   Review UI refinement · 2026-10-28
+   Scoped to Data Analytics; no model, API, or Reports styles are modified.
+   ------------------------------------------------------------------------- */
+
+/* Center the icon-only action exactly under the table's Action heading. */
+.analytics-page .analytics-review-table th.analytics-review-action-head,
+.analytics-page .analytics-review-table td.analytics-review-action-cell{
+  text-align:center;
+}
+.analytics-page .analytics-review-action-cell .analytics-view-button{
+  width:38px;
+  height:38px;
+  min-height:38px;
+  padding:0;
+  border:1px solid var(--an-outline);
+  border-radius:50%;
+  background:var(--an-card);
+  color:var(--an-brand);
+  display:inline-grid;
+  place-items:center;
+  vertical-align:middle;
+  font-weight:400;
+}
+.analytics-page .analytics-review-action-cell .analytics-view-button iconsax-icon{
+  display:block;
+  width:20px;
+  height:20px;
+}
+.analytics-page .analytics-review-action-cell .analytics-view-button:not(:disabled):hover{
+  background:var(--an-brand-soft);
+  border-color:var(--an-brand);
+  transform:none;
+  box-shadow:0 2px 8px rgba(116,31,46,.08);
+}
+
+/* A true custom dropdown with a centered, slightly inset line chevron. */
+.analytics-page .analytics-queue-select{
+  position:relative;
+  width:178px;
+  min-width:168px;
+  flex:0 0 auto;
+  z-index:5;
+}
+.analytics-page .analytics-review-filter select.analytics-queue-native{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  border:0!important;
+  opacity:0;
+  pointer-events:none;
+  overflow:hidden;
+}
+.analytics-page .analytics-queue-trigger{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  width:100%;
+  height:38px;
+  padding:0 12px;
+  border:1px solid var(--an-outline);
+  border-radius:11px;
+  background:var(--an-card);
+  color:var(--an-ink);
+  font-size:11.5px;
+  font-weight:400;
+  text-align:left;
+  box-shadow:0 2px 6px rgba(40,20,25,.018);
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+.analytics-page .analytics-queue-trigger>iconsax-icon{
+  flex:0 0 17px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--an-brand);
+}
+.analytics-page .analytics-queue-trigger [data-review-selected]{
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.analytics-page .analytics-queue-chevron{
+  flex:0 0 16px;
+  width:16px;
+  height:16px;
+  display:block;
+  color:var(--an-muted);
+  transform:translateX(-2px);
+  transition:transform .15s ease;
+}
+.analytics-page .analytics-queue-select.is-open .analytics-queue-chevron{
+  transform:translateX(-2px) rotate(180deg);
+}
+.analytics-page .analytics-queue-trigger:hover,
+.analytics-page .analytics-queue-select.is-open .analytics-queue-trigger{
+  border-color:#cda3ad;
+  box-shadow:0 0 0 3px rgba(116,31,46,.05);
+}
+.analytics-page .analytics-queue-trigger:focus-visible{
+  outline:2px solid var(--an-brand);
+  outline-offset:2px;
+}
+.analytics-page .analytics-queue-menu{
+  position:absolute;
+  top:calc(100% + 6px);
+  left:0;
+  width:max(100%,212px);
+  padding:6px;
+  background:var(--an-card);
+  border:1px solid var(--an-outline);
+  box-shadow:0 15px 36px rgba(40,25,30,.14),0 2px 9px rgba(40,25,30,.035);
+  border-radius:13px;
+  z-index:30;
+}
+.analytics-page .analytics-queue-menu [data-review-option]{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  width:100%;
+  min-height:39px;
+  padding:9px 10px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  text-align:left;
+  color:var(--an-ink);
+  font-size:11.5px;
+  font-weight:400;
+}
+.analytics-page .analytics-queue-menu [data-review-option]>iconsax-icon:first-child{
+  color:var(--an-muted);
+  flex:0 0 17px;
+}
+.analytics-page .analytics-queue-menu [data-review-option]>span{
+  flex:1;
+}
+.analytics-page .analytics-queue-menu .analytics-queue-check{
+  display:none;
+  color:var(--an-brand);
+}
+.analytics-page .analytics-queue-menu [aria-selected="true"]{
+  background:var(--an-brand-soft);
+  color:var(--an-brand);
+  font-weight:500;
+}
+.analytics-page .analytics-queue-menu [aria-selected="true"] .analytics-queue-check{
+  display:inline-flex;
+}
+.analytics-page .analytics-queue-menu [data-review-option]:hover,
+.analytics-page .analytics-queue-menu [data-review-option]:focus-visible{
+  background:var(--an-brand-soft);
+  outline:0;
+}
+html[data-theme="dark"] .analytics-page .analytics-queue-trigger:hover,
+html[data-theme="dark"] .analytics-page .analytics-queue-select.is-open .analytics-queue-trigger{
+  border-color:var(--an-brand);
+}
+
+/* Review overview: lighter surface, tidy status rows, restrained footer. */
+.analytics-page .analytics-review-card{
+  justify-content:flex-start;
+}
+.analytics-page .analytics-review-card .analytics-card-header{
+  margin-bottom:14px;
+}
+.analytics-page .analytics-review-panel{
+  border:0;
+  background:transparent;
+  padding:0;
+  border-radius:0;
+  gap:7px;
+}
+.analytics-page .analytics-review-panel-head{
+  padding:0 1px 9px;
+  margin-bottom:2px;
+  text-align:left;
+  font-size:10.5px;
+  font-weight:500;
+  color:var(--an-muted);
+  border-bottom:1px solid var(--an-outline);
+}
+.analytics-page .analytics-review-status-row{
+  min-height:37px;
+  border-radius:10px;
+  padding:9px 12px;
+  font-size:11px;
+  font-weight:400;
+}
+.analytics-page .analytics-review-summary{
+  display:flex;
+  align-items:flex-start;
+  gap:7px;
+  border-top:1px solid var(--an-outline);
+  padding:11px 1px 0;
+  margin:13px 0 0;
+  color:var(--an-muted);
+  line-height:1.5;
+  font-size:10.5px;
+  font-weight:400;
+}
+.analytics-page .analytics-review-summary iconsax-icon{
+  flex:none;
+  margin-top:0;
+  color:var(--an-muted);
+}
+@media(max-width:750px){
+  .analytics-page .analytics-review-filter{width:100%}
+  .analytics-page .analytics-queue-select{width:100%;min-width:0;flex:1 1 160px}
+  .analytics-page .analytics-queue-menu{width:100%;min-width:0}
+  .analytics-page .analytics-review-filter input{flex:1 1 180px}
+}
+
+
+/* ================================================================
+   BIKA Analytics: subtle Iconsax two-tone info buttons and tooltips
+   Scoped to Data Analytics; does not change typography or card sizes.
+   ================================================================ */
+.analytics-page .analytics-info {
+  display:inline-flex; align-items:center; justify-content:center;
+  appearance:none; width:19px; height:19px; min-width:19px; min-height:19px;
+  box-sizing:border-box; border:0; padding:0; margin:0 0 0 2px;
+  border-radius:50%; background:transparent;
+  color:#aaa4a8; cursor:help; vertical-align:middle;
+  box-shadow:none; font-weight:400; font-size:inherit; line-height:1;
+  transition:color .16s ease,background-color .16s ease;
+}
+.analytics-page .analytics-info iconsax-icon{display:block;width:17px;height:17px;pointer-events:none}
+.analytics-page .analytics-info:hover,
+.analytics-page .analytics-info:focus-visible{
+  color:var(--an-brand); background:var(--an-brand-soft); border:0;
+}
+.analytics-page .analytics-info:focus-visible{outline:2px solid var(--an-brand);outline-offset:2px}
+.analytics-page .analytics-card-title h2 .analytics-info{flex-shrink:0}
+/* Body-level popover so nested cards do not clip the explanation. */
+.analytics-floating-info-tooltip {
+  --a-tip-bg:#fff; --a-tip-border:#eadfe2; --a-tip-ink:#4c4346; --a-tip-head:#762437;
+  position:fixed; z-index:9200; width:min(282px, calc(100vw - 24px));
+  padding:13px 15px 14px; background:var(--a-tip-bg); color:var(--a-tip-ink);
+  border:1px solid var(--a-tip-border); border-radius:13px;
+  box-shadow:0 13px 32px rgba(37,23,28,.16),0 2px 7px rgba(37,23,28,.06);
+  font:400 12px/1.65 Inter,system-ui,sans-serif;
+  pointer-events:none; box-sizing:border-box;
+}
+.analytics-floating-info-tooltip[hidden]{display:none!important}
+.analytics-floating-info-tooltip::after{
+  content:''; position:absolute; width:10px; height:10px;
+  left:var(--a-tip-arrow-x,50%); background:var(--a-tip-bg);
+  border:1px solid var(--a-tip-border); transform:translateX(-50%) rotate(45deg);
+}
+.analytics-floating-info-tooltip[data-placement="above"]::after{bottom:-6px;border-top:0;border-left:0}
+.analytics-floating-info-tooltip[data-placement="below"]::after{top:-6px;border-bottom:0;border-right:0}
+.analytics-floating-info-heading{display:flex;align-items:center;gap:7px;margin:0 0 5px;
+  color:var(--a-tip-head);font-size:11px;font-weight:600;letter-spacing:0}
+.analytics-floating-info-heading iconsax-icon{flex:none}
+.analytics-floating-info-copy{color:var(--a-tip-ink);overflow-wrap:break-word}
+html[data-theme=dark] .analytics-page .analytics-info{color:#ada4ab}
+html[data-theme=dark] .analytics-page .analytics-info:is(:hover,:focus-visible){color:var(--an-brand);background:var(--an-brand-soft)}
+html[data-theme=dark] .analytics-floating-info-tooltip{
+  --a-tip-bg:#302a2e;--a-tip-border:#5a454e;--a-tip-ink:#ddd4d9;--a-tip-head:#e3a0ad;
+  box-shadow:0 13px 30px rgba(0,0,0,.37);
+}
+@media (prefers-reduced-motion:reduce){.analytics-page .analytics-info{transition:none}}
+
+
+/* BIKA 2026-10-28 | Genuine lowercase information icons + compact shift panel.
+   Keep existing KPI fonts, chart, filters, review and API behavior unchanged. */
+.analytics-page .analytics-info{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:17px;height:17px;min-width:17px;min-height:17px;
+  padding:0;margin:0 0 0 2px;border:1px solid #b6b0b3;
+  border-radius:50%;background:transparent;color:#969096;
+  font-family:Inter,Arial,sans-serif;font-size:11px;font-weight:600;line-height:1;
+  cursor:help;box-shadow:none;vertical-align:middle;
+  transition:color .16s,border-color .16s,background .16s;
+}
+.analytics-page .analytics-info-glyph{display:block;position:relative;top:-.15px;line-height:1;font:600 11px/1 Inter,Arial,sans-serif;pointer-events:none}
+.analytics-page .analytics-info:hover,.analytics-page .analytics-info:focus-visible{
+  border-color:var(--an-brand);background:var(--an-brand-soft);color:var(--an-brand);
+}
+.analytics-page .analytics-static-info-glyph,
+.analytics-tip-info-glyph{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:15px;height:15px;min-width:15px;border:1px solid currentColor;
+  border-radius:50%;font:600 10px/1 Inter,Arial,sans-serif;
+}
+.analytics-tip-info-glyph{color:var(--a-tip-head);margin-right:0}
+/* Stop distributing the tall trend chart's height among the two small side cards. */
+.analytics-page .analytics-side-column{
+  display:flex;flex-direction:column;align-self:start;gap:15px;
+  grid-template-rows:none;min-height:0;
+}
+.analytics-page .analytics-side-column > .analytics-card{
+  flex:0 0 auto;min-height:0;height:auto;
+}
+.analytics-page .analytics-shift-card{padding-bottom:18px}
+.analytics-page .analytics-shift-card .analytics-card-header{margin-bottom:14px}
+.analytics-page .analytics-shift-content{min-height:0}
+.analytics-page .analytics-shift-row{padding:7px 0 0;border-bottom:1px solid var(--an-outline)}
+.analytics-page .analytics-shift-row:last-child{border-bottom:0}
+.analytics-page .analytics-shift-row + .analytics-shift-row{margin-top:12px;padding-top:14px}
+.analytics-page .analytics-shift-top{font-size:12px;align-items:baseline;gap:12px}
+.analytics-page .analytics-shift-top strong{font-weight:600}
+.analytics-page .analytics-shift-rate{color:var(--an-ink);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.analytics-page .analytics-progress{height:8px;margin-top:10px}
+.analytics-page .analytics-shift-bottom{
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;
+  gap:6px 12px;margin-top:9px;color:var(--an-muted);font-size:10.5px;line-height:1.4;
+}
+.analytics-page .analytics-shift-content .analytics-empty{min-height:84px;padding:8px 4px 12px}
+html[data-theme=dark] .analytics-page .analytics-info{border-color:#8c8086;color:#b6aeb2}
+html[data-theme=dark] .analytics-page .analytics-info:hover,
+html[data-theme=dark] .analytics-page .analytics-info:focus-visible{border-color:var(--an-brand);color:var(--an-brand)}
+@media(max-width:1050px){.analytics-page .analytics-side-column{align-self:stretch}}
+
+
+/* Shift × calendar date heatmap. Compact by content: no tall placeholder on sparse datasets. */
+.analytics-page .analytics-shift-card{height:auto!important;min-height:0!important;align-self:start;padding-bottom:17px}
+.analytics-page .analytics-shift-content{min-height:0!important}
+.analytics-page .analytics-shift-card .analytics-card-header{margin-bottom:16px}
+.analytics-page .analytics-heatmap-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;color:var(--an-muted);font-size:10.5px;line-height:1.4}
+.analytics-page .analytics-heatmap-heading span:last-child{color:var(--an-ink);font-weight:500}
+.analytics-page .analytics-heatmap-grid{width:100%;min-width:0;display:flex;flex-direction:column;gap:7px}
+.analytics-page .analytics-heatmap-header,.analytics-page .analytics-heatmap-data-row{display:grid;grid-template-columns:minmax(72px,1.5fr) repeat(7,minmax(0,1fr));gap:5px;align-items:center;min-width:0}
+.analytics-page .analytics-heatmap-header{margin-bottom:1px}
+.analytics-page .analytics-heatmap-corner{font-size:10px;color:var(--an-muted)}
+.analytics-page .analytics-heatmap-date{min-width:0;display:flex;flex-direction:column;align-items:center;gap:1px;color:var(--an-muted);font-size:9px;line-height:1.2;font-weight:400}
+.analytics-page .analytics-heatmap-date b{font-weight:500;font-size:9px}
+.analytics-page .analytics-heatmap-date small{font-size:8.5px;color:var(--an-muted)}
+.analytics-page .analytics-heatmap-shift{font-size:10px;color:var(--an-ink);line-height:1.25;overflow-wrap:anywhere;font-weight:500;padding-right:4px;min-width:0}
+.analytics-page .analytics-heatmap-cell{display:flex;align-items:center;justify-content:center;min-width:0;min-height:36px;border-radius:8px;padding:3px 1px;border:1px solid transparent;font-size:9px;line-height:1.2;white-space:nowrap;font-weight:500;cursor:default;font-variant-numeric:tabular-nums;transition:filter .16s,transform .16s,box-shadow .16s}
+.analytics-page .analytics-heatmap-cell:hover,.analytics-page .analytics-heatmap-cell:focus-visible{transform:translateY(-1px);box-shadow:0 3px 8px rgba(45,35,38,.11);outline:2px solid var(--an-brand);outline-offset:1px}
+.analytics-page .analytics-heatmap-on-target{background:#e2f2e9;color:#307254;border-color:#cce9da}
+.analytics-page .analytics-heatmap-near-target{background:#f9eacf;color:#956526;border-color:#f4dfb8}
+.analytics-page .analytics-heatmap-below-target{background:#f8e3e9;color:#9e3653;border-color:#f0d3dc}
+.analytics-page .analytics-heatmap-no-data{background:var(--an-bg);color:var(--an-muted);border-color:var(--an-outline)}
+.analytics-page .analytics-heatmap-no-shift{font-size:10.5px;line-height:1.6;padding:12px 10px;background:var(--an-bg);border:1px dashed var(--an-outline);border-radius:10px;color:var(--an-muted)}
+.analytics-page .analytics-heatmap-legend{display:flex;flex-wrap:wrap;align-items:center;gap:7px 12px;margin-top:15px;font-size:9px;line-height:1.3;color:var(--an-muted)}
+.analytics-page .analytics-heatmap-legend span{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.analytics-page .analytics-heatmap-key{height:9px;width:9px;flex:0 0 9px;border-radius:3px;border:1px solid rgba(70,60,63,.06)}
+.analytics-page .analytics-heatmap-foot{margin:12px 0 0;color:var(--an-muted);font-size:9.5px;line-height:1.5}
+html[data-theme=dark] .analytics-page .analytics-heatmap-on-target{background:#203d32;color:#a9dec3;border-color:#345e4c}
+html[data-theme=dark] .analytics-page .analytics-heatmap-near-target{background:#4b3b24;color:#eacc9c;border-color:#6b5837}
+html[data-theme=dark] .analytics-page .analytics-heatmap-below-target{background:#4b2736;color:#e9b8c7;border-color:#633a49}
+@media(max-width:1260px){.analytics-page .analytics-heatmap-header,.analytics-page .analytics-heatmap-data-row{grid-template-columns:minmax(62px,1.4fr) repeat(7,minmax(0,1fr));gap:4px}.analytics-page .analytics-heatmap-cell{font-size:8.5px;min-height:34px}}
+@media(max-width:750px){.analytics-page .analytics-heatmap-header,.analytics-page .analytics-heatmap-data-row{grid-template-columns:minmax(61px,1.45fr) repeat(7,minmax(0,1fr));gap:4px}.analytics-page .analytics-heatmap-cell{min-height:34px;font-size:8.5px;border-radius:6px}.analytics-page .analytics-heatmap-heading{font-size:10px}.analytics-page .analytics-heatmap-legend{gap:7px 10px}}
+
+.analytics-page .analytics-heatmap-cell{font-family:inherit;appearance:none;-webkit-appearance:none;cursor:pointer}
+.analytics-page .analytics-heatmap-cell.is-selected{outline:2px solid var(--an-brand);outline-offset:1px}
+.analytics-page .analytics-heatmap-selected{margin-top:10px;border:1px solid var(--an-outline);background:var(--an-bg);border-radius:9px;padding:8px 10px;font-size:10px;line-height:1.5;color:var(--an-ink)}
+.analytics-page .analytics-heatmap-selected[hidden]{display:none!important}
+
+
+/* Dashboard-matched info icons & compact popover. Visual only.
+   Uses the exact outline SVG geometry of Dashboard's config-info-icon. */
+.analytics-page .analytics-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 17px;
+  height: 17px;
+  min-width: 17px;
+  min-height: 17px;
+  flex: 0 0 17px;
+  padding: 0;
+  margin: 0 0 0 4px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #9a9a9a;
+  cursor: help;
+  vertical-align: middle;
+  box-shadow: none;
+  transform: none;
+  transition: color 150ms ease, transform 150ms ease;
+}
+.analytics-page .analytics-dashboard-info-icon {
+  display: block;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  pointer-events: none;
+}
+.analytics-page .analytics-info:hover,
+.analytics-page .analytics-info:focus,
+.analytics-page .analytics-info:focus-visible {
+  color: #741f2e;
+  border: 0;
+  background: transparent;
+  transform: translateY(-1px);
+}
+.analytics-page .analytics-info:focus-visible {
+  outline: 2px solid #741f2e;
+  outline-offset: 2px;
+}
+/* Dashboard's small white tooltip, carried in document.body to avoid clipping. */
+.analytics-floating-info-tooltip {
+  --a-tip-bg: #fff;
+  --a-tip-border: rgba(0,0,0,.08);
+  --a-tip-ink: #4b4b4b;
+  width: max-content;
+  max-width: min(240px, calc(100vw - 24px));
+  padding: 8px 10px;
+  border: 1px solid var(--a-tip-border);
+  border-radius: 8px;
+  background: var(--a-tip-bg);
+  color: var(--a-tip-ink);
+  box-shadow: 0 6px 18px rgba(0,0,0,.10);
+  font-family: Inter, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+}
+.analytics-floating-info-copy {
+  color: var(--a-tip-ink);
+  font-size: inherit;
+  font-weight: 400;
+  line-height: inherit;
+}
+.analytics-floating-info-heading { display: none; }
+html[data-theme="dark"] .analytics-page .analytics-info { color: rgba(255,255,255,.55); border: 0; }
+html[data-theme="dark"] .analytics-page .analytics-info:hover,
+html[data-theme="dark"] .analytics-page .analytics-info:focus,
+html[data-theme="dark"] .analytics-page .analytics-info:focus-visible {
+  color: #f1b5c1;
+  border: 0;
+  background: transparent;
+}
+html[data-theme="dark"] .analytics-floating-info-tooltip {
+  --a-tip-bg: #302a2e;
+  --a-tip-border: #5a454e;
+  --a-tip-ink: #e5dce1;
+  box-shadow: 0 7px 20px rgba(0,0,0,.35);
+}
+
+
+/* Mask Review modal · polish v1 (2026-10-28).
+   Modal-only. Preserve dashboard, charts, permissions and API behavior. */
+.analytics-modal-backdrop .analytics-modal-close{
+  width:46px;height:46px;flex:0 0 46px;border-radius:999px;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:#f4f4f4;color:#888;cursor:pointer;border:0;
+  transition:background .15s ease,color .15s ease,transform .15s ease;
+}
+.analytics-modal-backdrop .analytics-modal-close:hover{background:#f1e4e6;color:#741f2e;transform:scale(1.03)}
+.analytics-modal-backdrop .analytics-modal-close:focus-visible{outline:2px solid var(--an-brand);outline-offset:2px}
+html[data-theme=dark] .analytics-modal-backdrop .analytics-modal-close{background:#39343a;color:#d5cbd0}
+html[data-theme=dark] .analytics-modal-backdrop .analytics-modal-close:hover{background:#51333e;color:#f3bdc5}
+/* Keep the side independently scrollable so adding crops never increases the
+   right column or the modal's height just to fill space. */
+.analytics-modal-backdrop .analytics-mask-viewer{display:flex;flex-direction:column;min-width:0;min-height:0}
+.analytics-modal-backdrop .analytics-selected-crops{
+  margin-top:18px;padding:0;border:0;
+  border-radius:0;background:transparent;min-width:0;
+}
+.analytics-modal-backdrop .analytics-selected-crops[hidden]{display:none!important}
+.analytics-modal-backdrop .analytics-selected-crops-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  font-size:12px;font-weight:500;color:var(--an-ink);margin-bottom:10px;
+}
+.analytics-modal-backdrop .analytics-selected-crops-head [data-crop-object-id]{
+  font-size:10px;font-weight:400;color:var(--an-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.analytics-modal-backdrop .analytics-selected-crops-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.analytics-modal-backdrop .analytics-selected-crop{min-width:0;display:flex;flex-direction:column;gap:7px}
+.analytics-modal-backdrop .analytics-selected-crop-label{font-size:10.5px;font-weight:500;color:var(--an-muted)}
+.analytics-modal-backdrop .analytics-selected-crop-image{
+  height:clamp(84px,12vh,136px);border-radius:11px;border:1px solid var(--an-outline);
+  background:var(--an-card);overflow:hidden;display:flex;align-items:center;justify-content:center;
+}
+.analytics-modal-backdrop .analytics-selected-crop-image canvas{display:block;width:100%;height:100%;object-fit:contain}
+.analytics-modal-backdrop .analytics-selected-crops-note{font-size:9.5px;color:var(--an-muted);line-height:1.4;display:block;margin-top:9px}
+/* Hide but preserve the original form select and its exact field value. */
+.analytics-modal-backdrop .analytics-decision-native{
+  position:absolute!important;width:1px!important;height:1px!important;padding:0!important;
+  margin:-1px!important;opacity:0!important;pointer-events:none!important;overflow:hidden!important;
+  clip-path:inset(50%)!important;border:0!important;
+}
+.analytics-modal-backdrop .analytics-decision-picker{position:relative;min-width:0}
+.analytics-modal-backdrop .analytics-decision-trigger{
+  width:100%;min-height:42px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  border:1px solid var(--an-outline);border-radius:12px;color:var(--an-ink);background:var(--an-card);
+  text-align:left;cursor:pointer;font-size:12px;font-weight:400;
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+.analytics-modal-backdrop .analytics-decision-trigger>svg{flex:0 0 18px;color:var(--an-muted);margin-right:2px}
+.analytics-modal-backdrop .analytics-decision-trigger:hover{border-color:#bc9aa1}
+.analytics-modal-backdrop .analytics-decision-trigger[aria-expanded="true"],
+.analytics-modal-backdrop .analytics-decision-trigger:focus-visible{
+  border-color:var(--an-brand);box-shadow:0 0 0 3px rgba(116,31,46,.09);outline:0;
+}
+.analytics-decision-menu{
+  position:fixed;z-index:12050;padding:6px;background:#fff;color:#292929;
+  border:1px solid #e8e1e3;border-radius:14px;box-shadow:0 16px 40px rgba(36,23,30,.20);
+  display:flex;flex-direction:column;gap:3px;
+}
+.analytics-decision-menu[hidden]{display:none!important}
+.analytics-decision-menu [data-decision-option]{
+  min-height:38px;padding:8px 10px;display:flex;gap:11px;align-items:center;
+  border:0;border-radius:9px;text-align:left;color:inherit;background:transparent;
+  cursor:pointer;font-size:11.5px;font-weight:400;width:100%;
+}
+.analytics-decision-menu [data-decision-option]>iconsax-icon{color:#8e4052;flex:0 0 18px}
+.analytics-decision-menu [data-decision-option]>span{flex:1;min-width:0}
+.analytics-decision-menu [data-decision-option]:hover,
+.analytics-decision-menu [data-decision-option]:focus-visible,
+.analytics-decision-menu [data-decision-option][aria-selected="true"]{color:#741f2e;background:#f8eff1;outline:0}
+.analytics-decision-menu .analytics-decision-tick{display:none;flex:0 0 17px}
+.analytics-decision-menu [aria-selected="true"] .analytics-decision-tick{display:block}
+html[data-theme=dark] .analytics-decision-menu{background:#282427;color:#eee;border-color:#4d4045;box-shadow:0 16px 40px rgba(0,0,0,.50)}
+html[data-theme=dark] .analytics-decision-menu [data-decision-option]:hover,
+html[data-theme=dark] .analytics-decision-menu [data-decision-option]:focus-visible,
+html[data-theme=dark] .analytics-decision-menu [data-decision-option][aria-selected="true"]{color:#f4b7c3;background:#472c37}
+/* Give reviewer notes useful writing space without expanding the modal.
+   The save button stays anchored below via the existing flex layout. */
+.analytics-modal-backdrop .analytics-feedback-form textarea[data-review-note]{
+  min-height:124px;
+  padding:12px 13px;
+  line-height:1.55;
+  resize:vertical;
+  font-weight:400;
+}
+/* One scoped pill button rather than changing other BIKA buttons. */
+.analytics-modal-backdrop .analytics-feedback-form [data-save-review]{
+  display:block;width:100%;min-height:44px;margin-top:15px;padding:10px 19px;
+  border-radius:999px!important;font-weight:400!important;font-size:12px;
+  background:#741f2e;color:#fff;border:1px solid #741f2e;
+  box-shadow:0 7px 18px rgba(116,31,46,.19);
+  transition:box-shadow .15s ease,transform .15s ease,background .15s ease;
+}
+.analytics-modal-backdrop .analytics-feedback-form [data-save-review]:not(:disabled):hover{
+  background:#611926;box-shadow:0 9px 22px rgba(116,31,46,.26);transform:translateY(-1px)
+}
+.analytics-modal-backdrop .analytics-feedback-form [data-save-review]:focus-visible{outline:2px solid var(--an-brand);outline-offset:3px}
+.analytics-modal-backdrop .analytics-feedback-form [data-save-review]:disabled{opacity:.5;box-shadow:none}
+@media(max-width:750px){
+  .analytics-modal-backdrop .analytics-modal-close{width:40px;height:40px;flex-basis:40px}
+  .analytics-modal-backdrop .analytics-selected-crop-image{height:100px}
+  .analytics-modal-backdrop .analytics-selected-crops{padding:0}
+  .analytics-modal-backdrop .analytics-feedback-form textarea[data-review-note]{min-height:104px}
+  .analytics-modal-backdrop .analytics-feedback-form [data-save-review]{margin-top:12px}
+}
+@media(prefers-reduced-motion:reduce){.analytics-modal-backdrop .analytics-modal-close,.analytics-modal-backdrop .analytics-feedback-form [data-save-review]{transition:none}}
+/* Mask Review — fill the EXISTING right-column space rather than leaving
+   an unused band below Save Review.  No effect on the left image/crops. */
+.analytics-modal-backdrop .analytics-feedback-form [data-save-message]:empty{
+  display:none!important;
+}
+.analytics-modal-backdrop .analytics-feedback-form [data-save-message]:not(:empty){
+  min-height:0;margin:3px 0 0;line-height:1.4;
+}
+@media (min-width:751px){
+  .analytics-modal-backdrop .analytics-mask-side{
+    display:flex;flex-direction:column;max-height:none;min-height:0;
+  }
+  .analytics-modal-backdrop .analytics-feedback-form{
+    display:flex;flex-direction:column;flex:1 1 auto;min-height:0;gap:8px;
+  }
+  .analytics-modal-backdrop .analytics-feedback-form textarea[data-review-note]{
+    flex:1 1 170px;
+    min-height:150px;
+    max-height:none;
+    resize:vertical;
+  }
+  .analytics-modal-backdrop .analytics-feedback-form [data-save-review]{
+    flex:0 0 auto;
+    margin-top:16px!important;
+    margin-bottom:0!important;
+  }
+}
+/* On narrow screens let the form use its natural height.  Avoid a tall textarea
+   pushing the button below the viewport. */
+@media (max-width:750px){
+  .analytics-modal-backdrop .analytics-feedback-form textarea[data-review-note]{
+    flex:none;min-height:120px;
+  }
+  .analytics-modal-backdrop .analytics-feedback-form [data-save-review]{margin-top:14px!important}
+}
+/* Short desktop viewports: preserve visible Save Review action without
+   requiring an excessively tall note input. */
+@media (min-width:751px) and (max-height:850px){
+  .analytics-modal-backdrop .analytics-feedback-form textarea[data-review-note]{
+    min-height:110px;
+    flex-basis:115px;
+  }
+  .analytics-modal-backdrop .analytics-feedback-form [data-save-review]{
+    margin-top:12px!important;
+  }
+}

@@ -47,3 +47,20 @@ __pycache__/
 *.ckpt
 *.safetensors
 /data/inspections/
+# Docker handover secrets and generated data
+/.env.docker
+/.env.handover
+/.env.*
+!/.env.docker.example
+!/.env.handover.example
+/instance/
+/data/
+/datasets/
+/handover_training_source/
+/docker_gpu_test_inputs/
+/docker_gpu_test_output/
+/website_models/**/*.pt
+/website_models/**/*.pth
+/website_models/**/*.ckpt
+/website_models/**/*.onnx
+/backups/

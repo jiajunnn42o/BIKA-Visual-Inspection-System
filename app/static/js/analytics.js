@@ -30,6 +30,7 @@
   let selectedObject = null;
   let reviewList = [];
   let selectedQueue = 'flagged';
+  let reviewSourceImage = null; // Loaded source image shared by full-frame overlay and crops.
   const admin = root.dataset.canReview === 'true';
 
   const status = (message, fail = false) => {
@@ -197,11 +198,44 @@
 
   function renderShifts() {
     const place=one('[data-shift-chart]');
-    if (!data.shifts.length) { place.innerHTML=empty('No shift information','Link inspection runs to users with a configured Shift to compare performance.');return; }
-    place.innerHTML=data.shifts.map(row=>{
-      const p=num(row.good_rate);
-      return `<div class="analytics-shift-row"><div class="analytics-shift-top"><strong>${esc(row.name)}</strong><span>${pct(row.good_rate)} · ${fmt(row.inspections)} runs</span></div><div class="analytics-progress"><div class="analytics-progress-fill" style="width:${cap(p,0,100)}%"></div></div></div>`;
+    const heat=data.shift_heatmap;
+    if (!heat || !Array.isArray(heat.dates) || !Array.isArray(heat.rows)) {
+      place.innerHTML=empty('Shift history unavailable','Please refresh to load the latest shift analysis.');
+      return;
+    }
+    const dates=heat.dates;
+    const names=dates.map(iso => {
+      const day=new Date(`${iso}T12:00:00`);
+      return {weekday:day.toLocaleDateString('en-US',{weekday:'short'}),date:day.toLocaleDateString('en-US',{month:'numeric',day:'numeric'})};
+    });
+    const header=`<div class="analytics-heatmap-heading"><span>Recent 7 calendar days</span><span>Good Snack Rate</span></div>`;
+    const weekdays=`<div class="analytics-heatmap-header"><span class="analytics-heatmap-corner">Shift</span>${names.map(d=>`<span class="analytics-heatmap-date"><b>${esc(d.weekday)}</b><small>${esc(d.date)}</small></span>`).join('')}</div>`;
+    const threshold=num(data.kpi.target_good || 85);
+    let available=0;
+    const rows=heat.rows.map(row => {
+      const title=esc(row.name);
+      const cells=(row.cells||[]).map(c=>{
+        const has=c.good_rate!==null && c.good_rate!==undefined && num(c.judged)>0;
+        if(has)available++;
+        const rate=has?num(c.good_rate):null;
+        const level=!has?'no-data':rate>=threshold?'on-target':rate>=threshold-15?'near-target':'below-target';
+        const label=has?`${row.name}, ${c.date}: ${pct(c.good_rate)} Good Snack Rate from ${fmt(c.judged)} judged objects in ${fmt(c.inspections)} runs`:`${row.name}, ${c.date}: No judged observations`;
+        return `<button type="button" class="analytics-heatmap-cell analytics-heatmap-${level}" data-heatmap-cell data-detail="${esc(label)}" title="${esc(label)}" aria-label="${esc(label)}">${has?`${Math.round(rate)}%`: '–'}</button>`;
+      }).join('');
+      return `<div class="analytics-heatmap-data-row" role="row"><span class="analytics-heatmap-shift" title="${title}">${title}</span>${cells}</div>`;
     }).join('');
+    const content=heat.rows.length?rows:`<div class="analytics-heatmap-no-shift">No saved inspections in this period. The heatmap will update when inspection results are saved.</div>`;
+    const key=`<div class="analytics-heatmap-legend" aria-label="Heatmap legend"><span><i class="analytics-heatmap-key analytics-heatmap-on-target"></i>Meets target</span><span><i class="analytics-heatmap-key analytics-heatmap-near-target"></i>Near target</span><span><i class="analytics-heatmap-key analytics-heatmap-below-target"></i>Below target</span><span><i class="analytics-heatmap-key analytics-heatmap-no-data"></i>No data</span></div>`;
+    const foot=available?`Based on ${fmt(available)} shift-day ${available===1?'sample':'samples'} · Hover or tap a cell for counts`:'No judged observations in the displayed week';
+    place.innerHTML=`${header}<div class="analytics-heatmap-grid" role="group" aria-label="Good Snack Rate heatmap by inspector shift and date">${weekdays}${content}</div><div class="analytics-heatmap-selected" data-heatmap-selected hidden></div>${key}<p class="analytics-heatmap-foot">${foot}</p>`;
+    place.onclick = (event) => {
+      const cell=event.target.closest('[data-heatmap-cell]');
+      if (!cell) return;
+      all('[data-heatmap-cell]',place).forEach(item=>item.classList.toggle('is-selected',item===cell));
+      const selected=one('[data-heatmap-selected]',place);
+      selected.textContent=cell.dataset.detail || '';
+      selected.hidden=false;
+    };
   }
 
   function renderForecast() {
@@ -265,11 +299,181 @@
       tbody.innerHTML=`<tr><td colspan="5" class="analytics-table-empty">${query?'No runs match your search.':mode==='flagged'?'No flagged inspection runs in this period.':'No stored image inspections available in this period.'}</td></tr>`;
     } else {
       tbody.innerHTML=rows.map(row=>{
-        const reason=row.reasons?.length?row.reasons[0]:'Routine review';
-        return `<tr><td><div class="analytics-review-source">${row.preview_url?`<img src="${esc(row.preview_url)}" class="analytics-review-thumb" alt="Saved inspection thumbnail" loading="lazy">`:'<span class="analytics-review-thumbnail-empty">—</span>'}<div><div class="analytics-review-primary" title="${esc(row.batch_id)}">${esc(row.batch_id)}</div><div class="analytics-review-secondary" title="${esc(row.file_name)}">${esc(row.file_name)}</div><div class="analytics-review-secondary">${esc(row.date)}</div></div></div></td><td>${fmt(row.judged)}</td><td><span class="analytics-reason" title="${esc(row.reasons.join('; '))}">${esc(reason)}</span></td><td><span class="analytics-review-badge">${fmt(row.reviewed)} reviewed</span></td><td><button type="button" class="analytics-view-button" data-open-review="${esc(row.batch_id)}" ${row.reviewable?'':'disabled title="Saved image results required"'}>Review Masks ↗</button></td></tr>`;
+        const reasons=Array.isArray(row.reasons)?row.reasons:[];
+        const reason=reasons.length?reasons[0]:'Routine review';
+        const more=reasons.length>1?`<span class="analytics-reason-more">+${fmt(reasons.length-1)} more</span>`:'';
+        const reviewed=Math.max(0,num(row.reviewed));
+        const reviewState=reviewed>0?'has-reviewed':'pending';
+        const reviewLabel=reviewed>0?`${fmt(reviewed)} reviewed`:'Pending review';
+        const queueTag=mode==='flagged'?'Review required':'Saved inspection';
+        const queueClass=mode==='flagged'?'needs-review':'routine';
+        return `<tr>
+          <td>
+            <div class="analytics-review-source">
+              ${row.preview_url?`<img src="${esc(row.preview_url)}" class="analytics-review-thumb" alt="Saved inspection thumbnail" loading="lazy">`:'<span class="analytics-review-thumbnail-empty"><iconsax-icon name="gallery" type="twotone" size="20" color="currentColor"></iconsax-icon></span>'}
+              <div class="analytics-review-source-info">
+                <div class="analytics-review-primary" title="${esc(row.batch_id)}">${esc(row.batch_id)}</div>
+                <div class="analytics-review-secondary" title="${esc(row.file_name)}">${esc(row.file_name)}</div>
+                <div class="analytics-review-secondary analytics-review-date"><iconsax-icon name="calendar" type="twotone" size="12" color="currentColor"></iconsax-icon>${esc(row.date)}</div>
+              </div>
+            </div>
+          </td>
+          <td class="analytics-review-quantity"><span class="analytics-review-number">${fmt(row.judged)}</span><small>observations</small></td>
+          <td>
+            <div class="analytics-reason-stack">
+              <span class="analytics-reason-tag ${queueClass}"><span class="analytics-reason-dot" aria-hidden="true"></span>${queueTag}</span>
+              <span class="analytics-reason-detail" title="${esc(reasons.join('; '))}">${esc(reason)}</span>${more}
+            </div>
+          </td>
+          <td>
+            <span class="analytics-review-status-pill ${reviewState}"><span class="analytics-review-status-dot" aria-hidden="true"></span>${reviewLabel}</span>
+          </td>
+          <td class="analytics-review-action-cell">
+            <button type="button" class="analytics-view-button" data-open-review="${esc(row.batch_id)}" aria-label="Review masks for ${esc(row.batch_id)}" title="Review masks" ${row.reviewable?'':'disabled'}>
+              <iconsax-icon name="eye" type="twotone" size="20" color="currentColor" aria-hidden="true"></iconsax-icon>
+            </button>
+          </td>
+        </tr>`;
       }).join('');
     }
     const total=one('[data-review-pagination]');if(total)total.textContent=`${fmt(rows.length)} shown${review.total_candidates>40 && mode==='flagged'?' · latest 40 flagged runs':''}`;
+  }
+
+  // Keep the native select as the stored value for the existing review API.
+  // The visual menu lives outside the scrolling modal so options cannot be clipped.
+  const decisionSelect=document.querySelector('[data-decision]');
+  const decisionButton=document.querySelector('[data-decision-trigger]');
+  const decisionMenu=document.querySelector('[data-decision-menu]');
+  const decisionOptions=decisionMenu?Array.from(decisionMenu.querySelectorAll('[data-decision-option]')):[];
+  function syncDecisionPicker(){
+    if(!decisionSelect||!decisionButton)return;
+    const option=decisionSelect.selectedOptions[0];
+    const label=decisionButton.querySelector('[data-decision-selected]');
+    if(label)label.textContent=option?.textContent||'Choose a review decision';
+    decisionOptions.forEach(el=>el.setAttribute('aria-selected',String(el.dataset.decisionOption===decisionSelect.value)));
+  }
+  function closeDecisionPicker(focus=false){
+    if(!decisionMenu||!decisionButton)return;
+    decisionMenu.hidden=true;
+    decisionButton.setAttribute('aria-expanded','false');
+    if(focus)decisionButton.focus();
+  }
+  function positionDecisionPicker(){
+    if(!decisionMenu||!decisionButton||decisionMenu.hidden)return;
+    const rect=decisionButton.getBoundingClientRect(),margin=10;
+    const h=decisionMenu.offsetHeight||184;
+    const below=window.innerHeight-rect.bottom-margin;
+    const above=rect.top-margin;
+    const top=below>=h+8||below>=above?rect.bottom+7:rect.top-h-7;
+    const width=Math.max(200,rect.width);
+    decisionMenu.style.width=`${Math.min(width,window.innerWidth-2*margin)}px`;
+    decisionMenu.style.left=`${Math.max(margin,Math.min(rect.left,window.innerWidth-width-margin))}px`;
+    decisionMenu.style.top=`${Math.max(margin,Math.min(top,window.innerHeight-h-margin))}px`;
+  }
+  function openDecisionPicker(){
+    if(!decisionMenu||!decisionButton||!decisionSelect)return;
+    syncDecisionPicker();decisionMenu.hidden=false;
+    decisionButton.setAttribute('aria-expanded','true');
+    positionDecisionPicker();
+    (decisionOptions.find(el=>el.dataset.decisionOption===decisionSelect.value)||decisionOptions[0])?.focus();
+  }
+  if(decisionButton){
+    decisionButton.addEventListener('click',()=>decisionMenu.hidden?openDecisionPicker():closeDecisionPicker());
+    decisionButton.addEventListener('keydown',e=>{
+      if(['ArrowDown','ArrowUp','Enter',' '].includes(e.key)){e.preventDefault();openDecisionPicker();}
+    });
+    decisionOptions.forEach((opt,index)=>{
+      opt.addEventListener('click',()=>{
+        decisionSelect.value=opt.dataset.decisionOption;
+        decisionSelect.dispatchEvent(new Event('change',{bubbles:true}));
+        syncDecisionPicker();closeDecisionPicker(true);
+      });
+      opt.addEventListener('keydown',e=>{
+        if(e.key==='Escape'){e.preventDefault();closeDecisionPicker(true);}
+        if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+          e.preventDefault();decisionOptions[(index+(e.key==='ArrowDown'?1:-1)+decisionOptions.length)%decisionOptions.length].focus();
+        }
+        if(e.key==='Home'){e.preventDefault();decisionOptions[0].focus();}
+        if(e.key==='End'){e.preventDefault();decisionOptions[decisionOptions.length-1].focus();}
+      });
+    });
+    document.addEventListener('pointerdown',e=>{
+      if(decisionMenu.hidden||decisionMenu.contains(e.target)||decisionButton.contains(e.target))return;
+      closeDecisionPicker();
+    });
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!decisionMenu.hidden){e.stopPropagation();closeDecisionPicker(true);}},true);
+    window.addEventListener('resize',()=>{if(!decisionMenu.hidden)positionDecisionPicker();});
+    // Modal column scrolling requires menu to track the trigger position.
+    document.querySelector('.analytics-mask-side')?.addEventListener('scroll',()=>{if(!decisionMenu.hidden)positionDecisionPicker();},{passive:true});
+  }
+
+  // Generate both previews from the same saved source image + polygon points.
+  // No new API, image uploads, or changes to original prediction records.
+  function renderSelectedCrop(){
+    const modal=document.querySelector('[data-mask-modal]');
+    const panel=modal?.querySelector('[data-crop-panel]');
+    if(!panel)return;
+    if(!selectedObject||!reviewRecord||!reviewSourceImage?.naturalWidth){panel.hidden=true;return;}
+    const orig=panel.querySelector('[data-crop-original]');
+    const masked=panel.querySelector('[data-crop-masked]');
+    if(!orig||!masked)return;
+    const img=reviewSourceImage;
+    const metaW=num(reviewRecord.image.width)||img.naturalWidth;
+    const metaH=num(reviewRecord.image.height)||img.naturalHeight;
+    const polys=(selectedObject.polygons||[]).filter(p=>Array.isArray(p)&&p.length>=3).slice(0,40);
+    let pointCount=0;
+    let x1=Infinity,y1=Infinity,x2=-Infinity,y2=-Infinity;
+    for(const poly of polys){
+      for(const p of poly.slice(0,4000)){
+        if(!Array.isArray(p)||p.length<2)continue;
+        const x=Number(p[0]),y=Number(p[1]);
+        if(!Number.isFinite(x)||!Number.isFinite(y))continue;
+        pointCount++;
+        x1=Math.min(x1,x);y1=Math.min(y1,y);x2=Math.max(x2,x);y2=Math.max(y2,y);
+      }
+    }
+    if(!pointCount){
+      const b=selectedObject.bbox||{};
+      x1=num(b.x1??b.xmin??b.left??b[0]);y1=num(b.y1??b.ymin??b.top??b[1]);
+      x2=num(b.x2??b.xmax??b.right??b[2]);y2=num(b.y2??b.ymax??b.bottom??b[3]);
+      if((!x2||!y2)&&b.width&&b.height){x2=x1+num(b.width);y2=y1+num(b.height);}
+    }
+    if(!Number.isFinite(x1+y1+x2+y2)||x2<=x1||y2<=y1){panel.hidden=true;return;}
+    // Keep some surrounding context so the object does not touch crop borders.
+    const pad=Math.max(9,Math.min(65,Math.max(x2-x1,y2-y1)*.19));
+    x1=cap(x1-pad,0,metaW);x2=cap(x2+pad,0,metaW);
+    y1=cap(y1-pad,0,metaH);y2=cap(y2+pad,0,metaH);
+    const scaleX=img.naturalWidth/metaW,scaleY=img.naturalHeight/metaH;
+    const sx=x1*scaleX,sy=y1*scaleY,sw=(x2-x1)*scaleX,sh=(y2-y1)*scaleY;
+    if(sw<=0||sh<=0){panel.hidden=true;return;}
+    const ratio=Math.min(1,520/sw,220/sh), cw=Math.max(1,Math.round(sw*ratio)),ch=Math.max(1,Math.round(sh*ratio));
+    for(const canvas of [orig,masked]){
+      canvas.width=cw;canvas.height=ch;
+      const ctx=canvas.getContext('2d');if(!ctx)continue;
+      ctx.clearRect(0,0,cw,ch);
+      ctx.drawImage(img,sx,sy,sw,sh,0,0,cw,ch);
+    }
+    const ctx=masked.getContext('2d');
+    if(ctx&&pointCount){
+      const colour=/^#[0-9a-f]{6}$/i.test(selectedObject.colour)?selectedObject.colour:'#741f2e';
+      const toX=x=>(x-x1)/(x2-x1)*cw;
+      const toY=y=>(y-y1)/(y2-y1)*ch;
+      polys.forEach(poly=>{
+        const valid=poly.slice(0,4000).filter(pt=>Array.isArray(pt)&&pt.length>=2&&Number.isFinite(Number(pt[0]))&&Number.isFinite(Number(pt[1])));
+        if(valid.length<3)return;
+        ctx.beginPath();
+        valid.forEach((pt,i)=>{const x=toX(Number(pt[0])),y=toY(Number(pt[1]));if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});
+        ctx.closePath();
+        ctx.fillStyle=colour;ctx.globalAlpha=.30;ctx.fill();ctx.globalAlpha=1;
+        ctx.lineWidth=Math.max(1.5,Math.min(3.2,cw/145));
+        ctx.strokeStyle='#ffffff';ctx.stroke();
+      });
+    }
+    panel.querySelector('[data-crop-object-id]').textContent=selectedObject.object_id;
+    panel.querySelector('[data-crop-note]').textContent=pointCount
+      ?'Original and masked views of the selected saved object.'
+      :'No saved polygon for this object; displaying the bounding-box crop.';
+    panel.hidden=false;
   }
 
   async function openReview(batchId) {
@@ -282,7 +486,9 @@
     one('[data-object-detail]',modal).innerHTML='<p>Select a mask to view details.</p>';
     one('[data-save-review]',modal).disabled=true;
     one('[data-save-message]',modal).textContent='';
-    selectedObject=null;reviewRecord=null;
+    selectedObject=null;reviewRecord=null;reviewSourceImage=null;
+    const cropPanel=one('[data-crop-panel]',modal); if(cropPanel)cropPanel.hidden=true;
+    closeDecisionPicker();
     try{
       const response=await fetch(`${root.dataset.reviewUrlRoot}${encodeURIComponent(batchId)}`,{credentials:'same-origin'});
       const payload=await response.json();
@@ -321,6 +527,8 @@
           });
         });
         wrap.append(svg);stage.replaceChildren(wrap);
+        reviewSourceImage=img;
+        if(selectedObject) renderSelectedCrop();
       };
       img.onerror=()=>{stage.innerHTML='<div class="analytics-mask-loading">The original image could not be loaded.</div>';};
       img.src=reviewRecord.image_url;
@@ -340,6 +548,8 @@
     const old=reviewRecord.reviews[selectedObject.object_id];
     one('[data-object-detail]',modal).innerHTML=`<strong>${esc(selectedObject.object_id)}</strong><br>Prediction: <strong>${esc(selectedObject.class_name)}</strong> · ${esc(selectedObject.decision)}<br>Classification confidence: <strong>${selectedObject.confidence==null?'—':pct(num(selectedObject.confidence)*100)}</strong><br>Detection confidence: <strong>${selectedObject.detection_confidence==null?'—':pct(num(selectedObject.detection_confidence)*100)}</strong><br>Segmentation polygons: ${(selectedObject.polygons||[]).length}${old?`<br>Last review: <strong>${esc(old.decision)}</strong> by ${esc(old.reviewer_name||'Reviewer')}`:''}`;
     one('[data-decision]',modal).value=old?.decision||'correct';
+    syncDecisionPicker();
+    renderSelectedCrop();
     one('[data-review-note]',modal).value=old?.note||'';
     one('[data-save-review]',modal).disabled=false;
     const message=one('[data-save-message]',modal); message.textContent='';message.classList.remove('is-error');
@@ -371,7 +581,8 @@
 
   function closeModal() {
     const modal=document.querySelector('[data-mask-modal]');if(!modal)return;
-    modal.setAttribute('hidden','');document.body.style.overflow='';reviewRecord=null;selectedObject=null;
+    closeDecisionPicker();
+    modal.setAttribute('hidden','');document.body.style.overflow='';reviewRecord=null;selectedObject=null;reviewSourceImage=null;
   }
   // Dashboard-matched date pill/dropdown. Native select remains as an internal value holder for load().
   const dateButton=one('[data-range-button]');
@@ -438,6 +649,65 @@
     if(data)renderTrend();
   }));
   if(admin){
+    // Accessible custom queue picker. Keep the original <select> as the single
+    // source of truth so the existing API filtering and change handler are unchanged.
+    const queueWrap=one('[data-review-select]');
+    const queueNative=one('[data-review-mode]');
+    const queueTrigger=one('[data-review-trigger]');
+    const queueMenu=one('[data-review-options]');
+    const queueOptions=all('[data-review-option]');
+    function syncQueuePicker(){
+      const active=queueOptions.find(option=>option.dataset.reviewOption===queueNative.value);
+      const label=active?.querySelector('span')?.textContent || 'Flagged runs';
+      one('[data-review-selected]').textContent=label;
+      queueTrigger.setAttribute('aria-label',`Review queue: ${label}`);
+      queueOptions.forEach(option=>option.setAttribute('aria-selected',String(option===active)));
+    }
+    function closeQueuePicker(restoreFocus=false){
+      queueMenu.hidden=true;
+      queueTrigger.setAttribute('aria-expanded','false');
+      queueWrap.classList.remove('is-open');
+      if(restoreFocus)queueTrigger.focus();
+    }
+    function openQueuePicker(){
+      queueMenu.hidden=false;
+      queueTrigger.setAttribute('aria-expanded','true');
+      queueWrap.classList.add('is-open');
+      const active=queueOptions.find(option=>option.dataset.reviewOption===queueNative.value);
+      (active||queueOptions[0])?.focus();
+    }
+    queueTrigger.addEventListener('click',()=>{
+      if(queueMenu.hidden)openQueuePicker();else closeQueuePicker();
+    });
+    queueOptions.forEach(option=>option.addEventListener('click',()=>{
+      const next=option.dataset.reviewOption;
+      const changed=queueNative.value!==next;
+      queueNative.value=next;
+      syncQueuePicker();
+      closeQueuePicker(true);
+      if(changed)queueNative.dispatchEvent(new Event('change',{bubbles:true}));
+    }));
+    queueWrap.addEventListener('keydown',event=>{
+      if(queueMenu.hidden){
+        if((event.key==='ArrowDown'||event.key==='ArrowUp')&&document.activeElement===queueTrigger){
+          event.preventDefault();openQueuePicker();
+        }
+        return;
+      }
+      if(event.key==='Escape'){event.preventDefault();closeQueuePicker(true);return;}
+      if(event.key==='Tab'){closeQueuePicker();return;}
+      if(event.key==='ArrowDown'||event.key==='ArrowUp'){
+        event.preventDefault();
+        const index=queueOptions.indexOf(document.activeElement);
+        const step=event.key==='ArrowDown'?1:-1;
+        queueOptions[(index+step+queueOptions.length)%queueOptions.length].focus();
+      }
+    });
+    document.addEventListener('pointerdown',event=>{
+      if(!queueWrap.contains(event.target)&&!queueMenu.hidden)closeQueuePicker();
+    });
+    queueNative.addEventListener('change',syncQueuePicker);
+    syncQueuePicker();
     one('[data-review-search]').addEventListener('input',()=>{if(data)renderReviewQueue();});
     one('[data-review-mode]').addEventListener('change',()=>{if(data)renderReviewQueue();});
     one('[data-review-table]').addEventListener('click',e=>{
@@ -452,5 +722,62 @@
     });
     one('[data-save-review]',modal).addEventListener('click',saveReview);
   }
+
+  // Data Analytics info tips: one viewport-aligned tooltip for hover, keyboard and touch.
+  // A body-level popover avoids clipping in KPI cards / narrow shift panels.
+  (() => {
+    const infoButtons = all('.analytics-info[data-info-tooltip]');
+    if (!infoButtons.length) return;
+    const tip = document.createElement('div');
+    tip.className = 'analytics-floating-info-tooltip';
+    tip.id = 'analytics-metric-description';
+    tip.setAttribute('role','tooltip');
+    tip.hidden = true;
+    // Same compact text-only popover as Dashboard: no extra heading or warning glyph.
+    const copy = document.createElement('div');
+    copy.className = 'analytics-floating-info-copy';
+    tip.append(copy);
+    document.body.append(tip);
+    let anchor = null;
+    let clicked = false;
+    const hide = () => {
+      tip.hidden = true;
+      if (anchor) anchor.removeAttribute('aria-describedby');
+      anchor = null; clicked = false;
+    };
+    const show = button => {
+      if (anchor && anchor !== button) hide();
+      anchor = button;
+      copy.textContent = button.dataset.infoTooltip || '';
+      tip.hidden = false;
+      button.setAttribute('aria-describedby',tip.id);
+      const rect = button.getBoundingClientRect();
+      const tw = tip.offsetWidth, th = tip.offsetHeight;
+      const left = Math.max(12, Math.min(window.innerWidth - tw - 12, rect.left + rect.width / 2 - tw / 2));
+      const above = rect.top >= th + 15;
+      const top = above ? rect.top - th - 10 : rect.bottom + 10;
+      tip.style.left = Math.round(left) + 'px';
+      tip.style.top = Math.round(top) + 'px';
+      tip.style.setProperty('--a-tip-arrow-x',Math.max(16,Math.min(tw - 16,rect.left + rect.width / 2 - left)) + 'px');
+      tip.dataset.placement = above ? 'above' : 'below';
+    };
+    infoButtons.forEach(button => {
+      button.addEventListener('pointerenter', event => { if (event.pointerType !== 'touch') show(button); });
+      button.addEventListener('pointerleave', event => { if (event.pointerType !== 'touch' && !clicked) hide(); });
+      button.addEventListener('focus', () => show(button));
+      button.addEventListener('blur', () => { if (!clicked) hide(); });
+      button.addEventListener('click', event => {
+        event.preventDefault();
+        if (anchor === button && clicked) hide();
+        else { show(button); clicked = true; }
+      });
+    });
+    document.addEventListener('pointerdown', event => {
+      if (anchor && !anchor.contains(event.target)) hide();
+    });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') hide(); });
+    window.addEventListener('scroll',hide,true);
+    window.addEventListener('resize',hide);
+  })();
   load();
 })();

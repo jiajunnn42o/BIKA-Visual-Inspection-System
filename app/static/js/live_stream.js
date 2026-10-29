@@ -1,4 +1,4 @@
-/* BIKA Live Stream Phase 2 · real sampled AI keyframes; raw RTSP preview remains independent. */
+/* BIKA Live Stream · sampled AI keyframes with Hikvision RTSP or Camo local camera. */
 (() => {
   'use strict';
   const page = document.querySelector('[data-live-stream-page]');
@@ -24,6 +24,9 @@
   const footDot = get('.lsi-foot-dot');
   const message = get('[data-control-message]');
   const stream = get('[data-camera-stream]');
+  const camoSettings = get('[data-camo-settings]');
+  const camoIndex = get('[data-camo-index]');
+  const sourceHelper = get('[data-camera-source-help]');
   const autoConnectToggle = get('[data-auto-connect]');
   const connectButton = get('[data-connect-button]');
   const disconnectButton = get('[data-disconnect-button]');
@@ -218,6 +221,7 @@
 
   const SOURCE_KEY = 'bika_live_preferred_source_v1';
   const AUTO_KEY = 'bika_live_auto_connect_v1';
+  const CAMO_INDEX_KEY = 'bika_live_camo_index_v1';
   // Browser preferences only; credentials stay on the server.
   function readPreference(key) {
     try { return window.localStorage.getItem(key); } catch (_) { return null; }
@@ -226,8 +230,27 @@
     try { window.localStorage.setItem(key, value); } catch (_) { /* Storage disabled: current page still works. */ }
   }
   const preferredSource = readPreference(SOURCE_KEY);
-  stream.value = preferredSource === 'sub' ? 'sub' : 'main';
+  stream.value = ['main', 'sub', 'camo'].includes(preferredSource) ? preferredSource : 'main';
+  const preferredIndex = readPreference(CAMO_INDEX_KEY);
+  if (camoIndex && [...camoIndex.options].some(o => o.value === preferredIndex)) camoIndex.value = preferredIndex;
   if (autoConnectToggle) autoConnectToggle.checked = readPreference(AUTO_KEY) === 'true';
+  function isCamoSelected() { return stream.value === 'camo'; }
+  function selectedStream() { return isCamoSelected() ? 'camo:' + (camoIndex?.value || '0') : stream.value; }
+  function syncCameraSourceUI() {
+    const camo = isCamoSelected();
+    if (camoSettings) camoSettings.hidden = !camo;
+    if (sourceHelper) sourceHelper.textContent = camo
+      ? 'Uses Camo Studio virtual webcam on this computer. No RTSP or Hikvision credentials required.'
+      : 'Hikvision IP and credentials are read securely from server-side .env.';
+    const subtitle = get('[data-source-subtitle]');
+    if (subtitle && lastCameraStatus?.state !== 'online') subtitle.textContent = camo
+      ? 'iPhone Camera via Camo Studio · USB / Wi-Fi' : 'Hikvision DS-2CD1123G0E-I(L)';
+    if (autoConnectToggle) {
+      autoConnectToggle.disabled = !authorizedControl || camo;
+      if (camo) autoConnectToggle.checked = false;
+    }
+  }
+  syncCameraSourceUI();
 
   function setMessage(text, isError = false) {
     message.textContent = text;
@@ -246,7 +269,7 @@
     const error = state === 'error';
     renderTrend(camera, online);
     statusEl.textContent = ({online: 'Online', connecting: 'Connecting', error: 'Connection Error'})[state] || 'Disconnected';
-    noteEl.textContent = online ? 'Live RTSP stream received' : connecting ? 'Attempting RTSP connection' : error ? 'Check camera configuration' : 'Camera not connected';
+    noteEl.textContent = online ? (camera.source_type === 'local_webcam' ? 'Local webcam feed received' : 'Live RTSP stream received') : connecting ? 'Connecting to selected camera' : error ? 'Check camera source' : 'Camera not connected';
     fpsEl.textContent = camera.camera_fps == null ? '—' : Number(camera.camera_fps).toFixed(1);
     badge.textContent = online ? 'Online' : connecting ? 'Connecting' : error ? 'Error' : 'Offline';
     badge.classList.toggle('is-online', online);
@@ -261,18 +284,32 @@
     stageRes.textContent = 'Resolution ' + (camera.resolution || '—');
     stageFPS.textContent = 'FPS ' + (camera.camera_fps == null ? '—' : Number(camera.camera_fps).toFixed(1));
     foot.textContent = online ? 'Camera feed streaming' : connecting ? 'Waiting for first frame' : error ? 'Connection failed' : 'Waiting for camera connection';
-    // While connected the hardware's current stream is authoritative.
-    if ((online || connecting) && (camera.stream === 'main' || camera.stream === 'sub')) {
-      stream.value = camera.stream;
+    // Current server source is authoritative while online or connecting.
+    if (online || connecting) {
+      if (camera.source_type === 'local_webcam' || camera.stream?.startsWith('camo:')) {
+        stream.value = 'camo';
+        const index = String(camera.device_index ?? String(camera.stream).split(':')[1]);
+        if (camoIndex && [...camoIndex.options].some(o => o.value === index)) camoIndex.value = index;
+      } else if (camera.stream === 'main' || camera.stream === 'sub') stream.value = camera.stream;
     }
-    const displayedStream = (online || connecting) ? camera.stream : stream.value;
-    get('[data-feed-stream-label]').textContent = displayedStream === 'main' ? 'Main Stream' : 'Sub Stream';
+    syncCameraSourceUI();
+    const camo = (online || connecting) ? camera.source_type === 'local_webcam' : isCamoSelected();
+    get('[data-feed-source-label]').textContent = camo ? 'iPhone / Camo' : 'Hikvision';
+    get('[data-feed-stream-label]').textContent = camo ? 'Device ' + (online || connecting ? (camera.device_index ?? camoIndex?.value) : camoIndex?.value) :
+      ((online || connecting ? camera.stream : stream.value) === 'main' ? 'Main Stream' : 'Sub Stream');
+    const infoSource = get('[data-detail-source]');
+    if (infoSource) infoSource.textContent = camo ? 'Local Webcam · Camo' : 'RTSP · Hikvision';
+    const transport = get('[data-stream-transport]');
+    if (transport) transport.textContent = camo ? 'Local camera → latest-frame preview' : 'RTSP → latest-frame preview';
+    const subtitle = get('[data-source-subtitle]');
+    if (subtitle) subtitle.textContent = camo ? 'iPhone Camera via Camo Studio · USB / Wi-Fi' : 'Hikvision DS-2CD1123G0E-I(L)';
     if (!busy) {
       connectButton.disabled = !authorizedControl || online || connecting;
       disconnectButton.disabled = !authorizedControl || !(online || connecting || error);
       snapshotButton.disabled = !authorizedControl || !camera.snapshot_ready;
     }
     stream.disabled = !authorizedControl || online || connecting;
+    if (camoIndex) camoIndex.disabled = !authorizedControl || online || connecting;
 
     if (online) {
       empty.hidden = true;
@@ -291,14 +328,15 @@
       emptyText.textContent = connecting
         ? 'Waiting for the camera to return its first frame. This can take a few seconds.'
         : error ? (camera.message || 'Check the IP, RTSP settings and network connection.')
+        : isCamoSelected() ? 'Open Camo Studio and connect your iPhone, then choose the correct Device Index.'
         : camera.configured ? 'Choose a stream, then click Connect Camera.'
           : 'Set HIKVISION_CAMERA_HOST, USER and PASSWORD in your local .env before connecting.';
     }
     if (currentState !== state) {
       if (error) setMessage(camera.message || 'Camera connection failed.', true);
       else if (online) setMessage('Camera connected. Start Detection when ready. Raw preview stays online during AI inference.');
-      else if (connecting) setMessage('Connecting to Hikvision camera…');
-      else if (!camera.configured) setMessage('Camera is not configured. Please update the local .env file.', true);
+      else if (connecting) setMessage('Connecting to selected camera…');
+      else if (!camera.configured && !isCamoSelected()) setMessage('Hikvision camera is not configured. Update the local .env, or choose iPhone Camera (Camo).', true);
       else setMessage('Camera ready to connect.');
     }
     currentState = state;
@@ -497,23 +535,29 @@ window.addEventListener('pagehide', () => clearInterval(cudaRefreshInterval), {o
   // Auto-connect never starts AI: operator must click Start Detection.
   function canAutoConnect(camera) {
     return authorizedControl && !busy && autoConnectToggle?.checked &&
-      camera?.configured && camera.state === 'disconnected';
+      stream.value !== 'camo' && camera?.configured && camera.state === 'disconnected';
   }
 
   stream?.addEventListener('change', () => {
     savePreference(SOURCE_KEY, stream.value);
+    syncCameraSourceUI();
     if (lastCameraStatus && lastCameraStatus.state === 'disconnected') {
-      get('[data-feed-stream-label]').textContent = stream.value === 'main' ? 'Main Stream' : 'Sub Stream';
+      render(lastCameraStatus);
+      setMessage(isCamoSelected() ? 'Open Camo Studio, choose the correct local device, then Connect Camera.' : 'Select Hikvision stream and Connect Camera.');
     }
+  });
+  camoIndex?.addEventListener('change', () => {
+    savePreference(CAMO_INDEX_KEY, camoIndex.value);
+    if (lastCameraStatus && lastCameraStatus.state === 'disconnected') render(lastCameraStatus);
   });
 
   autoConnectToggle?.addEventListener('change', () => {
     savePreference(AUTO_KEY, autoConnectToggle.checked ? 'true' : 'false');
     // Enabling the switch can connect now; disabling it does NOT interrupt an active stream.
-    if (canAutoConnect(lastCameraStatus)) action(page.dataset.connectUrl, {stream: stream.value});
+    if (canAutoConnect(lastCameraStatus)) action(page.dataset.connectUrl, {stream: selectedStream()});
   });
 
-  connectButton?.addEventListener('click', () => action(page.dataset.connectUrl, {stream:stream.value}));
+  connectButton?.addEventListener('click', () => action(page.dataset.connectUrl, {stream:selectedStream()}));
   disconnectButton?.addEventListener('click', () => action(page.dataset.disconnectUrl));
   snapshotButton?.addEventListener('click', () => {
     // Browser download; server's protected endpoint verifies role again.
@@ -525,7 +569,7 @@ window.addEventListener('pagehide', () => clearInterval(cudaRefreshInterval), {o
   (async () => {
     const camera = await checkStatus();
     if (canAutoConnect(camera)) {
-      await action(page.dataset.connectUrl, {stream: stream.value});
+      await action(page.dataset.connectUrl, {stream: selectedStream()});
     }
   })();
   const interval = setInterval(checkStatus, 1600);

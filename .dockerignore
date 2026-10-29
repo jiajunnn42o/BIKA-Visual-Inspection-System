@@ -1,0 +1,34 @@
+# Do not send secrets, datasets or model checkpoints as Docker build context.
+.git
+.venv
+venv
+__pycache__
+*.pyc
+.env
+.env.*
+!.env.docker.example
+.vscode
+.idea
+node_modules
+dist
+build
+instance
+uploads
+data
+datasets
+dataset
+website_models
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.zip
+backups
+backup
+logs
+# Keep the future model training source and datasets out of Docker build contexts
+handover_training_source
+datasets
+instance
+.env.handover
+.env.docker

@@ -181,6 +181,7 @@ def build_analytics_data(*, range_key="30d", date_from=None, date_to=None, admin
     defect_counts = defaultdict(int)
     daily = defaultdict(lambda: {"normal": 0, "defect": 0, "judged": 0, "inspections": 0})
     shifts = defaultdict(lambda: {"normal": 0, "judged": 0, "inspections": 0})
+    shift_days = defaultdict(lambda: {"normal": 0, "judged": 0, "inspections": 0})
     author_ids = {str(r.created_by_user_id) for r in records if r.created_by_user_id}
     people = {}
     if author_ids:
@@ -212,8 +213,13 @@ def build_analytics_data(*, range_key="30d", date_from=None, date_to=None, admin
         cls = r.classes_json or {}
         for key in CLASS_NAMES:
             defect_counts[key] += _n(cls.get(key))
-        shift = people.get(str(r.created_by_user_id), "")
-        if shift:
+        # A person's configured shift is not a sensor-derived lighting/noise label.
+        # Keep missing shift assignments visible instead of silently omitting runs.
+        shift = people.get(str(r.created_by_user_id), "") or "Unassigned"
+        shift_days[(shift, day)]["judged"] += n
+        shift_days[(shift, day)]["normal"] += g
+        shift_days[(shift, day)]["inspections"] += 1
+        if shift != "Unassigned":
             shifts[shift]["judged"] += n
             shifts[shift]["normal"] += g
             shifts[shift]["inspections"] += 1
@@ -275,6 +281,28 @@ def build_analytics_data(*, range_key="30d", date_from=None, date_to=None, admin
             if len(recent_image_runs) >= 40:
                 break
     series = points[-90:]
+    # A seven-calendar-day window ending at the selected period's end.
+    # No-record cells carry null rates; they are NOT counted as 0% yield.
+    # Using the profile's currently configured shift is an explicit limitation.
+    heat_end = end or (max((_record_date(r) for r in records), default=date.today()))
+    heat_dates = [(heat_end - timedelta(days=6 - i)).isoformat() for i in range(7)]
+    heat_names = sorted({shift for shift, _ in shift_days}, key=lambda name: (name == "Unassigned", name.casefold()))
+    heat_rows = []
+    for name in heat_names:
+        cells = []
+        total_judged = total_normal = total_runs = 0
+        for item_date in heat_dates:
+            values = shift_days.get((name, item_date))
+            normal_count = values["normal"] if values else 0
+            judged_count = values["judged"] if values else 0
+            run_count = values["inspections"] if values else 0
+            total_normal += normal_count
+            total_judged += judged_count
+            total_runs += run_count
+            cells.append({"date": item_date, "good_rate": _pct(normal_count, judged_count),
+                          "normal": normal_count, "judged": judged_count, "inspections": run_count})
+        heat_rows.append({"name": name, "good_rate": _pct(total_normal, total_judged),
+                          "inspections": total_runs, "judged": total_judged, "cells": cells})
     return {
         "filter": {"range": range_key, "label": label, "from": start.isoformat() if start else None, "to": end.isoformat() if end else None, "time_basis": "Inspection date (UTC)"},
         "kpi": {
@@ -287,6 +315,8 @@ def build_analytics_data(*, range_key="30d", date_from=None, date_to=None, admin
         "spc": {"pbar": _pct(good, judged), "method": "3σ binomial p-chart; daily sample-size-adjusted limits", "has_data": bool(judged)},
         "defects": [{"key": k, "name": CLASS_NAMES[k], "color": CLASS_COLORS[k], "count": defect_counts[k], "percent": _pct(defect_counts[k], judged - good)} for k in CLASS_NAMES],
         "shifts": [{"name": k, "good_rate": _pct(v["normal"], v["judged"]), **v} for k, v in sorted(shifts.items())],
+        "shift_heatmap": {"dates": heat_dates, "rows": heat_rows,
+                          "basis": "Inspection date; shift is read from the inspector's current profile."},
         "bayesian": _confidence_interval(good, judged),
         "forecast": _weighted_forecast(points),
         "review": {

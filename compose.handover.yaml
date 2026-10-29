@@ -1,0 +1,84 @@
+# ADDITIONAL / INDEPENDENT handover Compose file. Does not replace compose.yaml.
+# 'web' deliberately disables model preloading. AI & training are opt-in diagnostics.
+name: bika-handover
+
+services:
+  db:
+    image: postgres:17.11
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-bika_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.handover}
+      POSTGRES_DB: ${POSTGRES_DB:-bika_inspection}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.handover.web
+    image: bika-handover-web:cpu
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ./.env.handover
+    environment:
+      DATABASE_URL: "postgresql+psycopg://${POSTGRES_USER:-bika_app}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-bika_inspection}"
+      BIKA_PRELOAD_MODEL: "0"
+      STORAGE_BACKEND: local
+      LOCAL_INSPECTION_STORAGE: /app/data
+      BIKA_PIPELINE_SOURCE_ROOT: /app/pipeline_source
+      PYTHONUNBUFFERED: "1"
+      YOLO_CONFIG_DIR: /tmp/Ultralytics
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${APP_PORT:-5002}:8000"
+    volumes:
+      - ./data:/app/data
+      - ./instance:/app/instance
+      - ./website_models:/app/website_models
+
+  # Import / GPU / model file DIAGNOSTIC ONLY; not production AI inference.
+  gpu-check:
+    profiles: [gpu]
+    build:
+      context: .
+      dockerfile: Dockerfile.handover.ai
+    image: bika-handover-ai:gpu
+    gpus: all
+    restart: "no"
+    init: true
+    environment:
+      BIKA_MODEL_VERSION: ${BIKA_MODEL_VERSION:-v3_prawn_2026_10_25}
+      YOLO_CONFIG_DIR: /tmp/Ultralytics
+    volumes:
+      - ./website_models:/app/website_models:ro
+    entrypoint: ["python", "/app/docker_handover/scripts/check_ai.py"]
+
+  # Checks the transfer of the ORIGINAL training project; DOES NOT train.
+  training-check:
+    profiles: [training]
+    build:
+      context: .
+      dockerfile: Dockerfile.handover.ai
+    image: bika-handover-ai:gpu
+    gpus: all
+    restart: "no"
+    init: true
+    environment:
+      BIKA_MODEL_VERSION: ${BIKA_MODEL_VERSION:-v3_prawn_2026_10_25}
+    volumes:
+      - ./handover_training_source:/app/pipeline_source:ro
+      - ./datasets:/app/datasets:ro
+      - ./website_models:/app/website_models:ro
+    entrypoint: ["python", "/app/docker_handover/scripts/check_training.py"]
+
+volumes:
+  postgres_data:

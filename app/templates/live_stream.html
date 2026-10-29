@@ -4,6 +4,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/live_stream.css', v='phase2-live-latest-frame-1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/live_camo.css', v='camo-a1') }}">
 {% endblock %}
 
 {% block content %}
@@ -23,7 +24,7 @@
   <header class="lsi-header">
     <div class="lsi-heading">
       <h1>Live Stream Inspection</h1>
-      <p>Connect your Hikvision camera and run sampled AI inspection on live keyframes.</p>
+      <p>Connect Hikvision or an iPhone (Camo) and inspect sampled AI keyframes.</p>
     </div>
   </header>
 
@@ -38,15 +39,15 @@
     <section class="lsi-panel lsi-viewer-card" aria-labelledby="lsi-viewer-title">
       <div class="lsi-card-heading"><div><h2 id="lsi-viewer-title">Live Camera Feed</h2><p>Continuous camera preview · sampled 09b mask keyframes</p></div><span class="lsi-mini-status" data-live-badge>Offline</span></div>
       <div class="lsi-video-stage" data-video-stage>
-        <div class="lsi-video-top"><span class="lsi-live-tag"><i></i><span data-live-label>NOT CONNECTED</span></span><span class="lsi-video-tag">Hikvision · <span data-feed-stream-label>Main Stream</span></span></div>
-        <img class="lsi-video-image" data-video-image alt="Live camera view from Hikvision network camera" hidden>
+        <div class="lsi-video-top"><span class="lsi-live-tag"><i></i><span data-live-label>NOT CONNECTED</span></span><span class="lsi-video-tag"><span data-feed-source-label>Hikvision</span> · <span data-feed-stream-label>Main Stream</span></span></div>
+        <img class="lsi-video-image" data-video-image alt="Live camera feed from selected camera" hidden>
         <img class="lsi-video-image" data-ai-image alt="Last analysed AI keyframe with masks" hidden>
         <div class="lsi-video-empty" data-video-empty>
           <span class="lsi-empty-symbol"><iconsax-icon name="video-slash" type="twotone" size="44" color="currentColor"></iconsax-icon></span>
           <h3 data-placeholder-title>Camera not connected</h3>
           <p data-placeholder-message>Configure your Hikvision camera in <code>.env</code>, then choose Connect Camera.</p>
         </div>
-        <div class="lsi-video-bottom"><span data-video-resolution>Resolution —</span><span class="lsi-video-separator"></span><span data-video-fps>FPS —</span><span class="lsi-video-separator"></span><span>RTSP → latest-frame preview</span></div>
+        <div class="lsi-video-bottom"><span data-video-resolution>Resolution —</span><span class="lsi-video-separator"></span><span data-video-fps>FPS —</span><span class="lsi-video-separator"></span><span data-stream-transport>RTSP → latest-frame preview</span></div>
       </div>
       <div class="lsi-viewer-footer"><span><span class="lsi-foot-dot"></span><span data-viewer-foot-status>Waiting for camera connection</span></span><span class="lsi-view-modes"><span>AI view: <b data-ai-view-state>Off</b></span><button type="button" class="lsi-view-toggle" data-ai-view-toggle disabled>View AI keyframe</button></span></div>
       <!-- Camera-only metrics: use real worker status, never sample/generated AI results. -->
@@ -97,14 +98,26 @@
     </section>
 
     <aside class="lsi-panel lsi-controls-card" aria-labelledby="lsi-controls-title">
-      <div class="lsi-card-heading"><div><h2 id="lsi-controls-title">Inspection Controls</h2><p>Hikvision DS-2CD1123G0E-I(L)</p></div><iconsax-icon name="setting-2" type="twotone" size="21" color="currentColor"></iconsax-icon></div>
+      <div class="lsi-card-heading"><div><h2 id="lsi-controls-title">Inspection Controls</h2><p data-source-subtitle>Hikvision DS-2CD1123G0E-I(L)</p></div><iconsax-icon name="setting-2" type="twotone" size="21" color="currentColor"></iconsax-icon></div>
       <label class="lsi-field-label" for="lsi-camera-stream">Camera Source</label>
-      <div class="lsi-select-shell"><iconsax-icon name="video" type="twotone" size="18" color="currentColor"></iconsax-icon><select id="lsi-camera-stream" data-camera-stream {% if not can_control_camera %}disabled{% endif %}><option value="main" selected>Hikvision · Main Stream (101)</option><option value="sub">Hikvision · Sub Stream (102)</option></select></div>
-      <p class="lsi-helper">Camera IP and credentials are read securely from server-side <code>.env</code>.</p>
+      <div class="lsi-select-shell"><iconsax-icon name="video" type="twotone" size="18" color="currentColor"></iconsax-icon><select id="lsi-camera-stream" data-camera-stream {% if not can_control_camera %}disabled{% endif %}><option value="main" selected>Hikvision · Main Stream (101)</option><option value="sub">Hikvision · Sub Stream (102)</option><option value="camo">iPhone Camera · Camo Studio</option></select></div>
+      <p class="lsi-helper" data-camera-source-help>Hikvision IP and credentials are read from server-side <code>.env</code>.</p>
+      <div class="lsi-camo-settings" data-camo-settings hidden>
+        <label class="lsi-field-label" for="lsi-camo-index">Local Camera Device Index</label>
+        <div class="lsi-select-shell"><iconsax-icon name="camera" type="twotone" size="18" color="currentColor"></iconsax-icon>
+          <select id="lsi-camo-index" data-camo-index {% if not can_control_camera %}disabled{% endif %}>
+            <option value="0">Device 0</option><option value="1">Device 1</option>
+            <option value="2">Device 2</option><option value="3">Device 3</option>
+            <option value="4">Device 4</option><option value="5">Device 5</option>
+            <option value="6">Device 6</option><option value="7">Device 7</option>
+          </select>
+        </div>
+        <p class="lsi-helper">Open Camo Studio on Windows and connect your iPhone first. Select the device showing your iPhone preview. Device 0 may be the laptop webcam. No Hikvision credentials required.</p>
+      </div>
       <div class="lsi-auto-connect-row">
         <div class="lsi-auto-connect-copy">
           <label for="lsi-auto-connect">Auto connect camera</label>
-          <small>Connect when this page opens · AI detection stays off</small>
+          <small>Hikvision only · AI detection stays off</small>
         </div>
         <label class="lsi-auto-switch" for="lsi-auto-connect">
           <input id="lsi-auto-connect" data-auto-connect type="checkbox" role="switch" aria-label="Auto connect camera on page load" {% if not can_control_camera %}disabled{% endif %}>
@@ -134,7 +147,7 @@
       <p class="lsi-helper">Mask overlay shows the last analysed keyframe, not tracking on every live frame. Camera FPS and AI FPS are different measurements.</p>
       <div class="lsi-controls-divider"></div>
       <div class="lsi-mini-heading">Stream Information</div>
-      <dl class="lsi-detail-grid"><div><dt>Connection</dt><dd data-detail-connection>Offline</dd></div><div><dt>Source</dt><dd>RTSP · Hikvision</dd></div><div><dt>Resolution</dt><dd data-detail-resolution>—</dd></div><div><dt>Live AI Inference</dt><dd data-detail-ai>Stopped</dd></div><div><dt>Preview Processing</dt><dd>CPU · OpenCV</dd></div><div><dt>Server Frame Age</dt><dd data-preview-age title="Age since the frame was received by Flask; not glass-to-glass camera latency.">—</dd></div><div><dt>CUDA Support</dt><dd data-live-cuda>Checking…</dd></div></dl>
+      <dl class="lsi-detail-grid"><div><dt>Connection</dt><dd data-detail-connection>Offline</dd></div><div><dt>Source</dt><dd data-detail-source>RTSP · Hikvision</dd></div><div><dt>Resolution</dt><dd data-detail-resolution>—</dd></div><div><dt>Live AI Inference</dt><dd data-detail-ai>Stopped</dd></div><div><dt>Preview Processing</dt><dd>CPU · OpenCV</dd></div><div><dt>Server Frame Age</dt><dd data-preview-age title="Age since the frame was received by Flask; not glass-to-glass camera latency.">—</dd></div><div><dt>CUDA Support</dt><dd data-live-cuda>Checking…</dd></div></dl>
       {% if not can_control_camera %}<div class="lsi-operator-note">You can view an existing camera feed. Only Admin and SuperAdmin can connect or disconnect the source.</div>{% endif %}
     </aside>
   </div>
@@ -149,4 +162,4 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}<script src="{{ url_for('static', filename='js/live_stream.js', v='phase2-live-latest-frame-1') }}" defer></script>{% endblock %}
+{% block extra_js %}<script src="{{ url_for('static', filename='js/live_stream.js', v='camo-a1') }}" defer></script>{% endblock %}

@@ -1,0 +1,24 @@
+# Portable, self-contained GPU DIAGNOSTIC image. Does not depend on prior local bika images.
+# Production inference/training entry points remain to be integrated and tested.
+FROM python:3.12-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 YOLO_CONFIG_DIR=/tmp/Ultralytics
+WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git ca-certificates libglib2.0-0 libgl1 libgomp1 ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+COPY requirements-docker.txt /app/requirements-docker.txt
+RUN python -m pip install --no-cache-dir torch==2.8.0 torchvision==0.23.0 \
+    --index-url https://download.pytorch.org/whl/cu129 \
+    && python -m pip install --no-cache-dir -r /app/requirements-docker.txt
+# Import-tested SAM3 commit from the user's Phase 2B (not floating 'main').
+ARG SAM3_REF=f1647e8d0c1d280991f4d1b7d974c2704537fe66
+RUN git clone https://github.com/facebookresearch/sam3.git /opt/sam3 \
+    && git -C /opt/sam3 checkout "${SAM3_REF}" \
+    && python -m pip install --no-cache-dir /opt/sam3 \
+    && git -C /opt/sam3 rev-parse HEAD > /app/sam3_commit.txt
+# These versions were import-tested with the user's separate diagnostic image.
+RUN python -m pip install --no-cache-dir \
+    "numpy==1.26.4" "opencv-python-headless==4.10.0.84" \
+    "einops==0.8.1" "pycocotools==2.0.9" "decord==0.6.0" "psutil==6.1.1"
+COPY . /app
+CMD ["python", "/app/docker_handover/scripts/check_ai.py"]
