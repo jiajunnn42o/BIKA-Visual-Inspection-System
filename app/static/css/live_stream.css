@@ -345,3 +345,242 @@ html[data-theme=dark] .lsi-page .lsi-monitor-live.is-online { color: #94d1aa; }
 
 /* A sampled AI still image must not use the red LIVE indicator. */
 .lsi-page .lsi-live-tag.is-ai-frame i { background: #e2a43e; box-shadow: none; }
+
+
+/* 2026-10-29 / Live layout: two independently sized column stacks.
+   The events table expands down the left without changing the height of right cards. */
+.lsi-page .lsi-content-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.69fr) minmax(315px, 1fr);
+  align-items: start;
+  gap: 13px;
+  min-width: 0;
+}
+.lsi-page .lsi-content-left,
+.lsi-page .lsi-content-right {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  min-width: 0;
+  align-items: stretch;
+}
+.lsi-page .lsi-content-left > .lsi-panel,
+.lsi-page .lsi-content-right > .lsi-panel {
+  flex: 0 0 auto;  /* do not stretch short alerts/distribution to match events */
+  height: auto;
+  min-width: 0;
+}
+/* Override the older viewer align-self:start rule, which would shrink the viewer. */
+.lsi-page .lsi-content-left > .lsi-viewer-card { align-self: stretch; width: 100%; }
+.lsi-page .lsi-events-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 365px;
+}
+.lsi-page .lsi-events-card .lsi-table-scroll {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow-x: auto;
+  overflow-y: visible; /* added events grow down naturally, rather than stretching the right */
+}
+.lsi-page .lsi-events-card .lsi-no-events { height: 245px; }
+.lsi-page .lsi-alerts-card,
+.lsi-page .lsi-distribution-card { align-self: stretch; }
+@media (max-width: 1300px) {
+  .lsi-page .lsi-content-columns { grid-template-columns: minmax(0, 1.5fr) minmax(290px, 1fr); }
+}
+@media (max-width: 1070px) {
+  .lsi-page .lsi-content-columns { grid-template-columns: minmax(0, 1fr); }
+  .lsi-page .lsi-content-right { gap: 13px; }
+  .lsi-page .lsi-content-right .lsi-controls-card .lsi-detail-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 650px) {
+  .lsi-page .lsi-content-right .lsi-controls-card .lsi-detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lsi-page .lsi-events-card { min-height: 300px; }
+  .lsi-page .lsi-events-card .lsi-no-events { height: 185px; }
+}
+
+/* Enhanced dropdown, scoped to this page only; native select is preserved for
+   existing camera JS, permissions and fallback if enhancement cannot initialize. */
+.lsi-page .lsi-select-shell.lsi-enhanced-select {
+  position: relative;
+  overflow: visible;
+  height: 46px;
+  padding: 0 12px;
+  border: 1px solid rgba(116, 31, 46, .22);
+  border-radius: 12px;
+  background: var(--lsi-card);
+  box-shadow: 0 2px 9px rgba(70, 30, 38, .035);
+  transition: border-color .18s ease, box-shadow .18s ease;
+  z-index: 3;
+}
+.lsi-page .lsi-select-shell.lsi-enhanced-select:hover,
+.lsi-page .lsi-select-shell.lsi-enhanced-select.is-open {
+  border-color: rgba(116, 31, 46, .55);
+  box-shadow: 0 4px 14px rgba(116, 31, 46, .085);
+}
+.lsi-page .lsi-select-shell.lsi-enhanced-select:focus-within {
+  border-color: var(--lsi-wine);
+  box-shadow: 0 0 0 3px rgba(116, 31, 46, .105);
+}
+.lsi-page .lsi-select-shell.lsi-enhanced-select > select {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  overflow: hidden;
+  left: 0;
+  top: 0;
+}
+.lsi-page .lsi-source-trigger {
+  border: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  color: var(--lsi-ink);
+  cursor: pointer;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 500;
+  outline: none;
+}
+.lsi-page .lsi-source-trigger:disabled { cursor: not-allowed; opacity: .6; }
+.lsi-page .lsi-source-trigger-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.lsi-page .lsi-source-chevron {
+  border-right: 1.7px solid currentColor;
+  border-bottom: 1.7px solid currentColor;
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg) translateY(-2px);
+  color: var(--lsi-wine);
+  margin: 0 6px 2px 0;
+  flex: 0 0 8px;
+  transition: transform .16s ease;
+}
+.lsi-page .lsi-select-shell.is-open .lsi-source-chevron { transform: rotate(225deg) translate(-2px, -1px); }
+.lsi-page .lsi-source-menu {
+  position: absolute;
+  z-index: 100;
+  left: -1px;
+  right: -1px;
+  top: calc(100% + 8px);
+  padding: 6px;
+  background: var(--lsi-card);
+  border: 1px solid var(--lsi-border);
+  border-radius: 13px;
+  box-shadow: 0 13px 32px rgba(42, 28, 33, .16);
+  max-height: 310px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.lsi-page .lsi-source-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  min-height: 48px;
+  position: relative;
+  padding: 8px 32px 8px 12px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--lsi-ink);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  transition: background .12s ease;
+}
+.lsi-page .lsi-source-option:hover,
+.lsi-page .lsi-source-option:focus-visible { background: var(--lsi-soft); outline: none; }
+.lsi-page .lsi-source-option.is-selected { background: var(--lsi-soft); color: var(--lsi-wine); }
+.lsi-page .lsi-source-option.is-selected::after {
+  content: '✓'; position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  font-weight: 700; font-size: 14px;
+}
+.lsi-page .lsi-source-option-title { font-size: 12px; font-weight: 550; line-height: 1.3; }
+.lsi-page .lsi-source-option-hint { font-size: 10.3px; color: var(--lsi-muted); line-height: 1.4; margin-top: 3px; }
+.lsi-page .lsi-source-option:disabled { opacity: .5; cursor: not-allowed; }
+.lsi-page .lsi-select-shell:has(.lsi-source-menu:not([hidden])) { z-index: 30; }
+html[data-theme=dark] .lsi-page .lsi-select-shell.lsi-enhanced-select { border-color: rgba(190, 114, 129, .32); }
+html[data-theme=dark] .lsi-page .lsi-source-menu { box-shadow: 0 14px 36px rgba(0, 0, 0, .35); }
+
+/* 2026-10-29: BIKA coloured-mask view + event detail dialog. */
+.lsi-page [data-ai-toggle]:not(:disabled) {
+  color: #fff;
+  background: var(--lsi-wine);
+  border-color: var(--lsi-wine);
+  box-shadow: 0 5px 13px rgba(116,31,46,.14);
+}
+.lsi-page [data-ai-toggle]:not(:disabled):hover,
+.lsi-page [data-ai-toggle].is-active:not(:disabled) {
+  background: var(--lsi-wine-dark);
+  border-color: var(--lsi-wine-dark);
+}
+.lsi-page [data-ai-toggle]:disabled {
+  color: var(--lsi-muted);
+  background: var(--lsi-soft);
+  border-color: var(--lsi-border);
+  box-shadow: none;
+}
+.lsi-page .lsi-event-link {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--lsi-wine);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 5px;
+  border-radius: 7px;
+}
+.lsi-page .lsi-event-link:hover { background: var(--lsi-soft); text-decoration: none; }
+.lsi-page .lsi-event-link:focus-visible,
+.lsi-event-close:focus-visible { outline: 3px solid rgba(116,31,46,.24); outline-offset: 2px; }
+.lsi-event-modal[hidden] {display:none !important;}
+.lsi-event-modal { position:fixed; z-index:10050; inset:0; display:grid; place-items:center; padding:20px; }
+.lsi-event-backdrop { position:absolute; inset:0; background:rgba(18,14,18,.56); backdrop-filter:blur(3px); }
+.lsi-event-dialog {
+  position:relative; z-index:1; width:min(700px, 100%); max-height:min(92vh,850px); overflow-y:auto;
+  border-radius:19px; border:1px solid var(--lsi-border,#e9e9e9); background:var(--lsi-card,#fff);
+  color:var(--lsi-ink,#292929); padding:24px;
+  box-shadow:0 25px 75px rgba(18,9,12,.25); outline:0;
+}
+.lsi-event-modal-head { display:flex; gap:18px; justify-content:space-between; align-items:flex-start; margin-bottom:20px; }
+.lsi-event-kicker { display:block; color:var(--lsi-wine,#741f2e); font-size:10px; letter-spacing:.1em; font-weight:650; margin-bottom:5px; }
+.lsi-event-modal-head h2 { margin:0; font-weight:650; font-size:21px; }
+.lsi-event-modal-head p { font-size:12px; color:var(--lsi-muted,#888); margin:5px 0 0; }
+.lsi-event-close { flex:0 0 35px; height:35px; border:1px solid var(--lsi-border,#eee); border-radius:50%;
+  background:var(--lsi-soft,#f9f5f6); color:var(--lsi-wine,#741f2e); font-size:24px; line-height:1; cursor:pointer; }
+.lsi-event-previews { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:0 0 20px; }
+.lsi-event-previews figure { margin:0; min-width:0; }
+.lsi-event-preview-frame { display:grid; place-items:center; aspect-ratio: 4 / 3; background:var(--lsi-soft,#faf8f8);
+  border:1px solid var(--lsi-border,#eee); border-radius:13px; overflow:hidden; }
+.lsi-event-preview-frame img {display:block; width:100%; height:100%; object-fit:contain; }
+.lsi-event-previews figcaption { text-align:center; color:var(--lsi-muted,#888); font-size:11px; padding-top:8px; }
+.lsi-event-facts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); margin:0; border-top:1px solid var(--lsi-border,#eee); }
+.lsi-event-facts>div { padding:13px 3px; border-bottom:1px solid var(--lsi-border,#eee); min-width:0; }
+.lsi-event-facts>div:nth-child(even) { padding-left:14px; }
+.lsi-event-facts dt {font-size:11px; color:var(--lsi-muted,#888); margin-bottom:6px;}
+.lsi-event-facts dd {font-size:13px; font-weight:600; margin:0; overflow-wrap:anywhere;}
+.lsi-event-footnote {color:var(--lsi-muted,#888); font-size:11px; line-height:1.6; margin:14px 0 0;}
+body.lsi-event-modal-open { overflow:hidden; }
+@media (max-width:560px) {
+ .lsi-event-modal {padding:12px;}
+ .lsi-event-dialog { padding:16px; border-radius:15px; }
+ .lsi-event-previews {gap:9px;}
+ .lsi-event-modal-head h2 {font-size:18px;}
+ .lsi-event-facts>div {padding:11px 2px;}
+}

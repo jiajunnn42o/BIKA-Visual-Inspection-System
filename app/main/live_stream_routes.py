@@ -207,12 +207,34 @@ def live_inspection_ai_feed():
     return response
 
 
+@main_bp.get("/live-inspection/ai-latest.jpg")
+@login_required
+def live_inspection_ai_latest():
+    """Return newest complete annotated frame, or 204 when unchanged.
+
+    A single JPEG response avoids keeping a long-lived MJPEG stream open while
+    GPU inference is much slower than camera FPS. Never starts inference.
+    """
+    sequence, image = live_ai.latest_overlay()
+    headers = {
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        "Pragma": "no-cache",
+        "X-Content-Type-Options": "nosniff",
+        "X-BIKA-AI-Sequence": str(sequence),
+    }
+    if image is None:
+        return Response(status=204, headers=headers)
+    if request.args.get("seq") == str(sequence):
+        return Response(status=204, headers=headers)
+    return Response(image, mimetype="image/jpeg", headers=headers)
+
+
 @main_bp.get("/live-inspection/api/ai/events/<event_id>/image")
 @login_required
 def live_inspection_event_image(event_id):
     if not (len(event_id) == 32 and all(c in "0123456789abcdef" for c in event_id)):
         abort(404)
-    image = live_ai.event_preview(event_id)
+    image = live_ai.event_preview(event_id, variant="mask" if request.args.get("view") == "mask" else "original")
     if image is None:
         abort(404)
     response = send_file(io.BytesIO(image), mimetype="image/jpeg")
