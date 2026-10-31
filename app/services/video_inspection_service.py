@@ -1,10 +1,9 @@
-"""Offline on-entry 09b video inspection with x-only Safe Zone triggering.
+"""Offline video inspection with model-aware keyframe scheduling.
 
-A fast YOLO observation on every exported frame detects new arrivals and
-immediately schedules a validated 09b segmentation/classification on that
-source frame. Optical flow moves masks between 09b keyframes; the output is
-an annotated MP4 without a Safe Zone rectangle. This is not real-time CUDA
-inference and not a guarantee of catching objects missed by YOLO/SAM2.
+Legacy YOLO/SAM2 models retain per-frame YOLO entry triggering. SAM3 model
+packages have no YOLO detector, so they use periodic SAM3 keyframes and
+optical-flow mask propagation instead. Both modes export annotated MP4.
+These are offline estimates, not per-frame segmentation or unique-object counts.
 """
 from __future__ import annotations
 
@@ -27,6 +26,7 @@ from app.services.inspection_pipeline_service import (
     InspectionCancelled,
     InspectionPipelineError,
     inspect_image_bytes_with_progress,
+    get_inspection_context,
 )
 from app.services.video_entry_trigger import VideoEntryTrigger, detect_video_frame_boxes
 from app.services.mask_overlay_service import render_mask_overlay_webp
@@ -35,7 +35,8 @@ from app.services.video_safe_zone import DEFAULT_ZONE, validate_zone
 
 MAX_DURATION_SECONDS = 120.0
 MAX_PREVIEW_FRAMES = 12  # cap returned base64 preview images, not AI inspection frames
-PERIODIC_REFRESH_SECONDS = 3.0  # additional 09b keyframes for drift correction
+PERIODIC_REFRESH_SECONDS = 3.0  # legacy YOLO entry-based refresh
+SAM3_VIDEO_KEYFRAME_SECONDS = 4.0  # SAM3 costs much more per keyframe; keep GPU load bounded
 JPEG_QUALITY = 90
 PREVIEW_SIZE = (960, 540)
 OUTPUT_MAX_WIDTH = 1280
@@ -78,6 +79,7 @@ def _make_annotated_video(
     input_path: Path, output_path: Path, *, fps: float, frame_count: int,
     width: int, height: int, samples: list[dict], safe_zone=DEFAULT_ZONE,
     progress_callback=None, cancel_check=None,
+    method="yolo_per_frame_on_entry_09b_flow_x_zone",
 ) -> dict:
     """Write full-length coloured video and tracking sidecar using optical flow.
 
@@ -169,7 +171,7 @@ def _make_annotated_video(
         _check_cancel(cancel_check)
         with temporary_json.open("w", encoding="utf-8") as fp:
             json.dump({"fps": out_fps, "width": out_width, "height": out_height,
-                       "method": "yolo_per_frame_on_entry_09b_flow_x_zone",
+                       "method": method,
                        "safe_zone": list(tracker.safe_zone),
                        "activations": tracker.activations,
                        "tracks": tracker.track_history, "frames": timeline},
@@ -183,12 +185,26 @@ def _make_annotated_video(
             "height": out_height,
             "fps": round(out_fps, 2),
             "size_bytes": output_path.stat().st_size,
-            "note": "YOLO checks every output frame. New entries trigger full 09b inspection on the arrival frame. The complete biscuit mask is visible (no top/bottom clipping), and the Safe Zone boundary is not drawn. Optical flow estimates intermediate masks; objects missed by the detector or segmentation may still be absent.",
+            "note": (
+                "SAM3 classifies sampled keyframes about every 4 seconds; optical flow "
+                "estimates masks between them. Safe Zone controls which tracked masks "
+                "are visible. This is offline frame sampling, not per-frame AI detection "
+                "or reliable unique-product counting."
+                if method.startswith("sam3_") else
+                "YOLO checks every output frame. New entries trigger full 09b inspection on the arrival frame. "
+                "The complete biscuit mask is visible (no top/bottom clipping), and the Safe Zone "
+                "boundary is not drawn. Optical flow estimates intermediate masks; objects missed "
+                "by the detector or segmentation may still be absent."
+            ),
             "audio_preserved": False,
             "tracked_ids": len(tracker.track_history),
             "safe_zone": list(tracker.safe_zone),
             "zone_triggered_tracks": len(tracker.activations),
-            "tracking_method": "per_frame_yolo_on_entry_09b_with_optical_flow",
+            "tracking_method": (
+                "periodic_sam3_keyframes_with_optical_flow"
+                if method.startswith("sam3_") else
+                "per_frame_yolo_on_entry_09b_with_optical_flow"
+            ),
         }
     finally:
         capture.release()
@@ -207,6 +223,15 @@ def inspect_video_bytes_with_progress(
     progress_callback=None, cancel_check=None, safe_zone=DEFAULT_ZONE,
 ) -> dict:
     safe_zone = validate_zone(safe_zone)
+    # Opt-in demo pipeline; the default SAM3/keyframe implementation remains intact.
+    # This branch NEVER calls get_inspection_context() or SAM3 inference.
+    if os.environ.get("BIKA_REALTIME_VIDEO_ENABLED", "0").strip().lower() in ("1", "true", "yes", "on"):
+        from app.services.realtime_inspection_service import inspect_realtime_video_bytes_with_progress
+        return inspect_realtime_video_bytes_with_progress(
+            video_bytes, filename=filename, output_path=output_path,
+            progress_callback=progress_callback, cancel_check=cancel_check,
+            safe_zone=safe_zone,
+        )
     if not video_bytes:
         raise InspectionPipelineError("Video file is empty.")
     suffix = Path(filename).suffix.lower()
@@ -237,13 +262,27 @@ def inspect_video_bytes_with_progress(
             raise InspectionPipelineError(f"For this video inspection, use clips up to {int(MAX_DURATION_SECONDS)} seconds.")
         if duration_seconds <= 0:
             raise InspectionPipelineError("Video duration could not be determined.")
-        # Analyse every frame that will appear in the encoded output, using
-        # the faster YOLO detector to trigger full 09b only on new entries or
-        # periodic drift-correction frames. No 12-keyframe inference limit.
+        # Current SAM3 model packages intentionally set context["detector"] = None.
+        # Image Inspection already handles this by segmenting directly with SAM3;
+        # the legacy video entry helper does not. Never call YOLO.detect(None).
+        model_context = get_inspection_context()
+        sam3_mode = model_context.get("segmenter") is not None
+        if not sam3_mode and model_context.get("detector") is None:
+            raise InspectionPipelineError(
+                "Active inspection model has neither a YOLO detector nor a SAM3 segmenter."
+            )
+        method = (
+            "sam3_periodic_keyframes_optical_flow_x_zone"
+            if sam3_mode else "yolo_per_frame_on_entry_09b_flow_x_zone"
+        )
         out_fps = min(fps, OUTPUT_MAX_FPS)
         total_output_frames = max(1, int(math.ceil(duration_seconds * out_fps)))
         trigger = VideoEntryTrigger(width=width, zone_x0=safe_zone[0], zone_x1=safe_zone[2])
-        refresh_interval = max(1, round(PERIODIC_REFRESH_SECONDS * out_fps))
+        # SAM3 processes one frame about every 4 seconds, not every output
+        # frame. This avoids loading a second detector and repeated heavy GPU
+        # inference for every frame of an uploaded clip.
+        refresh_seconds = SAM3_VIDEO_KEYFRAME_SECONDS if sam3_mode else PERIODIC_REFRESH_SECONDS
+        refresh_interval = max(1, round(refresh_seconds * out_fps))
         next_refresh = 0
         source_frame = None
         current_src_index = -1
@@ -265,17 +304,24 @@ def inspect_video_bytes_with_progress(
             if progress_callback and (out_index == 0 or out_index % max(1, int(out_fps)) == 0):
                 progress_callback(
                     5 + round(out_index / total_output_frames * 78),
-                    f"Checking biscuit entries: frame {out_index + 1}/{total_output_frames}"
+                    (f"Sampling SAM3 keyframes: frame {out_index + 1}/{total_output_frames}"
+                     if sam3_mode else
+                     f"Checking biscuit entries: frame {out_index + 1}/{total_output_frames}")
                 )
-            # The active 09b detector is reused with identical weights and
-            # thresholds; lightweight detection does NOT assign defect class.
-            boxes = detect_video_frame_boxes(source_frame, cancel_check=cancel_check)
-            arrived = trigger.update(boxes, out_index)
-            inside_box = any(
-                safe_zone[0] * width <= (b[0] + b[2]) * .5 < safe_zone[2] * width
-                for b in boxes
-            )
-            should_inspect = bool(arrived) or (inside_box and out_index >= next_refresh)
+            if sam3_mode:
+                # SAM3 returns masks directly and provides no YOLO detector.
+                # Periodic offline sampling is the safe, resource-bounded
+                # alternative; optical flow propagates masks in the output.
+                arrived = []
+                should_inspect = out_index >= next_refresh
+            else:
+                boxes = detect_video_frame_boxes(source_frame, cancel_check=cancel_check)
+                arrived = trigger.update(boxes, out_index)
+                inside_box = any(
+                    safe_zone[0] * width <= (b[0] + b[2]) * .5 < safe_zone[2] * width
+                    for b in boxes
+                )
+                should_inspect = bool(arrived) or (inside_box and out_index >= next_refresh)
             if not should_inspect:
                 continue
             next_refresh = out_index + refresh_interval
@@ -283,8 +329,10 @@ def inspect_video_bytes_with_progress(
             if progress_callback:
                 progress_callback(
                     5 + round(out_index / total_output_frames * 78),
-                    f"Running 09b on {'new biscuit entry' if arrived else 'drift refresh'} "
-                    f"at {time_seconds:.2f}s (AI frame {len(samples) + 1})"
+                    (f"Running SAM3 keyframe at {time_seconds:.2f}s (AI frame {len(samples) + 1})"
+                     if sam3_mode else
+                     f"Running 09b on {'new biscuit entry' if arrived else 'drift refresh'} "
+                     f"at {time_seconds:.2f}s (AI frame {len(samples) + 1})")
                 )
             encoded, jpeg = cv2.imencode(".jpg", source_frame, [cv2.IMWRITE_JPEG_QUALITY, JPEG_QUALITY])
             if not encoded:
@@ -332,7 +380,7 @@ def inspect_video_bytes_with_progress(
         export_meta = _make_annotated_video(
             path, output_path, fps=fps, frame_count=frame_count, width=width,
             height=height, samples=samples, safe_zone=safe_zone, progress_callback=progress_callback,
-            cancel_check=cancel_check,
+            cancel_check=cancel_check, method=method,
         )
         _check_cancel(cancel_check)
         judged = summed["judged"]
@@ -349,7 +397,7 @@ def inspect_video_bytes_with_progress(
         return {
             "ok": True,
             "kind": "video",
-            "method": "yolo_per_frame_on_entry_09b_flow_x_zone",
+            "method": method,
             "model": model or {},
             "video": {
                 "duration_seconds": round(duration_seconds, 2),
@@ -360,9 +408,17 @@ def inspect_video_bytes_with_progress(
                 "sampled_frames": len(samples),
                 "ai_inspection_frames": len(samples),
                 "preview_frames": len(frames),
-                "yolo_checked_frames": total_output_frames,
-                "entry_trigger_count": trigger.total_triggered,
-                "sample_interval_note": "YOLO checks every output frame; full 09b runs when a new box enters and periodically to correct drift. Between AI frames, masks are optical-flow estimates. This is offline and can take time.",
+                "yolo_checked_frames": 0 if sam3_mode else total_output_frames,
+                "entry_trigger_count": 0 if sam3_mode else trigger.total_triggered,
+                "sample_interval_note": (
+                    "SAM3 runs on periodic keyframes about every 4 seconds. Between keyframes, "
+                    "masks are optical-flow estimates. This is offline, not per-frame inference; "
+                    "the same biscuit may be counted repeatedly across AI keyframes."
+                    if sam3_mode else
+                    "YOLO checks every output frame; full 09b runs when a new box enters and "
+                    "periodically to correct drift. Between AI frames, masks are optical-flow "
+                    "estimates. This is offline and can take time."
+                ),
             },
             "annotated_video": export_meta,
             "frames": frames,

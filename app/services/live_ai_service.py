@@ -78,6 +78,85 @@ def _annotate(frame, objects):
     return canvas
 
 
+
+def _live_mask_roi():
+    """Optional NORMALISED belt area: left,top,right,bottom. Unset -> whole frame.
+
+    Only affects the live UI's observations and overlays; the validated
+    Inspection pipeline and its calibrated outputs are left unchanged.
+    """
+    text = os.getenv('BIKA_LIVE_MASK_ROI', '').strip()
+    if not text:
+        return None
+    try:
+        left, top, right, bottom = (float(v.strip()) for v in text.split(','))
+        if not (0 <= left < right <= 1 and 0 <= top < bottom <= 1):
+            raise ValueError('invalid range')
+        if (right - left) < .10 or (bottom - top) < .10:
+            raise ValueError('area too small')
+        return (left, top, right, bottom)
+    except (TypeError, ValueError):
+        import logging
+        logging.getLogger(__name__).warning('Ignoring invalid BIKA_LIVE_MASK_ROI; expected normalized left,top,right,bottom.')
+        return None
+
+
+def _live_mask_candidates(objects, frame_shape, model_version='', roi=None):
+    """Conservative, live-only sanity gate to reduce obvious SAM3 false masks.
+
+    Does not assert an object is a biscuit: a model trained with explicit
+    background/negative examples is needed for a reliable such guarantee.
+    Keeps object ordering and classification without altering Inspection.
+    """
+    height, width = frame_shape[:2]
+    is_prawn_model = str(model_version).lower().startswith(('v3', 'v4')) or 'prawn' in str(model_version).lower()
+    try:
+        max_fraction = max(.01, min(.50, float(os.getenv('BIKA_LIVE_MASK_MAX_FRAME_FRACTION', '.15'))))
+    except (ValueError, TypeError):
+        max_fraction = .15
+    try:
+        min_aspect = max(1., min(5., float(os.getenv('BIKA_LIVE_MASK_MIN_PRAWN_ASPECT', '1.25'))))
+    except (ValueError, TypeError):
+        min_aspect = 1.25
+    try:
+        min_detection_conf = max(0., min(1., float(os.getenv('BIKA_LIVE_MASK_MIN_DETECTION_CONF', '0.0'))))
+    except (ValueError, TypeError):
+        min_detection_conf = 0.0
+
+    selected = []
+    for item in objects:
+        if not isinstance(item, dict):
+            continue
+        # Ignore edge / occluded / not-judged candidates rather than painting
+        # every SAM3 proposal returned by the serialized Inspection result.
+        if not item.get('in_safe_zone') or str(item.get('decision', '')).lower() not in ('normal', 'defect'):
+            continue
+        if not item.get('polygons'):
+            continue
+        box = item.get('bbox') or {}
+        try:
+            x0, y0 = float(box['x0']), float(box['y0'])
+            x1, y1 = float(box['x1']), float(box['y1'])
+            area = float(item.get('mask_area') or 0)
+            confidence = float(item.get('detection_confidence') or 0)
+        except (ValueError, TypeError, KeyError):
+            continue
+        bw, bh = x1 - x0 + 1, y1 - y0 + 1
+        if bw <= 1 or bh <= 1 or area <= 0 or area > height * width * max_fraction:
+            continue
+        if confidence < min_detection_conf:
+            continue
+        if is_prawn_model and max(bw, bh) / max(1., min(bw, bh)) < min_aspect:
+            continue
+        if roi is not None:
+            cx = float((item.get('centre') or {}).get('x', (x0 + x1) / 2)) / max(1, width)
+            cy = float((item.get('centre') or {}).get('y', (y0 + y1) / 2)) / max(1, height)
+            if not (roi[0] <= cx <= roi[2] and roi[1] <= cy <= roi[3]):
+                continue
+        selected.append(item)
+    return selected
+
+
 class LiveAI:
     def __init__(self):
         self.lock = threading.RLock()
@@ -101,6 +180,7 @@ class LiveAI:
         self.events = []
         self.last_events = {}
         self._sample_sequence = -1
+        self.mask_suppressed_last = 0
 
     def _reset(self):
         self.error = ''
@@ -115,6 +195,7 @@ class LiveAI:
         self.events = []
         self.last_events = {}
         self._sample_sequence = -1
+        self.mask_suppressed_last = 0
 
     def start(self, app, camera):
         if camera.status().get('state') != 'online':
@@ -130,6 +211,8 @@ class LiveAI:
                                            args=(app, camera, self.stop_signal, self.generation),
                                            daemon=True, name='bika-live-ai-09b')
             self.thread.start()
+        if os.environ.get('BIKA_REALTIME_LIVE_ENABLED', '0').strip().lower() in ('1','true','yes','on'):
+            return True, 'Starting YOLO + selective v4 camera tracking (provisional counts).'
         return True, 'Starting sampled 09b AI inspection on the latest camera frames.'
 
     def stop(self):
@@ -162,20 +245,23 @@ class LiveAI:
                 'overlay_ready': self.jpeg is not None,
                 'model_device': self.device,
                 'model_version': self.model_version,
-                'events': [{k: v for k, v in ev.items() if k != 'preview'} for ev in self.events[:30]] if include_events else [],
+                'events': [{k: v for k, v in ev.items() if k not in ('preview', 'mask_preview')} for ev in self.events[:30]] if include_events else [],
                 'event_total': len(self.events),
-                'counts_are_observations': True,
+                'mask_suppressed_last': self.mask_suppressed_last,
+                'mask_filter_mode': 'live-preview-only',
+                'counts_are_observations': not (os.environ.get('BIKA_REALTIME_LIVE_ENABLED','0').strip().lower() in ('1','true','yes','on')),
+                'counts_are_provisional': os.environ.get('BIKA_REALTIME_LIVE_ENABLED','0').strip().lower() in ('1','true','yes','on'),
             }
 
     def latest_overlay(self):
         with self.lock:
             return self.jpeg_sequence, self.jpeg
 
-    def event_preview(self, key):
+    def event_preview(self, key, variant="original"):
         with self.lock:
             for ev in self.events:
                 if ev['id'] == key:
-                    return ev.get('preview')
+                    return ev.get('mask_preview' if variant == 'mask' else 'preview')
         return None
 
     def _record_events(self, frame, objects, moment):
@@ -199,22 +285,58 @@ class LiveAI:
             x1 = _safe_int(bbox.get('x1', x+35), W-1, 0, W)
             y1 = _safe_int(bbox.get('y1', y+35), H-1, 0, H)
             margin = 18
-            crop = frame[max(0, y0-margin): min(H, max(y0+1, y1)+margin),
-                         max(0, x0-margin): min(W, max(x0+1, x1)+margin)]
+            left = max(0, x0 - margin)
+            top = max(0, y0 - margin)
+            right = min(W, max(x0+1, x1) + margin)
+            bottom = min(H, max(y0+1, y1) + margin)
+            crop = frame[top:bottom, left:right]
             jpeg = None
+            mask_jpeg = None
             if crop.size:
-                scale = min(1.0, 260 / max(crop.shape[:2]))
+                # Render ONLY this candidate's polygon onto the companion crop.
+                # This uses its already-computed SAM3 polygons; no second GPU call.
+                import numpy as np
+                masked_crop = crop.copy()
+                colour = _colour_bgr(obj.get('mask_colour'))
+                for poly in (obj.get('polygons') or [])[:16]:
+                    if len(poly) < 3:
+                        continue
+                    coords = np.asarray(poly, dtype=np.float32)
+                    if coords.ndim != 2 or coords.shape[1] != 2:
+                        continue
+                    coords[:, 0] = np.clip(coords[:, 0] - left, 0, crop.shape[1]-1)
+                    coords[:, 1] = np.clip(coords[:, 1] - top, 0, crop.shape[0]-1)
+                    contour = coords.astype(np.int32)
+                    if len(contour) < 3:
+                        continue
+                    region = np.zeros(crop.shape[:2], np.uint8)
+                    cv2.fillPoly(region, [contour], 255)
+                    tinted = np.empty_like(masked_crop)
+                    tinted[:] = colour
+                    blend = cv2.addWeighted(masked_crop, .61, tinted, .39, 0)
+                    cv2.copyTo(blend, region, masked_crop)
+                    cv2.polylines(masked_crop, [contour], True, (255, 255, 255), 2, cv2.LINE_AA)
+                scale = min(1.0, 320 / max(crop.shape[:2]))
                 if scale < 1.0:
-                    crop = cv2.resize(crop, None, fx=scale, fy=scale)
-                ok, encoded = cv2.imencode('.jpg', crop, [int(cv2.IMWRITE_JPEG_QUALITY), 76])
+                    size = (max(1, int(round(crop.shape[1]*scale))), max(1, int(round(crop.shape[0]*scale))))
+                    crop = cv2.resize(crop, size, interpolation=cv2.INTER_AREA)
+                    masked_crop = cv2.resize(masked_crop, size, interpolation=cv2.INTER_AREA)
+                ok, encoded = cv2.imencode('.jpg', crop, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
                 if ok:
                     jpeg = encoded.tobytes()
+                ok, encoded = cv2.imencode('.jpg', masked_crop, [int(cv2.IMWRITE_JPEG_QUALITY), 82])
+                if ok:
+                    mask_jpeg = encoded.tobytes()
             new_events.append({
                 'id': uuid.uuid4().hex,
                 'time': datetime.now().astimezone().strftime('%H:%M:%S'),
                 'label': klass,
                 'confidence': obj.get('class_confidence'),
+                'detection_confidence': obj.get('detection_confidence'),
+                'decision': obj.get('decision', 'defect'),
+                'model_version': self.model_version,
                 'preview': jpeg,
+                'mask_preview': mask_jpeg,
             })
         self.last_events = {k: v for k, v in self.last_events.items() if moment - v < 30}
         self.events = (new_events + self.events)[:50]
@@ -222,9 +344,13 @@ class LiveAI:
     def _worker(self, app, camera, stopped, generation):
         # Only the worker loads model modules. The preview/status endpoints never do.
         try:
+            if os.environ.get('BIKA_REALTIME_LIVE_ENABLED','0').strip().lower() in ('1','true','yes','on'):
+                from app.services.realtime_inspection_service import run_realtime_live_worker
+                return run_realtime_live_worker(self, app, camera, stopped, generation)
             import cv2
             import numpy as np
             from app.services.inspection_pipeline_service import inspect_image_bytes_with_progress
+            roi = _live_mask_roi()
             width_limit = _safe_int(os.getenv('BIKA_LIVE_AI_MAX_WIDTH', '1280'), 1280, 640, 1920)
             interval = max(2.0, min(30.0, float(os.getenv('BIKA_LIVE_AI_MIN_INTERVAL', '3'))))
             with app.app_context():
@@ -268,10 +394,11 @@ class LiveAI:
                     )
                     if stopped.is_set():
                         return
-                    objects = result.get('objects') or []
+                    all_objects = result.get('objects') or []
+                    model_version = (result.get('model') or {}).get('version') or ''
+                    objects = _live_mask_candidates(all_objects, frame.shape, model_version, roi)
                     annotated = _annotate(frame, objects)
                     valid, snapshot = cv2.imencode('.jpg', annotated, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
-                    summary = result.get('summary') or {}
                     duration = time.monotonic()-start
                     from app.services.inspection_device_status_service import runtime_model_device_snapshot
                     model_device = runtime_model_device_snapshot().get('label', 'Unverified')
@@ -279,9 +406,12 @@ class LiveAI:
                         if generation != self.generation:
                             return
                         self.sample_count += 1
-                        self.observed += int(summary.get('judged') or 0)
-                        self.normal += int(summary.get('normal') or 0)
-                        self.defective += int(summary.get('defect') or 0)
+                        # Live statistics must match masks actually shown, not
+                        # the unfiltered offline Inspection summary.
+                        self.mask_suppressed_last = max(0, len(all_objects) - len(objects))
+                        self.observed += len(objects)
+                        self.normal += sum(str(o.get('decision', '')).lower() == 'normal' for o in objects)
+                        self.defective += sum(str(o.get('decision', '')).lower() == 'defect' for o in objects)
                         self.last_duration = duration
                         self.ai_fps = 1 / max(duration, interval) if duration > 0 else None
                         self.device = model_device

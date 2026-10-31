@@ -907,7 +907,7 @@
         );
 
         if (videoSafeZoneCard) {
-            videoSafeZoneCard.hidden = mode !== "video";
+            videoSafeZoneCard.hidden = true;
         }
 
 
@@ -2527,12 +2527,19 @@
                 dot.className =
                     "inspection-defect-row-dot";
 
-                dot.style.setProperty(
-                    "--defect-colour",
-                    item.colour
-                    ||
-                    "#7A7A7A"
-                );
+                const colourByClass = {
+                        normal: "#37B56D",
+                        too_dark: "#FF00AA",
+                        too_short: "#2DBEFF",
+                        fractured: "#E6464C",
+                        bent_snack: "#8C5CF6"
+                    };
+                    const classKey = String(item.class_name || "")
+                        .trim().toLowerCase().replace(/[\s-]+/g, "_");
+                    const colour = colourByClass[classKey] || item.colour || "#7A7A7A";
+                    dot.style.setProperty("--defect-colour", colour);
+                    dot.style.backgroundColor = colour;
+                    dot.style.borderColor = colour;
 
 
                 const label =
@@ -2901,6 +2908,7 @@
         if (selectedObjectCard) selectedObjectCard.hidden = true;
 
         const frames = Array.isArray(data.frames) ? data.frames : [];
+        const isRealtimeVideo = String(data.method || "").startsWith("yolo11n_seg_selective_v4");
         if (resultCount) {
             resultCount.textContent = `${data.video?.ai_inspection_frames ?? frames.length} AI inspection frames`;
             resultCount.hidden = false;
@@ -2913,7 +2921,7 @@
         if (media.url) {
             const title = document.createElement("div");
             title.className = "inspection-video-analysis-heading";
-            title.textContent = "Tracked Colour Mask Video (MP4)";
+            title.textContent = isRealtimeVideo ? "YOLO Tracked Inspection Video (MP4)" : "Tracked Colour Mask Video (MP4)";
             const movieWrap = document.createElement("div");
             movieWrap.className = "inspection-video-player-wrap";
             const movie = document.createElement("video");
@@ -2930,7 +2938,9 @@
             hitArea.title = "Click a coloured biscuit to view its crop and class on the right";
             const selectHint = document.createElement("p");
             selectHint.className = "inspection-video-select-hint";
-            selectHint.textContent = "Click a coloured biscuit in the video to see its original crop and defect class. The horizontal Safe Zone is an invisible activation boundary; whole masks are shown without clipping.";
+            selectHint.textContent = isRealtimeVideo
+                ? "Click a coloured mask to inspect the cached v4 prediction and Track ID. Yellow line = motion-gated counting. Counts are provisional."
+                : "Click a coloured biscuit in the video to see its original crop and defect class. The horizontal Safe Zone is an invisible activation boundary; whole masks are shown without clipping.";
             movieWrap.append(movie, hitArea);
             wrapper.append(title, movieWrap, selectHint);
             const actions = document.createElement("div");
@@ -3038,7 +3048,7 @@
             const evidence = document.createElement("details");
             evidence.className = "inspection-video-evidence";
             const evidenceHeading = document.createElement("summary");
-            evidenceHeading.textContent = `09b AI Inspection Evidence (${frames.length} preview frames of ${data.video?.ai_inspection_frames ?? frames.length} total)`;
+            evidenceHeading.textContent = `${isRealtimeVideo ? "YOLO + v4" : "09b"} AI Inspection Evidence (${frames.length} preview frames of ${data.video?.ai_inspection_frames ?? frames.length} total)`;
             const picture = document.createElement("img");
             picture.className = "inspection-video-analysis-frame";
             picture.alt = "09b AI keyframe evidence";
@@ -3083,7 +3093,11 @@
         note.textContent = data.counting_note || "Only AI keyframes contribute to statistical counts.";
         wrapper.append(note);
         renderSummary(data);
-        setStatus(`Annotated MP4 ready · ${media.zone_triggered_tracks ?? 0} mask activations · ${data.video?.ai_inspection_frames ?? frames.length} 09b inference frames (not unique biscuit counts).`, "success");
+        if (isRealtimeVideo) {
+            setStatus(`Annotated MP4 ready · ${data.summary?.judged ?? 0} provisional motion-gated events · ${data.video?.ai_inspection_frames ?? 0} source frames inspected.`, "success");
+        } else {
+            setStatus(`Annotated MP4 ready · ${media.zone_triggered_tracks ?? 0} mask activations · ${data.video?.ai_inspection_frames ?? frames.length} 09b inference frames (not unique biscuit counts).`, "success");
+        }
     };
 
     const restorePersistedInspection = async () => {

@@ -350,39 +350,168 @@
   const aiViewToggle = get('[data-ai-view-toggle]');
   const aiViewState = get('[data-ai-view-state]');
   let aiState = null;
-  let aiViewPreference = 'raw'; // Keep the true camera preview as the default; sampled AI images can be seconds old.
-  let aiFeedStarted = false;
+  let aiViewPreference = 'ai'; // Automatically show fresh annotated keyframes once inference finishes; raw preview remains selectable.
+  // Read-only JPEG polling. Never runs another inference and never hides the
+  // continuous camera feed before a complete AI keyframe has decoded.
+  const aiLatestURL = page.dataset.aiLatestUrl;
+  let aiImageLoaded = false;
+  let aiSequence = null;
+  let aiImageBlobURL = null;
+  let aiTimer = null;
+  let aiRequest = null;
+  let aiPollEpoch = 0;
+  let aiPolling = false;
   let lastEventsSignature = '';
   const aiField = selector => get(selector);
 
   function paintView() {
     const cameraOnline = lastCameraStatus?.state === 'online';
-    const ready = cameraOnline && !!aiState?.active && !!aiState?.overlay_ready;
-    const showAI = ready && aiViewPreference === 'ai';
+    const active = cameraOnline && !!aiState?.active;
+    const showAI = active && aiImageLoaded && aiViewPreference === 'ai';
     image.hidden = !cameraOnline || showAI;
     aiImage.hidden = !showAI;
-    aiViewToggle.disabled = !ready;
-    aiViewToggle.textContent = showAI ? 'Show raw feed' : 'View AI keyframe';
-    aiViewState.textContent = showAI ? 'Sampled keyframe · not live' : aiState?.active ? 'Raw camera · AI running' : 'Raw camera';
-    // Never label a frozen, previously analysed frame as a live camera image.
+    // Allow the operator to select AI view while waiting for the first mask.
+    aiViewToggle.disabled = !active;
+    aiViewToggle.textContent = showAI ? 'Show raw feed' : 'Show AI masks';
+    aiViewState.textContent = showAI ? 'Colour masks · latest analysed keyframe'
+      : active && aiViewPreference === 'ai' ? 'Analysing · showing raw feed until masks are ready'
+      : active ? 'Raw camera · AI running' : 'Raw camera';
     if (cameraOnline) {
-      liveLabel.textContent = showAI ? 'AI KEYFRAME · NOT LIVE' : 'LIVE';
+      liveLabel.textContent = showAI ? 'AI MASK · SAMPLED KEYFRAME' : 'LIVE CAMERA';
     }
     liveTag.classList.toggle('is-ai-frame', showAI);
-    if (ready && !aiFeedStarted) {
-      aiImage.src = page.dataset.aiFeedUrl + '?t=' + Date.now();
-      aiFeedStarted = true;
-    }
-    if (!ready && aiFeedStarted) {
-      aiImage.removeAttribute('src');
-      aiFeedStarted = false;
+  }
+
+  function stopAIPolling() {
+    aiPollEpoch++;
+    aiPolling = false;
+    if (aiTimer != null) clearTimeout(aiTimer);
+    aiTimer = null;
+    if (aiRequest) aiRequest.abort();
+    aiRequest = null;
+    aiSequence = null;
+    aiImageLoaded = false;
+    aiImage.removeAttribute('src');
+    if (aiImageBlobURL) URL.revokeObjectURL(aiImageBlobURL);
+    aiImageBlobURL = null;
+  }
+
+  async function pollAIFrame(epoch) {
+    if (!aiPolling || epoch !== aiPollEpoch) return;
+    const started = performance.now();
+    const request = new AbortController();
+    aiRequest = request;
+    let previousURL = null;
+    try {
+      const suffix = aiSequence == null ? '' : '?seq=' + encodeURIComponent(aiSequence);
+      const response = await fetch(aiLatestURL + suffix, {
+        credentials: 'same-origin', cache: 'no-store', signal: request.signal
+      });
+      if (response.status === 200) {
+        const sequence = response.headers.get('X-BIKA-AI-Sequence');
+        const blob = await response.blob();
+        if (!blob.type.startsWith('image/') || !blob.size) throw new Error('Invalid AI image');
+        const url = URL.createObjectURL(blob);
+        const probe = new Image();
+        probe.src = url;
+        try {
+          await probe.decode();
+        } catch (error) {
+          URL.revokeObjectURL(url);
+          throw error;
+        }
+        if (!aiPolling || epoch !== aiPollEpoch || request.signal.aborted) {
+          URL.revokeObjectURL(url);
+          return;
+        }
+        previousURL = aiImageBlobURL;
+        aiImage.src = url;
+        aiImageBlobURL = url;
+        aiSequence = sequence || aiSequence;
+        aiImageLoaded = true;
+        paintView();
+        if (previousURL) URL.revokeObjectURL(previousURL);
+      } else if (response.status !== 204) {
+        throw new Error('AI image unavailable');
+      }
+    } catch (error) {
+      // Keep showing the last successfully decoded keyframe, or the raw camera.
+      // Temporary endpoint errors must never switch the stage to black.
+      if (!request.signal.aborted && aiPolling && epoch === aiPollEpoch && !aiImageLoaded) {
+        paintView();
+      }
+    } finally {
+      if (aiRequest === request) aiRequest = null;
+      if (aiPolling && epoch === aiPollEpoch) {
+        aiTimer = setTimeout(() => pollAIFrame(epoch),
+          document.hidden ? 1600 : Math.max(350, 800 - (performance.now() - started)));
+      }
     }
   }
+
+  function syncAIPolling() {
+    const active = lastCameraStatus?.state === 'online' && !!aiState?.active;
+    if (active && aiLatestURL) {
+      if (!aiPolling) {
+        aiPolling = true;
+        const epoch = ++aiPollEpoch;
+        pollAIFrame(epoch);
+      }
+    } else if (aiPolling) {
+      stopAIPolling();
+    }
+  }
+
   aiViewToggle?.addEventListener('click', () => {
     aiViewPreference = aiViewPreference === 'ai' ? 'raw' : 'ai';
     paintView();
   });
-  aiImage?.addEventListener('error', () => { aiFeedStarted = false; });
+
+  // The events table retains the same data source; View opens an in-page dialog.
+  const eventModal = get('[data-event-modal]');
+  const eventDialog = get('[data-event-dialog]');
+  const eventClose = get('[data-event-modal-close]');
+  let modalOpener = null;
+  const percent = value => {
+    if (value == null || value === '') return '—';
+    const number = Number(value);
+    return Number.isFinite(number) ? (number * 100).toFixed(1) + '%' : '—';
+  };
+  function closeEventDetails() {
+    if (!eventModal || eventModal.hidden) return;
+    eventModal.hidden = true;
+    document.body.classList.remove('lsi-event-modal-open');
+    get('[data-event-original]').removeAttribute('src');
+    get('[data-event-mask]').removeAttribute('src');
+    if (modalOpener?.isConnected) modalOpener.focus();
+  }
+  function openEventDetails(ev, trigger) {
+    if (!eventModal) return;
+    const base = page.dataset.aiEventUrlBase + encodeURIComponent(ev.id) + '/image';
+    get('[data-event-original]').src = base;
+    get('[data-event-mask]').src = base + '?view=mask';
+    get('[data-event-class]').textContent = ev.label || 'Defect';
+    get('[data-event-confidence]').textContent = percent(ev.confidence);
+    get('[data-event-detection]').textContent = percent(ev.detection_confidence);
+    get('[data-event-time]').textContent = ev.time || '—';
+    get('[data-event-decision]').textContent = ev.decision || 'Defect';
+    get('[data-event-model]').textContent = ev.model_version || '—';
+    modalOpener = trigger;
+    eventModal.hidden = false;
+    document.body.classList.add('lsi-event-modal-open');
+    eventDialog?.focus();
+  }
+  eventClose?.addEventListener('click', closeEventDetails);
+  get('[data-event-modal-backdrop]')?.addEventListener('click', closeEventDetails);
+  document.addEventListener('keydown', event => {
+    if (eventModal?.hidden) return;
+    if (event.key === 'Escape') { event.preventDefault(); closeEventDetails(); }
+    if (event.key === 'Tab' && eventDialog) {
+      // Only one interactive control in the dialog at present.
+      event.preventDefault();
+      eventClose?.focus();
+    }
+  });
 
   function renderEvents(events) {
     const tbody = aiField('[data-ai-events-body]');
@@ -414,27 +543,31 @@
       const conf = Number(ev.confidence);
       row.insertCell().textContent = ev.confidence == null || !Number.isFinite(conf) ? '—' : (conf * 100).toFixed(1) + '%';
       const action = row.insertCell();
-      const link = document.createElement('a');
-      link.href = previewUrl;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.textContent = 'View';
-      link.className = 'lsi-event-link';
-      action.append(link);
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = 'View';
+      button.className = 'lsi-event-link';
+      button.setAttribute('aria-label', `View details for ${ev.label || 'defect'} at ${ev.time || 'unknown time'}`);
+      button.addEventListener('click', () => openEventDetails(ev, button));
+      action.append(button);
     }
   }
 
   function renderAI(ai, camera) {
+    const previousActive = !!aiState?.active;
     aiState = ai || {state: 'stopped'};
+    if (!previousActive && aiState.active) aiViewPreference = 'ai';
     const active = !!aiState.active;
     const online = camera?.state === 'online';
     aiToggle.disabled = !authorizedControl || busy || (!online && !active);
     aiToggleLabel.textContent = active ? 'Stop Detection' : aiState.state === 'error' ? 'Restart Detection' : 'Start Detection';
-    aiToggle.title = active ? 'Stop the AI sampler; keep the camera online' : 'Start sampled 09b inference on live keyframes';
+    const isTrackedLive = !!aiState.counts_are_provisional;
+    aiToggle.title = active ? 'Stop AI detection; keep the camera online' :
+      isTrackedLive ? 'Start YOLO tracked live detection' : 'Start sampled 09b inference on live keyframes';
     aiToggle.classList.toggle('is-active', active);
     aiField('[data-ai-state]').textContent = aiState.state === 'error' ? 'Error' :
       active ? (aiState.stage || 'Running') : 'Stopped';
-    aiField('[data-detail-ai]').textContent = active ? 'Running · sampled keyframes' : 'Stopped';
+    aiField('[data-detail-ai]').textContent = active ? (isTrackedLive ? 'Running · tracked YOLO + v4' : 'Running · sampled keyframes') : 'Stopped';
     aiField('[data-ai-fps]').textContent = aiState.ai_fps == null ? '—' : `${Number(aiState.ai_fps).toFixed(2)} FPS`;
     aiField('[data-ai-inference]').textContent = aiState.inference_seconds == null ? '—' : `${Number(aiState.inference_seconds).toFixed(2)} s`;
     let age = '—';
@@ -445,21 +578,23 @@
     aiField('[data-ai-keyframe-age]').textContent = age;
     aiField('[data-stat-samples]').textContent = aiState.sample_count ? String(aiState.sample_count) : '—';
     aiField('[data-stat-reject]').textContent = aiState.sampled_reject_rate == null ? '—' : `${Number(aiState.sampled_reject_rate).toFixed(1)}%`;
-    aiField('[data-ai-events-badge]').textContent = active ? 'Collecting keyframes' : aiState.event_total ? 'Last session' : 'Not collecting';
+    aiField('[data-ai-events-badge]').textContent = active ? (isTrackedLive ? 'Tracking defect events' : 'Collecting keyframes') : aiState.event_total ? 'Last session' : 'Not collecting';
     const events = aiState.events || [];
     renderEvents(events);
     aiField('[data-ai-alert-badge]').textContent = !active ? 'Waiting' : events.length ? `${events.length} candidates` : 'Monitoring';
     aiField('[data-ai-alert-text]').textContent = aiState.state === 'error' ? (aiState.message || 'AI error') :
-      !active ? 'Start AI to monitor sampled defects.' : events.length ?
+      !active ? 'Start AI to monitor possible defects.' : events.length ?
       `${events.length} possible defect events in this session. Manual verification required.` :
-      'No sampled defect candidates yet. AI is analysing available keyframes.';
-    aiField('[data-ai-distribution-badge]').textContent = events.length ? 'Sampled events' : 'No data';
+      isTrackedLive ? 'No motion-gated defect events yet; counts are provisional.' : 'No sampled defect candidates yet. AI is analysing available keyframes.';
+    aiField('[data-ai-distribution-badge]').textContent = events.length ? (isTrackedLive ? 'Provisional events' : 'Sampled events') : 'No data';
     const categories = new Map();
     for (const ev of events) categories.set(ev.label, (categories.get(ev.label) || 0) + 1);
     aiField('[data-ai-ring-total]').textContent = events.length ? String(events.length) : '—';
     aiField('[data-ai-distribution-text]').textContent = categories.size ?
-      [...categories.entries()].map(([label, count]) => `${label}: ${count}`).join(' · ') + '. Sampled candidates; not unique products.' :
-      'Waiting for sampled defect events; not unique products.';
+      [...categories.entries()].map(([label, count]) => `${label}: ${count}`).join(' · ') +
+      (isTrackedLive ? '. Motion-gated Track IDs; physical uniqueness unverified.' : '. Sampled candidates; not unique products.') :
+      (isTrackedLive ? 'Waiting for motion-gated defect events (provisional).' : 'Waiting for sampled defect events; not unique products.');
+    syncAIPolling();
     paintView();
     if (aiState.state === 'error' && aiState.message) setMessage(aiState.message, true);
   }
@@ -573,5 +708,5 @@ window.addEventListener('pagehide', () => clearInterval(cudaRefreshInterval), {o
     }
   })();
   const interval = setInterval(checkStatus, 1600);
-  window.addEventListener('pagehide', () => { clearInterval(interval); stopLatestPreview(); }, {once:true});
+  window.addEventListener('pagehide', () => { clearInterval(interval); stopLatestPreview(); stopAIPolling(); }, {once:true});
 })();

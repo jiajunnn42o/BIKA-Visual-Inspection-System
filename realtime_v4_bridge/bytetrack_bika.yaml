@@ -1,0 +1,9 @@
+# CPU tracker tuning for crowded prawn-stick scenes.
+# Uses exactly one lightweight YOLO Seg model; no extra GPU model.
+tracker_type: bytetrack
+track_high_thresh: 0.25
+track_low_thresh: 0.10
+new_track_thresh: 0.40
+track_buffer: 45
+match_thresh: 0.80
+fuse_score: True
