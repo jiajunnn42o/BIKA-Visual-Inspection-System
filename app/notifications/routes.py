@@ -701,3 +701,19 @@ def mark_all_notifications_read():
             notifications
         ),
     )
+
+# BIKA-LIVE-GLOBAL-ALERTS-V1
+@notifications_bp.route('/api/live-system-health', methods=['POST'])
+@login_required
+def live_system_health_notifications():
+    """Poll camera health across all signed-in pages; append persistent bell alerts."""
+    if getattr(current_user, 'role', None) not in {'admin', 'superadmin'}:
+        return jsonify(ok=True, unread_alerts=[]), 200
+    from app.services.live_system_alerts import poll_camera_alerts
+    try:
+        data = poll_camera_alerts(current_user.id)
+    except Exception:
+        from flask import current_app
+        current_app.logger.exception('Unable to retrieve Live system alerts')
+        return jsonify(ok=False, message='Camera health monitoring temporarily unavailable'), 503
+    return jsonify(data)

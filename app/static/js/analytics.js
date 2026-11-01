@@ -29,7 +29,7 @@
   let reviewRecord = null;
   let selectedObject = null;
   let reviewList = [];
-  let selectedQueue = 'flagged';
+  let selectedQueue = 'recent';
   let reviewSourceImage = null; // Loaded source image shared by full-frame overlay and crops.
   const admin = root.dataset.canReview === 'true';
 
@@ -61,6 +61,23 @@
       const payload = await response.json();
       if (!payload.ok || !payload.analytics) throw new Error('Invalid analytics response');
       data = payload.analytics;
+      // BIKA-TREND-REVIEW-MASK-V1: Separate, clearly-labelled provisional data.
+      try {
+        const url = `/analytics/api/provisional?${params.toString()}`;
+        const extraResponse = await fetch(url, {credentials:'same-origin', signal:controller.signal});
+        if (extraResponse.ok) {
+          const extraPayload = await extraResponse.json();
+          const extra = extraPayload?.provisional || {};
+          data.provisional_trend = Array.isArray(extra.daily) ? extra.daily : [];
+          if (admin && data.review && Array.isArray(extra.recent_runs)) {
+            data.review.recent_runs = [...extra.recent_runs, ...(data.review.recent_runs||[])]
+              .sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,80);
+          }
+        }
+      } catch (extraError) {
+        if (extraError.name === 'AbortError') throw extraError;
+        data.provisional_trend = [];
+      }
       renderAll();
       const runs = data.kpi.inspections;
       status(`${data.filter.label} · ${fmt(runs)} inspection ${runs === 1 ? 'run' : 'runs'} · Updated from saved records`);
@@ -72,18 +89,45 @@
 
   function renderAll() {
     const k = data.kpi;
+    const live = data.live || {};
+    const liveRuns = Math.max(0, Number(live.sessions) || 0);
+    const liveObservations = Math.max(0, Number(live.defect_observations) || 0);
+    const totalRuns = Number(k.inspections || 0);
     const map = {
       '[data-kpi-good]':pct(k.good_rate), '[data-kpi-defect]':pct(k.defect_rate),
       '[data-kpi-standard]':pct(k.meeting_standard_rate),
       '[data-kpi-good-foot]':`Target ${pct(k.target_good)}`,
-      '[data-kpi-defect-foot]':`${fmt(k.defects)} defective observations`,
-      '[data-kpi-standard-foot]':`${fmt(k.meeting_standard_count)} of ${fmt(k.inspections)} runs · Requirement ${pct(k.pass_requirement)}`,
-      '[data-stat-runs]':fmt(k.inspections), '[data-stat-judged]':fmt(k.judged),
+      '[data-kpi-defect-foot]':`${fmt(k.defects)} defects (est.)`,
+      '[data-kpi-standard-foot]':`${fmt(k.meeting_standard_count)} / ${fmt(Math.max(0, Number(k.inspections || 0) - Number(k.incomplete_live_sessions || 0)))} runs · Target ${pct(k.pass_requirement)}`,
+      '[data-stat-runs]':fmt(totalRuns), '[data-stat-judged]':fmt(k.judged),
       '[data-stat-normal]':fmt(k.normal), '[data-stat-defective]':fmt(k.defects),
       '[data-footer-note]':data.note,
     };
     Object.entries(map).forEach(([selector, value]) => { const el = one(selector); if (el) el.textContent = value; });
-    renderTrend(); renderShifts();
+    const clsLine = one('[data-unified-live-class-line]');
+    if (clsLine) {
+      clsLine.hidden = Boolean(data.kpi?.combined_basis) || !liveObservations;
+      if (!clsLine.hidden) {
+        const cls = live.classes || {};
+        const parts = ['Fractured','Too Dark','Too Short','Bent Snack']
+          .filter(name => Number(cls[name]) > 0)
+          .map(name => `${name}: ${fmt(cls[name])}`);
+        clsLine.textContent = `Live observations (provisional): ${parts.join(' · ')}`;
+      }
+    }
+    renderTrend();
+    const info = one('[data-unified-live-trend-note]');
+    if (info) {
+      info.hidden = Boolean(data.kpi?.combined_basis) || (!liveRuns && !live.unavailable);
+      if (!info.hidden) {
+        const dates=(live.daily || []).slice(-7).map(item =>
+          `<span>${esc(item.date)} · ${fmt(item.sessions)} session${Number(item.sessions)===1?'':'s'}</span>`).join('');
+        info.innerHTML = live.unavailable ? 'Live history is temporarily unavailable.' :
+          `<strong>Live activity included:</strong> ${fmt(liveRuns)} session${liveRuns===1?'':'s'} · ${fmt(liveObservations)} provisional defect observations · ${fmt(live.ai_frames || 0)} AI frames · ${Number(live.duration_seconds || 0).toFixed(1)} s runtime`+
+          `<div class="analytics-unified-live-daily">${dates}</div><span class="analytics-unified-live-foot">Daily quality rates and SPC above still use judged Image/Video records only.</span>`;
+      }
+    }
+    renderShifts();
     if (admin) renderReviewQueue();
   }
 
@@ -115,8 +159,16 @@
 
   function renderTrend() {
     const holder = one('[data-quality-chart]');
-    const rows = data.trend || [];
-    if (!rows.some(r => num(r.judged) > 0)) {
+    const coreRows = chartMode === 'spc' ? (data.official_trend || []) : (data.combined_trend || []);
+    const provisionalRows = []; // Sources are already summed in combined_trend.
+    const byDay = new Map(coreRows.map(r=>[r.date,r]));
+    provisionalRows.forEach(p=>{
+      if(!byDay.has(p.date)) byDay.set(p.date, {date:p.date, judged:0, normal:0, defect:0,
+        yield_rate:null, defect_rate:null, rolling_yield:null, lcl:null, ucl:null});
+    });
+    const rows = [...byDay.values()].sort((a,b)=>String(a.date).localeCompare(String(b.date))).slice(-90);
+    const provisionalByDate = new Map(provisionalRows.map(p=>[p.date,p]));
+    if (!rows.some(r => num(r.judged)>0 || num(provisionalByDate.get(r.date)?.video_runs)>0 || num(provisionalByDate.get(r.date)?.live_runs)>0)) {
       holder.innerHTML = empty('No quality history yet','Run and save an image inspection to populate the trend.');
       one('[data-chart-legend]').innerHTML = '';
       return;
@@ -127,8 +179,10 @@
       spc:{name:'Good Snack Rate (SPC)',field:'yield_rate',rolling:null,target:null,desc:'Good Snack Rate (%) · Judged Output · 3σ Control Limits'},
     };
     const mode = modes[chartMode];
+    if (chartMode !== 'spc') mode.desc = `${mode.name} (%) · Total Image + Video + Live · Target`;
+    const outputLabel = chartMode === 'spc' ? 'Judged Output' : 'Combined Tracked Output';
     one('[data-trend-guide]').textContent=mode.desc;
-    one('[data-trend-caption]').textContent = `${data.spc.method}. Output bars show judged observations (not unique objects across video frames). ${data.trend_truncated ? 'Latest 90 observed dates shown. ' : ''}No-data dates are not treated as 0% quality.`;
+    one('[data-trend-caption]').textContent = chartMode === 'spc' ? `${data.spc.method}. Official judged inspections only.` : `Daily total: Image + Video + complete Live counts. Estimates are provisional; SPC uses judged data.`;
     // Two genuine y-axes: rates on the left, daily judged observations on the right.
     // The horizontal dashed line is a TARGET; it is never mislabelled as an LCL.
     const w=760,h=395,l=49,r=49,t=32,b=36;
@@ -150,7 +204,7 @@
       contents+=`<text class="axis-label" x="${w-r+9}" y="${t+ih*(1-tick/4)+3}" text-anchor="start">${fmt(count)}</text>`;
     }
     contents+=`<text class="chart-title-axis" x="${l}" y="13">${esc(mode.name)} (%)</text>`;
-    contents+=`<text class="chart-title-axis" x="${w-r}" y="13" text-anchor="end">Judged Output</text>`;
+    contents+=`<text class="chart-title-axis" x="${w-r}" y="13" text-anchor="end">${esc(outputLabel)}</text>`;
     const barWidth=cap(iw/(rows.length*2.1),5,37);
     rows.forEach((point,i)=>{
       const val=num(point.judged);
@@ -170,6 +224,22 @@
     }
     if(mode.rolling) contents+=svgLine(rows.map(row=>row[mode.rolling]),X,Y,'series-green',true);
     contents+=svgLine(primary,X,Y,primaryClass);
+    // Visual overlays only; never feed provisional counts into SPC calculations.
+    for (const source of ['video','live']) {
+      const color=source==='video'?'#cb9250':'#8b6dc6';
+      const vals=rows.map(r=>{
+        const p=provisionalByDate.get(r.date);
+        return p ? p[`${source}_${chartMode==='defect'?'defect_rate':'good_rate'}`] : null;
+      });
+      contents+=svgLine(vals,X,Y,`series-${source}-provisional`,true);
+      rows.forEach((r,i)=>{
+        const p=provisionalByDate.get(r.date);
+        if(!p || !num(p[`${source}_runs`]))return;
+        const rate=vals[i];
+        const yy=rate===null||rate===undefined ? t+ih-5 : Y(rate);
+        contents+=`<circle data-provisional-index="${i}" data-provisional-source="${source}" cx="${X(i)}" cy="${yy}" r="5" fill="${color}" stroke="white" stroke-width="1.5" tabindex="0" role="button" aria-label="${esc(source)} provisional ${esc(r.date)}"/>`;
+      });
+    }
     rows.forEach((point,i)=>{
       if(primary[i]===null||primary[i]===undefined)return;
       contents+=`<circle data-point="${i}" class="series-dots ${primaryClass}" cx="${X(i)}" cy="${Y(primary[i])}" r="3.6" tabindex="0" role="button" aria-label="${esc(point.date)} ${esc(mode.name)} ${esc(pct(primary[i]))}"/>`;
@@ -179,19 +249,30 @@
       if(i%labelInterval===0||i===rows.length-1)contents+=`<text class="axis-label" x="${X(i)}" y="${h-14}" text-anchor="middle">${esc(dateLabel(point.date))}</text>`;
     });
     holder.innerHTML=`<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(mode.name)} with daily judged output volume">${contents}</svg><div class="analytics-chart-tooltip" data-chart-tooltip hidden></div>`;
-    const legends=[[mode.name,chartMode==='defect'?'#c86168':'#7b3043'],['Judged Output','#bfcbd8']];
+    const legends=[[mode.name,chartMode==='defect'?'#c86168':'#7b3043'],[outputLabel,'#bfcbd8']];
     if(mode.rolling)legends.push(['7-day rolling','#529f84']);
     if(mode.target!==null)legends.push([`Target ${pct(mode.target)}`,'#c78c95']);
     if(chartMode==='spc')legends.push(['UCL / LCL','#ba9c5b']);
+    if(rows.some(r=>num(provisionalByDate.get(r.date)?.video_runs)))legends.push(['Video · Provisional','#cb9250']);
+    if(rows.some(r=>num(provisionalByDate.get(r.date)?.live_runs)))legends.push(['Live · Provisional','#8b6dc6']);
     one('[data-chart-legend]').innerHTML=legends.map(([label,color])=>`<span><b style="background:${color}"></b>${esc(label)}</span>`).join('');
     holder.onmouseover=showPoint;
     holder.onfocusin=showPoint;
     holder.onmouseout=e=>{if(e.target?.hasAttribute?.('data-point'))one('[data-chart-tooltip]',holder)?.setAttribute('hidden','');};
     function showPoint(event){
+      const provisional=event.target.closest?.('[data-provisional-index]');
+      if(provisional){
+        const idx=Number(provisional.dataset.provisionalIndex), source=provisional.dataset.provisionalSource;
+        const r=rows[idx],p=provisionalByDate.get(r.date),rate=p?.[`${source}_${chartMode==='defect'?'defect_rate':'good_rate'}`];
+        const label=source==='video'?'Video':'Live';
+        const tip=one('[data-chart-tooltip]',holder);
+        tip.innerHTML=`<strong>${esc(r.date)} · ${label}</strong><br>${esc(mode.name)}: <strong>${rate===null||rate===undefined?'Not recorded':pct(rate)}</strong><br>${fmt(p?.[`${source}_runs`])} session(s) · ${fmt(p?.[`${source}_total`])} estimated tracks<br><em>Provisional · excluded from official SPC</em>`;
+        tip.removeAttribute('hidden');return;
+      }
       const point=event.target.closest?.('[data-point]');if(!point)return;
       const r=rows[Number(point.dataset.point)];if(!r)return;
       const tip=one('[data-chart-tooltip]',holder);
-      tip.innerHTML=`<strong>${esc(r.date)}</strong><br>${esc(mode.name)}: <strong>${esc(pct(r[mode.field]))}</strong><br>Judged Output: ${fmt(r.judged)} · Defects: ${fmt(r.defect)}${chartMode==='spc'?`<br>3σ limits: ${pct(r.lcl)} – ${pct(r.ucl)}`:''}`;
+      tip.innerHTML=`<strong>${esc(r.date)}</strong><br>${esc(mode.name)}: <strong>${esc(pct(r[mode.field]))}</strong><br>${esc(outputLabel)}: ${fmt(r.judged)} · Defects: ${fmt(r.defect)}${chartMode==='spc'?`<br>3σ limits: ${pct(r.lcl)} – ${pct(r.ucl)}`:''}`;
       tip.removeAttribute('hidden');
     }
   }
@@ -267,20 +348,28 @@
   }
 
   function renderDefects() {
-    const holder=one('[data-defects]');const classes=data.defects||[];
+    const holder=one('[data-defects]');
+    // BIKA-UNIFIED-VIEWS-V1: aggregate defect *observations* only.
+    // NEVER alter Good Snack Rate / SPC denominators with provisional Live IDs.
+    const liveCounts = data.kpi?.combined_basis ? {} : ((data.live || {}).classes || {});
+    const classes=(data.defects || []).map(row => ({...row,
+      count: Number(row.count || 0) + Number(liveCounts[row.name] || 0)}));
     const total=classes.reduce((s,r)=>s+num(r.count),0);
     if(total===0) {holder.innerHTML=empty('No defect-class counts available','Defect class distribution appears when stored inspection metadata includes class counts.');return;}
     let cursor=0;
     const stops=[];
     classes.forEach(row=> {const percent=num(row.count)/total*100;if(percent>0){stops.push(`${row.color} ${cursor.toFixed(3)}% ${(cursor+percent).toFixed(3)}%`);cursor+=percent;}});
     holder.innerHTML=`<div class="analytics-donut-row"><div class="analytics-donut" style="background:conic-gradient(${stops.join(',')})"><div class="analytics-donut-center"><strong>${fmt(total)}</strong><small>Defects</small></div></div><div class="analytics-donut-desc">Detected defects<br>across saved inspection runs.</div></div>${classes.map(row=>`<div class="analytics-defect-row"><span class="analytics-defect-color" style="background:${row.color}"></span><span>${esc(row.name)}</span><strong>${fmt(row.count)}</strong><small>${(num(row.count)*100/total).toFixed(1)}%</small></div>`).join('')}`;
+    if (Number(data.live?.defect_observations || 0) > 0) {
+      holder.innerHTML += `<p class="analytics-unified-live-foot">Includes ${fmt(data.live.defect_observations)} provisional Live Track ID observations; these are not verified unique products.</p>`;
+    }
   }
 
   function renderBayesian() {
     const holder=one('[data-bayesian]'); const b=data.bayesian;
     if (!b) {holder.innerHTML=empty('Awaiting observations','The Beta–Binomial estimate becomes available after judged snack observations are saved.');return;}
     const low=cap(num(b.lower),0,100),high=cap(num(b.upper),0,100),mid=cap(num(b.mean),0,100);
-    holder.innerHTML=`<div class="analytics-bayes-metric"><small>Posterior mean · Good Snack Rate</small><strong>${pct(mid)}</strong></div><div class="analytics-bayes-body"><div class="analytics-bayes-track"><div class="analytics-bayes-range" style="left:${low}%;width:${high-low}%"></div><div class="analytics-bayes-pin" style="left:${mid}%"></div></div><div class="analytics-bayes-scale"><span>0%</span><strong>Approx. 95% credible interval: ${pct(low)} – ${pct(high)}</strong><span>100%</span></div><p class="analytics-bayes-explain">${esc(b.prior)} prior updated with ${fmt(data.kpi.normal)} normal and ${fmt(data.kpi.defects)} defective observations. ${esc(b.method)}. This is uncertainty estimation, not future prediction.</p></div>`;
+    holder.innerHTML=`<div class="analytics-bayes-metric"><small>Posterior mean · Good Snack Rate</small><strong>${pct(mid)}</strong></div><div class="analytics-bayes-body"><div class="analytics-bayes-track"><div class="analytics-bayes-range" style="left:${low}%;width:${high-low}%"></div><div class="analytics-bayes-pin" style="left:${mid}%"></div></div><div class="analytics-bayes-scale"><span>0%</span><strong>Approx. 95% credible interval: ${pct(low)} – ${pct(high)}</strong><span>100%</span></div><p class="analytics-bayes-explain">${esc(b.prior)} prior updated with ${fmt((data.official_kpi || data.kpi).normal)} normal and ${fmt((data.official_kpi || data.kpi).defects)} defective observations. ${esc(b.method)}. This is uncertainty estimation, not future prediction.</p></div>`;
   }
 
   function renderReviewQueue() {
@@ -290,13 +379,13 @@
     const statusValues={'[data-review-pending]':stats.pending_runs,'[data-review-confirmed]':stats.confirmed_objects,'[data-review-false]':stats.false_positive_objects,'[data-review-corrected]':stats.corrected_objects};
     Object.entries(statusValues).forEach(([selector,value])=>{const el=one(selector);if(el)el.textContent=value===undefined?'—':fmt(value);});
     const query=(one('[data-review-search]')?.value||'').trim().toLowerCase();
-    const mode=one('[data-review-mode]')?.value||'flagged';
+    const mode=one('[data-review-mode]')?.value||'recent';
     selectedQueue=mode;
     reviewList=(mode==='recent'?review.recent_runs:review.candidates)||[];
     const rows=reviewList.filter(row=>!query||`${row.batch_id} ${row.file_name} ${row.reasons.join(' ')}`.toLowerCase().includes(query));
     const tbody=one('[data-review-table]');
     if(!rows.length) {
-      tbody.innerHTML=`<tr><td colspan="5" class="analytics-table-empty">${query?'No runs match your search.':mode==='flagged'?'No flagged inspection runs in this period.':'No stored image inspections available in this period.'}</td></tr>`;
+      tbody.innerHTML=`<tr><td colspan="5" class="analytics-table-empty">${query?'No runs match your search.':mode==='flagged'?'No pipeline anomalies found in this period. Select All inspection runs for normal and provisional activity.':'No saved Image / Video / Live runs in this period.'}</td></tr>`;
     } else {
       tbody.innerHTML=rows.map(row=>{
         const reasons=Array.isArray(row.reasons)?row.reasons:[];
@@ -305,7 +394,7 @@
         const reviewed=Math.max(0,num(row.reviewed));
         const reviewState=reviewed>0?'has-reviewed':'pending';
         const reviewLabel=reviewed>0?`${fmt(reviewed)} reviewed`:'Pending review';
-        const queueTag=mode==='flagged'?'Review required':'Saved inspection';
+        const queueTag=mode==='flagged'?'Review required':row.source_type==='video'?'Video · Provisional':row.source_type==='live'?'Live · Provisional':'Saved image';
         const queueClass=mode==='flagged'?'needs-review':'routine';
         return `<tr>
           <td>
@@ -345,6 +434,22 @@
   const decisionButton=document.querySelector('[data-decision-trigger]');
   const decisionMenu=document.querySelector('[data-decision-menu]');
   const decisionOptions=decisionMenu?Array.from(decisionMenu.querySelectorAll('[data-decision-option]')):[];
+  // BIKA-REVIEW-CORRECT-CLASS-V1_1: use existing native review decision and save API.
+  const correctField = document.querySelector('[data-correct-class-field]');
+  const correctSelect = document.querySelector('[data-correct-class]');
+  function normalizeReviewClass(value) {
+    return String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+  }
+  function syncCorrectClassField(){
+    if(!correctField || !correctSelect || !decisionSelect) return;
+    const needed = decisionSelect.value === 'incorrect_class';
+    correctField.hidden = !needed;
+    correctSelect.disabled = !needed;
+    correctSelect.required = needed;
+    if (!needed) correctSelect.value = '';
+  }
+  decisionSelect?.addEventListener('change', syncCorrectClassField);
+
   function syncDecisionPicker(){
     if(!decisionSelect||!decisionButton)return;
     const option=decisionSelect.selectedOptions[0];
@@ -548,7 +653,9 @@
     const old=reviewRecord.reviews[selectedObject.object_id];
     one('[data-object-detail]',modal).innerHTML=`<strong>${esc(selectedObject.object_id)}</strong><br>Prediction: <strong>${esc(selectedObject.class_name)}</strong> · ${esc(selectedObject.decision)}<br>Classification confidence: <strong>${selectedObject.confidence==null?'—':pct(num(selectedObject.confidence)*100)}</strong><br>Detection confidence: <strong>${selectedObject.detection_confidence==null?'—':pct(num(selectedObject.detection_confidence)*100)}</strong><br>Segmentation polygons: ${(selectedObject.polygons||[]).length}${old?`<br>Last review: <strong>${esc(old.decision)}</strong> by ${esc(old.reviewer_name||'Reviewer')}`:''}`;
     one('[data-decision]',modal).value=old?.decision||'correct';
+    if(correctSelect) correctSelect.value=old?.corrected_class||'';
     syncDecisionPicker();
+    syncCorrectClassField();
     renderSelectedCrop();
     one('[data-review-note]',modal).value=old?.note||'';
     one('[data-save-review]',modal).disabled=false;
@@ -560,12 +667,24 @@
     const modal=document.querySelector('[data-mask-modal]');
     const button=one('[data-save-review]',modal),message=one('[data-save-message]',modal);
     const token=document.querySelector('meta[name="csrf-token"]')?.content||'';
+    const decision=one('[data-decision]',modal).value;
+    const correctedClass = decision==='incorrect_class' ? (correctSelect?.value || '') : null;
+    if(decision==='incorrect_class'){
+      if(!correctedClass){
+        message.classList.add('is-error');message.textContent='Please select the correct class.';
+        correctSelect?.focus();return;
+      }
+      if(normalizeReviewClass(selectedObject.class_name)===correctedClass){
+        message.classList.add('is-error');message.textContent='Choose a different class from the AI prediction.';
+        correctSelect?.focus();return;
+      }
+    }
     button.disabled=true;message.classList.remove('is-error');message.textContent='Saving human review…';
     try {
       const response=await fetch(`${root.dataset.reviewUrlRoot}${encodeURIComponent(reviewRecord.batch_id)}`,{
         method:'POST',credentials:'same-origin',
         headers:{'Content-Type':'application/json','X-CSRFToken':token},
-        body:JSON.stringify({object_id:selectedObject.object_id,decision:one('[data-decision]',modal).value,note:one('[data-review-note]',modal).value})
+        body:JSON.stringify({object_id:selectedObject.object_id,decision,corrected_class:correctedClass,note:one('[data-review-note]',modal).value})
       });
       const payload=await response.json();
       if(!response.ok||!payload.ok)throw new Error(payload.message||`HTTP ${response.status}`);
@@ -588,6 +707,66 @@
   const dateButton=one('[data-range-button]');
   const dateMenu=one('[data-range-menu]');
   const rangeSelect=one('[data-range]');
+  // BIKA_ANALYTICS_PERIOD_MEMORY_V1: preference belongs to logged-in account,
+  // stored on the server, not shared between accounts on the same browser.
+  const periodPreferenceUrl = root.dataset.periodPreferenceUrl;
+  const allowedPeriodKeys = new Set(['today','7d','30d','90d','all','custom']);
+  const isoValid = value => {
+    if(typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value))return false;
+    const [year,month,day] = value.split('-').map(Number);
+    const parsed = new Date(Date.UTC(year,month-1,day));
+    return parsed.getUTCFullYear()===year && parsed.getUTCMonth()===month-1 && parsed.getUTCDate()===day;
+  };
+  function applySavedPeriod(pref){
+    if(!pref || !allowedPeriodKeys.has(pref.range))return false;
+    if(pref.range==='custom'){
+      if(!isoValid(pref.from)||!isoValid(pref.to)||pref.from>pref.to)return false;
+      one('[data-date-from]').value=pref.from;
+      one('[data-date-to]').value=pref.to;
+      if(pref.from===pref.to)singleDayInput.value=pref.from;
+      one('[data-range-label]').textContent=periodLabel(pref.from,pref.to);
+    }else{
+      one('[data-range-label]').textContent=presetPeriodLabel(pref.range);
+    }
+    rangeSelect.value=pref.range;
+    all('[data-range-option]').forEach(item=>item.classList.toggle('is-active',item.dataset.rangeOption===pref.range));
+    return true;
+  }
+  let periodWriteQueue = Promise.resolve();
+  function saveSelectedPeriod(){
+    if(!periodPreferenceUrl)return;
+    const range=rangeSelect.value;
+    const payload={range};
+    if(range==='custom'){
+      payload.from=one('[data-date-from]').value;
+      payload.to=one('[data-date-to]').value;
+    }
+    const token=document.querySelector('meta[name="csrf-token"]')?.content||'';
+    // Serialize requests to avoid older user selections overwriting newer ones.
+    periodWriteQueue=periodWriteQueue.catch(()=>{}).then(async()=>{
+      const response=await fetch(periodPreferenceUrl,{
+        method:'POST',credentials:'same-origin',keepalive:true,
+        headers:{'Content-Type':'application/json','X-CSRFToken':token},
+        body:JSON.stringify(payload)
+      });
+      if(!response.ok)throw new Error(`Period preference save returned ${response.status}`);
+    }).catch(error=>{console.warn('Analytics period preference not saved:',error);});
+  }
+  async function restorePeriodAndLoad(){
+    if(periodPreferenceUrl){
+      try{
+        const response=await fetch(periodPreferenceUrl, {credentials:'same-origin',cache:'no-store'});
+        if(response.ok){
+          const payload=await response.json();
+          applySavedPeriod(payload.preference);
+        } else {
+          console.warn('Analytics period preference load returned',response.status);
+        }
+      }catch(error){console.warn('Analytics period preference unavailable:',error);}
+    }
+    await load();
+  }
+
   const dateWrap=one('[data-range-wrap]');
   const dateLabels={'today':'Today','7d':'Last 7 days','30d':'Last 30 days','90d':'Last 90 days','all':'All runs to date','custom':'Custom range'};
   // Initialize the selected period before the first API request.
@@ -602,7 +781,7 @@
     rangeSelect.value=button.dataset.rangeOption;
     one('[data-range-label]').textContent=presetPeriodLabel(rangeSelect.value);
     all('[data-range-option]').forEach(item=>item.classList.toggle('is-active',item===button));
-    closeDate();load();
+    closeDate();saveSelectedPeriod();load();
   }));
   // Select a single historical day without requiring two custom-range fields.
   const singleDayInput=one('[data-date-single]');
@@ -615,7 +794,7 @@
     rangeSelect.value='custom';
     one('[data-range-label]').textContent=periodLabel(day);
     all('[data-range-option]').forEach(item=>item.classList.toggle('is-active',item.dataset.rangeOption==='today'&&day===todayISO()));
-    closeDate();load();
+    closeDate();saveSelectedPeriod();load();
   });
   one('[data-apply-range]').addEventListener('click',()=>{
     const from=one('[data-date-from]').value,to=one('[data-date-to]').value;
@@ -624,7 +803,7 @@
     one('[data-range-label]').textContent=periodLabel(from,to);
     if(from===to)singleDayInput.value=from;
     all('[data-range-option]').forEach(item=>item.classList.remove('is-active'));
-    closeDate();load();
+    closeDate();saveSelectedPeriod();load();
   });
   document.addEventListener('click',event=>{if(!dateWrap.contains(event.target))closeDate();});
   document.addEventListener('keydown',event=>{if(event.key==='Escape')closeDate();});
@@ -779,5 +958,17 @@
     window.addEventListener('scroll',hide,true);
     window.addEventListener('resize',hide);
   })();
-  load();
+  restorePeriodAndLoad();
 })();
+
+/* BIKA-UNIFIED-VIEWS-V1 */
+
+/* BIKA-UNIFIED-FIX-V2 */
+
+/* BIKA-TREND-REVIEW-MASK-V1 */
+
+/* BIKA-COMBINED-TOTALS-V1-1 */
+
+/* BIKA-ANALYTICS-KPI-COMPACT-V1 */
+
+// BIKA-REVIEW-CORRECT-CLASS-V1_1

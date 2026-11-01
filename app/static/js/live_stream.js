@@ -265,16 +265,17 @@
     lastCameraStatus = camera;
     const state = camera.state || 'disconnected';
     const online = state === 'online';
+    const feedLost = online && camera.feed_usable === false; // BIKA-LIVE-OBSERVE-CAMO-V3
     const connecting = state === 'connecting';
     const error = state === 'error';
     renderTrend(camera, online);
-    statusEl.textContent = ({online: 'Online', connecting: 'Connecting', error: 'Connection Error'})[state] || 'Disconnected';
-    noteEl.textContent = online ? (camera.source_type === 'local_webcam' ? 'Local webcam feed received' : 'Live RTSP stream received') : connecting ? 'Connecting to selected camera' : error ? 'Check camera source' : 'Camera not connected';
+    statusEl.textContent = feedLost ? 'Feed Unavailable' : (({online: 'Online', connecting: 'Connecting', error: 'Connection Error'})[state] || 'Disconnected');
+    noteEl.textContent = feedLost ? (camera.feed_unavailable_reason || 'No usable camera image') : online ? (camera.source_type === 'local_webcam' ? 'Local webcam feed received' : 'Live RTSP stream received') : connecting ? 'Connecting to selected camera' : error ? 'Check camera source' : 'Camera not connected';
     fpsEl.textContent = camera.camera_fps == null ? '—' : Number(camera.camera_fps).toFixed(1);
-    badge.textContent = online ? 'Online' : connecting ? 'Connecting' : error ? 'Error' : 'Offline';
+    badge.textContent = feedLost ? 'Feed Lost' : online ? 'Online' : connecting ? 'Connecting' : error ? 'Error' : 'Offline';
     badge.classList.toggle('is-online', online);
     badge.classList.toggle('is-connecting', connecting);
-    badge.classList.toggle('is-error', error);
+    badge.classList.toggle('is-error', error || feedLost);
     onlineDot.classList.toggle('is-online', online);
     liveTag.classList.toggle('is-online', online);
     footDot.classList.toggle('is-online', online);
@@ -311,7 +312,7 @@
     stream.disabled = !authorizedControl || online || connecting;
     if (camoIndex) camoIndex.disabled = !authorizedControl || online || connecting;
 
-    if (online) {
+    if (online && !feedLost) {
       empty.hidden = true;
       image.hidden = false;
       if (currentStream !== camera.stream) {
@@ -324,8 +325,8 @@
       image.hidden = true;
       currentStream = null;
       empty.hidden = false;
-      emptyTitle.textContent = connecting ? 'Connecting to camera…' : error ? 'Camera connection failed' : 'Camera not connected';
-      emptyText.textContent = connecting
+      emptyTitle.textContent = feedLost ? 'Camera feed unavailable' : connecting ? 'Connecting to camera…' : error ? 'Camera connection failed' : 'Camera not connected';
+      emptyText.textContent = feedLost ? (camera.feed_unavailable_reason || 'Camera is connected but not providing usable video.') : connecting
         ? 'Waiting for the camera to return its first frame. This can take a few seconds.'
         : error ? (camera.message || 'Check the IP, RTSP settings and network connection.')
         : isCamoSelected() ? 'Open Camo Studio and connect your iPhone, then choose the correct Device Index.'
@@ -364,8 +365,69 @@
   let lastEventsSignature = '';
   const aiField = selector => get(selector);
 
+  // BIKA-LIVE-HEALTH-LEGEND-V1: Camera health alerts, separate from defect events.
+  let healthEverOnline = false;
+  let healthManualDisconnect = false;
+  let healthFailedPolls = 0;
+  let healthConnectingSince = null;
+
+  function updateCameraHealthAlerts(camera, ai) {
+    const badgeEl = aiField('[data-ai-alert-badge]');
+    const textEl = aiField('[data-ai-alert-text]');
+    if (!badgeEl || !textEl) return;
+    const card = get('.lsi-alerts-card');
+    const state = camera?.state || 'disconnected';
+    const notes = [];
+    const age = Number(camera?.last_decoded_frame_seconds_ago ?? camera?.last_frame_seconds_ago);
+    const blackTime = Number(camera?.black_frame_seconds);
+    if (state === 'online') {
+      if (camera?.feed_usable === false) notes.push(camera?.feed_unavailable_reason || 'Camera feed is unavailable.');
+      healthEverOnline = true;
+      healthManualDisconnect = false;
+      healthConnectingSince = null;
+      if (camera?.black_frame_seconds != null && Number.isFinite(blackTime) && blackTime >= 3) {
+        notes.push('Camera image appears black for several seconds. Check iPhone, Camo Studio, and lens.');
+      }
+      if (camera?.last_decoded_frame_seconds_ago != null || camera?.last_frame_seconds_ago != null) {
+        if (Number.isFinite(age) && age > 3.5) notes.push('Camera is connected but no fresh frames have arrived for ' + age.toFixed(1) + ' s.');
+      }
+      if (camera?.snapshot_ready === false && Number(camera?.stream_uptime_seconds || 0) > 4) {
+        notes.push('Camera is connected, but the preview has no usable frame.');
+      }
+    } else if (state === 'connecting') {
+      if (healthConnectingSince == null) healthConnectingSince = Date.now();
+      if (Date.now() - healthConnectingSince > 10000) notes.push('Camera connection is taking too long. Check Camo Studio and the selected device.');
+    } else {
+      healthConnectingSince = null;
+      if (state === 'error') notes.push(camera?.message || 'Camera connection or capture failed.');
+      else if (healthEverOnline && !healthManualDisconnect) {
+        notes.push('Camera unexpectedly disconnected. Check iPhone / Camo Studio or the network.');
+      }
+    }
+    if (ai?.state === 'error') notes.push(ai?.message || 'AI inference stopped after an error.');
+    if (healthFailedPolls >= 2) notes.push('Cannot retrieve camera status from the server. Check Flask and connection.');
+
+    if (notes.length) {
+      badgeEl.textContent = notes.length === 1 ? '1 warning' : notes.length + ' warnings';
+      textEl.textContent = notes.join('  •  ');
+    } else {
+      badgeEl.textContent = state === 'online' ? 'Healthy' : state === 'connecting' ? 'Connecting' : 'Idle';
+      textEl.textContent = state === 'online'
+        ? 'Camera connected. No current camera health alerts.'
+        : state === 'connecting' ? 'Connecting to camera and waiting for a fresh frame.'
+        : 'No active alerts. Connect a camera to start monitoring.';
+    }
+    card?.classList.toggle('is-health-warning', notes.length > 0);
+    card?.classList.toggle('is-health-ok', !notes.length && state === 'online');
+  }
+
+  // Intentional disconnect should not be reported as an unexpected failure.
+  connectButton?.addEventListener('click', () => { healthManualDisconnect = false; });
+  disconnectButton?.addEventListener('click', () => { healthManualDisconnect = true; });
+
+
   function paintView() {
-    const cameraOnline = lastCameraStatus?.state === 'online';
+    const cameraOnline = lastCameraStatus?.state === 'online' && lastCameraStatus?.feed_usable !== false;
     const active = cameraOnline && !!aiState?.active;
     const showAI = active && aiImageLoaded && aiViewPreference === 'ai';
     image.hidden = !cameraOnline || showAI;
@@ -373,11 +435,11 @@
     // Allow the operator to select AI view while waiting for the first mask.
     aiViewToggle.disabled = !active;
     aiViewToggle.textContent = showAI ? 'Show raw feed' : 'Show AI masks';
-    aiViewState.textContent = showAI ? 'Colour masks · latest analysed keyframe'
+    aiViewState.textContent = showAI ? (aiState?.counts_are_provisional ? 'Continuous masks · motion-aligned to live camera (estimated between AI frames)' : 'Colour masks · latest analysed keyframe')
       : active && aiViewPreference === 'ai' ? 'Analysing · showing raw feed until masks are ready'
       : active ? 'Raw camera · AI running' : 'Raw camera';
     if (cameraOnline) {
-      liveLabel.textContent = showAI ? 'AI MASK · SAMPLED KEYFRAME' : 'LIVE CAMERA';
+      liveLabel.textContent = showAI ? (aiState?.counts_are_provisional ? 'LIVE MASK · MOTION-TRACKED' : 'AI MASK · SAMPLED KEYFRAME') : 'LIVE CAMERA';
     }
     liveTag.classList.toggle('is-ai-frame', showAI);
   }
@@ -444,13 +506,13 @@
       if (aiRequest === request) aiRequest = null;
       if (aiPolling && epoch === aiPollEpoch) {
         aiTimer = setTimeout(() => pollAIFrame(epoch),
-          document.hidden ? 1600 : Math.max(350, 800 - (performance.now() - started)));
+          document.hidden ? 1600 : Math.max(30, (aiState?.counts_are_provisional ? 90 : 800) - (performance.now() - started)));
       }
     }
   }
 
   function syncAIPolling() {
-    const active = lastCameraStatus?.state === 'online' && !!aiState?.active;
+    const active = lastCameraStatus?.state === 'online' && lastCameraStatus?.feed_usable !== false && !!aiState?.active;
     if (active && aiLatestURL) {
       if (!aiPolling) {
         aiPolling = true;
@@ -577,8 +639,15 @@
     }
     aiField('[data-ai-keyframe-age]').textContent = age;
     aiField('[data-stat-samples]').textContent = aiState.sample_count ? String(aiState.sample_count) : '—';
+    const sampleCard = aiField('[data-stat-samples]')?.parentElement;
+    if (sampleCard) {
+      const title = sampleCard.querySelector('p');
+      const note = sampleCard.querySelector('small');
+      if (title) title.textContent = isTrackedLive ? 'AI Detection Frames' : 'AI Keyframes';
+      if (note) note.textContent = isTrackedLive ? 'Model inferences; continuous masks use motion alignment' : 'Sampled frames, not unique products';
+    }
     aiField('[data-stat-reject]').textContent = aiState.sampled_reject_rate == null ? '—' : `${Number(aiState.sampled_reject_rate).toFixed(1)}%`;
-    aiField('[data-ai-events-badge]').textContent = active ? (isTrackedLive ? 'Tracking defect events' : 'Collecting keyframes') : aiState.event_total ? 'Last session' : 'Not collecting';
+    aiField('[data-ai-events-badge]').textContent = active ? (isTrackedLive ? 'Watching visible defects' : 'Collecting keyframes') : aiState.event_total ? 'Last session' : 'Not collecting';
     const events = aiState.events || [];
     renderEvents(events);
     aiField('[data-ai-alert-badge]').textContent = !active ? 'Waiting' : events.length ? `${events.length} candidates` : 'Monitoring';
@@ -592,8 +661,8 @@
     aiField('[data-ai-ring-total]').textContent = events.length ? String(events.length) : '—';
     aiField('[data-ai-distribution-text]').textContent = categories.size ?
       [...categories.entries()].map(([label, count]) => `${label}: ${count}`).join(' · ') +
-      (isTrackedLive ? '. Motion-gated Track IDs; physical uniqueness unverified.' : '. Sampled candidates; not unique products.') :
-      (isTrackedLive ? 'Waiting for motion-gated defect events (provisional).' : 'Waiting for sampled defect events; not unique products.');
+      (isTrackedLive ? '. Confirmed on-screen defect Track IDs; physical uniqueness unverified.' : '. Sampled candidates; not unique products.') :
+      (isTrackedLive ? 'Waiting for stable, classified on-screen defects (provisional).' : 'Waiting for sampled defect events; not unique products.');
     syncAIPolling();
     paintView();
     if (aiState.state === 'error' && aiState.message) setMessage(aiState.message, true);
@@ -613,8 +682,12 @@
       const data = await response.json();
       render(data.camera);
       renderAI(data.ai, data.camera);
+      healthFailedPolls = 0;
+      updateCameraHealthAlerts(data.camera, data.ai);
       return data.camera;
     } catch (err) {
+      healthFailedPolls += 1;
+      updateCameraHealthAlerts(lastCameraStatus, aiState);
       setMessage('Camera status request failed: ' + (err.message || 'Check Flask / browser Console.'), true);
       return null;
     }

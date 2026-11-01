@@ -584,3 +584,14 @@ body.lsi-event-modal-open { overflow:hidden; }
  .lsi-event-modal-head h2 {font-size:18px;}
  .lsi-event-facts>div {padding:11px 2px;}
 }
+
+
+/* BIKA-LIVE-HEALTH-LEGEND-V1: Mask legend + meaningful camera health status */
+.lsi-mask-legend { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 12px; margin:14px 0 12px; }
+.lsi-mask-legend-item { display:flex; gap:9px; align-items:center; min-width:0; font-size:13px; color:var(--text-primary,#333); }
+.lsi-mask-legend-swatch { display:inline-block; flex:0 0 13px; width:13px; height:13px; border-radius:4px; background:var(--mask-swatch); border:1px solid rgba(0,0,0,.12); box-shadow:0 0 0 2px rgba(0,0,0,.025); }
+.lsi-mask-legend-help { font-size:12px; line-height:1.55; opacity:.75; margin:6px 0 16px; }
+.lsi-alerts-card.is-health-warning [data-ai-alert-badge],
+.lsi-alerts-card.is-health-warning [data-ai-alert-text] { color:#a23244; }
+.lsi-alerts-card.is-health-ok [data-ai-alert-badge] { color:#238653; }
+@media (max-width: 480px) { .lsi-mask-legend { grid-template-columns:1fr 1fr; } }

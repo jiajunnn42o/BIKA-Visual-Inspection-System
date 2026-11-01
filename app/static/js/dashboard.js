@@ -127,7 +127,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const minutes = Math.floor((seconds % 3600) / 60);
 
-        return `${hours}h ${minutes}m`;
+        const remainingSeconds = Math.floor(seconds % 60);
+
+        return `${hours}h ${minutes}m ${remainingSeconds}s`;
 
     };
 
@@ -2040,4 +2042,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
     renderDashboard(dashboard);
 
+    // BIKA-DASH-LIVE-RUNTIME-V1: independent polling, no changes to saved quality KPIs.
+    const liveRuntimeUrl = page.dataset.dashboardLiveRuntimeUrl;
+    let runtimePolling = false;
+    const refreshLiveRuntime = async () => {
+        if (!liveRuntimeUrl || runtimePolling || document.hidden) return;
+        runtimePolling = true;
+        try {
+            const response = await fetch(liveRuntimeUrl, {
+                method: "GET", credentials: "same-origin", cache: "no-store",
+            });
+            if (!response.ok) return;
+            const payload = await response.json();
+            if (!payload.ok || !payload.camera) return;
+            const camera = payload.camera;
+            // BIKA-LIVE-SESSION-HISTORY-V1
+            const caption = document.querySelector('[data-bika-runtime-caption]');
+            if (caption) caption.textContent = camera.origin === 'last_session'
+              ? 'Last saved Live Session · provisional' : 'Current Live Camera and AI session';
+
+            setText("[data-camera-uptime]", formatUptime(camera.uptime_seconds));
+            setText("[data-camera-frames]", formatCompact(camera.frames_processed));
+            setText("[data-camera-fps]", formatFps(camera.average_fps));
+        } catch (error) {
+            console.debug("Live runtime status unavailable", error);
+        } finally { runtimePolling = false; }
+    };
+    refreshLiveRuntime();
+    const liveRuntimeInterval = window.setInterval(refreshLiveRuntime, 4000);
+    window.addEventListener("pagehide", () => window.clearInterval(liveRuntimeInterval), { once: true });
+
 });
+/* BIKA-LIVE-ANALYTICS-V1: dashboard uptime includes seconds. */

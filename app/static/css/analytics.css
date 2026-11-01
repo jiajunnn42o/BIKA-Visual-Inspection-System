@@ -1198,3 +1198,367 @@ html[data-theme=dark] .analytics-decision-menu [data-decision-option][aria-selec
     margin-top:12px!important;
   }
 }
+
+/* BIKA Analytics UI Polish v1 — START
+   Presentation only; no data, model, filter, or chart logic changed.
+   Scoped to the Data Analytics page. */
+
+/* Make the empty Quality Trend chart intentionally centered and readable.
+   This applies only when analytics.js renders the empty-state element. */
+.analytics-page .analytics-chart-card .analytics-svg-chart > .analytics-empty {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  padding: 28px 22px;
+  text-align: center;
+  line-height: 1.6;
+}
+.analytics-page .analytics-chart-card .analytics-svg-chart > .analytics-empty iconsax-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  color: var(--an-brand);
+}
+.analytics-page .analytics-chart-card .analytics-svg-chart > .analytics-empty iconsax-icon svg {
+  width: 44px;
+  height: 44px;
+}
+.analytics-page .analytics-chart-card .analytics-svg-chart > .analytics-empty strong {
+  display: block;
+  color: var(--an-ink);
+  font-size: clamp(17px, 1.5vw, 21px);
+  font-weight: 600;
+  line-height: 1.35;
+}
+.analytics-page .analytics-chart-card .analytics-svg-chart > .analytics-empty span {
+  display: block;
+  max-width: 410px;
+  color: var(--an-muted);
+  font-size: clamp(12px, 1.03vw, 14px);
+  font-weight: 400;
+  line-height: 1.65;
+}
+
+/* Date popover: subtle, rounded preset pills that turn burgundy on
+   hover/selection (rather than five visually heavy solid buttons). */
+.analytics-page .analytics-date-menu .analytics-date-option {
+  box-sizing: border-box;
+  width: calc(100% - 24px);
+  min-height: 39px;
+  margin: 4px 12px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--an-ink);
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: background .18s ease, color .18s ease,
+              box-shadow .18s ease, transform .18s ease;
+}
+.analytics-page .analytics-date-menu .analytics-date-option.is-active {
+  background: var(--an-brand);
+  color: #fff;
+  box-shadow: 0 5px 13px rgba(116, 31, 46, .18);
+}
+/* Hover/focus is pale rose; selected preset stays deep burgundy. */
+.analytics-page .analytics-date-menu .analytics-date-option:is(:hover, :focus-visible):not(.is-active) {
+  background: #F8EDF0;
+  color: #741F2E;
+  border-color: #EED9DE;
+  box-shadow: 0 5px 12px rgba(116, 31, 46, .08);
+}
+.analytics-page .analytics-date-menu .analytics-date-option:hover:not(.is-active) {
+  transform: translateY(-1px);
+}
+.analytics-page .analytics-date-menu .analytics-date-option:focus-visible {
+  outline: 2px solid var(--an-brand);
+  outline-offset: 2px;
+}
+
+/* Main actions: pill buttons with BIKA's burgundy, soft shadow and hover. */
+.analytics-page .analytics-date-menu .analytics-date-single-controls {
+  grid-template-columns: minmax(0, 1fr) 86px;
+}
+.analytics-page .analytics-date-menu .analytics-date-single button,
+.analytics-page .analytics-date-menu .analytics-date-apply {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  border: 1px solid var(--an-brand);
+  border-radius: 999px;
+  background: var(--an-brand);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(116, 31, 46, .19);
+  transition: background .18s ease, border-color .18s ease,
+              box-shadow .18s ease, transform .18s ease;
+}
+.analytics-page .analytics-date-menu .analytics-date-single button:hover,
+.analytics-page .analytics-date-menu .analytics-date-apply:hover {
+  background: #954253;
+  border-color: #954253;
+  box-shadow: 0 8px 17px rgba(116, 31, 46, .20);
+  transform: translateY(-1px);
+}
+.analytics-page .analytics-date-menu .analytics-date-single button:focus-visible,
+.analytics-page .analytics-date-menu .analytics-date-apply:focus-visible {
+  outline: 2px solid var(--an-brand);
+  outline-offset: 3px;
+}
+.analytics-page .analytics-date-menu .analytics-date-single button:active,
+.analytics-page .analytics-date-menu .analytics-date-apply:active {
+  transform: translateY(0);
+}
+.analytics-page .analytics-date-menu .analytics-date-custom-grid input,
+.analytics-page .analytics-date-menu .analytics-date-single input {
+  border-radius: 12px;
+}
+.analytics-page .analytics-date-button {
+  transition: background .18s ease, box-shadow .18s ease,
+              transform .18s ease;
+}
+.analytics-page .analytics-date-button:hover {
+  box-shadow: 0 9px 23px rgba(50, 26, 32, .12);
+  transform: translateY(-1px);
+}
+@media (max-width: 750px) {
+  .analytics-page .analytics-chart-card .analytics-svg-chart > .analytics-empty {
+    padding: 22px 12px;
+    gap: 10px;
+  }
+  .analytics-page .analytics-chart-card .analytics-svg-chart > .analytics-empty iconsax-icon {
+    width: 48px;
+    height: 48px;
+  }
+  .analytics-page .analytics-chart-card .analytics-svg-chart > .analytics-empty strong {
+    font-size: 17px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .analytics-page .analytics-date-menu .analytics-date-option,
+  .analytics-page .analytics-date-menu .analytics-date-single button,
+  .analytics-page .analytics-date-menu .analytics-date-apply,
+  .analytics-page .analytics-date-button {
+    transition: none;
+    transform: none;
+  }
+}
+/* BIKA Analytics UI Polish v1 — END */
+
+/* BIKA-TREND-REVIEW-MASK-V1 Provisional data visibly differentiated */
+.analytics-chart-container svg path.series-video-provisional, .analytics-quality-chart svg path.series-video-provisional, svg path.series-video-provisional {stroke:#cb9250;stroke-width:2.5}
+.analytics-chart-container svg path.series-live-provisional, .analytics-quality-chart svg path.series-live-provisional, svg path.series-live-provisional {stroke:#8b6dc6;stroke-width:2.5}
+
+
+/* BIKA-ANALYTICS-KPI-COMPACT-V1
+   Display-only: restore consistent, compact 4-card KPI presentation.
+   No effect on formulas, charts, filters, or other BIKA pages. */
+.analytics-page .analytics-kpis{
+  align-items:stretch;
+  gap:12px;
+  margin-bottom:14px;
+}
+.analytics-page .analytics-kpi{
+  height:108px;
+  min-height:108px;
+  padding:14px 17px;
+  gap:12px;
+  align-items:center;
+  border-radius:16px;
+}
+.analytics-page .analytics-kpi-icon{
+  width:43px;
+  height:43px;
+  flex:0 0 43px;
+  border-radius:50%;
+}
+.analytics-page .analytics-kpi-body{
+  min-width:0;
+  flex:1;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  gap:4px;
+}
+.analytics-page .analytics-kpi-label{
+  min-height:0;
+  line-height:1.25;
+  font-size:12px;
+  font-weight:500;
+}
+.analytics-page .analytics-kpi-value{
+  font-size:24px;
+  font-weight:600;
+  line-height:1.14;
+  letter-spacing:-.35px;
+}
+.analytics-page .analytics-kpi-footer{
+  display:flex;
+  flex-wrap:nowrap;
+  align-items:center;
+  min-width:0;
+  max-width:100%;
+  gap:5px;
+  font-size:10.5px;
+  font-weight:400;
+  line-height:1.25;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.analytics-page .analytics-kpi-footer > span:not(.analytics-mini-dot){
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+@media(max-width:1260px){
+  .analytics-page .analytics-kpi{height:104px;min-height:104px;padding:12px 13px;}
+}
+@media(max-width:750px){
+  .analytics-page .analytics-kpi{height:auto;min-height:100px;padding:14px 16px;}
+  .analytics-page .analytics-kpi-footer{white-space:normal;overflow:visible;}
+}
+
+/* BIKA-ANALYTICS-KPI-BALANCE-V2 START */
+/* Presentation only: four Data Analytics top KPI cards. */
+.analytics-page .analytics-kpi {
+  box-sizing: border-box;
+  height: 100px;
+  min-height: 100px;
+  padding: 12px 17px;
+  gap: 14px;
+  align-items: center;
+}
+.analytics-page .analytics-kpi-icon {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.analytics-page .analytics-kpi-icon iconsax-icon {
+  display: inline-flex;
+  transform: scale(1.13);
+  transform-origin: center;
+}
+.analytics-page .analytics-kpi-body {
+  min-width: 0;
+  gap: 4px;
+  justify-content: center;
+  align-items: flex-start;
+}
+.analytics-page .analytics-kpi-label {
+  line-height: 1.2;
+  min-height: 0;
+}
+.analytics-page .analytics-kpi-value {
+  line-height: 1.08;
+}
+.analytics-page .analytics-kpi-footer {
+  line-height: 1.25;
+  min-width: 0;
+}
+@media (max-width: 1260px) {
+  .analytics-page .analytics-kpi {
+    height: 100px;
+    min-height: 100px;
+    padding: 12px 13px;
+    gap: 11px;
+  }
+  .analytics-page .analytics-kpi-icon {
+    width: 50px;
+    height: 50px;
+    flex: 0 0 50px;
+  }
+}
+@media (max-width: 750px) {
+  .analytics-page .analytics-kpi {
+    height: auto;
+    min-height: 94px;
+    padding: 13px 16px;
+    gap: 12px;
+  }
+  .analytics-page .analytics-kpi-icon {
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+  }
+}
+/* BIKA-ANALYTICS-KPI-BALANCE-V2 END */
+
+/* BIKA-ANALYTICS-REVIEW-INFO-V1 START */
+/* Keep the review footer as subtle as the info icon beside card headings. */
+.analytics-page .analytics-review-summary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  line-height: 1.4;
+}
+.analytics-page .analytics-review-summary .analytics-review-info {
+  margin: 0;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  min-width: 17px;
+  min-height: 17px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #9a9a9a;
+}
+.analytics-page .analytics-review-summary .analytics-review-info:hover,
+.analytics-page .analytics-review-summary .analytics-review-info:focus-visible {
+  color: #741f2e;
+}
+.analytics-page .analytics-review-summary .analytics-review-info svg {
+  display: block;
+  width: 17px;
+  height: 17px;
+}
+/* BIKA-ANALYTICS-REVIEW-INFO-V1 END */
+
+/* BIKA-REVIEW-CORRECT-CLASS-V1_1 · compact conditional correction, same BIKA palette */
+.analytics-modal-backdrop .analytics-correct-class-field[hidden]{display:none!important}
+.analytics-modal-backdrop .analytics-correct-class-field{display:flex;flex-direction:column;gap:6px;margin:2px 0 0}
+.analytics-modal-backdrop .analytics-correct-class-field label{margin:0;font-size:11px;font-weight:600}
+.analytics-modal-backdrop .analytics-correct-required{color:#a73448}
+.analytics-modal-backdrop .analytics-correct-class-field select{
+  width:100%;min-height:43px;border:1px solid var(--an-outline,#e6dddd);
+  border-radius:12px;padding:9px 12px;font-size:12px;font-weight:400;line-height:1.35;
+  color:var(--an-ink,#292929);background:var(--an-card,#fff);
+}
+.analytics-modal-backdrop .analytics-correct-class-field select:focus-visible{
+  outline:0;border-color:#741f2e;box-shadow:0 0 0 3px rgba(116,31,46,.09)
+}
+/* Do not reserve space for the selector in other decisions; keep reviewer note short. */
+.analytics-modal-backdrop .analytics-feedback-form textarea[data-review-note]{
+  flex:0 0 auto!important;min-height:70px!important;height:74px!important;
+  max-height:125px!important;resize:vertical;
+}
+@media(min-width:751px){
+  .analytics-modal-backdrop .analytics-feedback-form{flex:0 0 auto!important}
+  .analytics-modal-backdrop .analytics-feedback-form [data-save-review]{margin-top:8px!important}
+}
+@media(max-width:750px){
+  .analytics-modal-backdrop .analytics-feedback-form textarea[data-review-note]{height:66px!important;min-height:66px!important}
+}
+html[data-theme="dark"] .analytics-modal-backdrop .analytics-correct-class-field select{
+  background:#282427;color:#f2eff0;border-color:#51444a
+}
+/* END BIKA-REVIEW-CORRECT-CLASS-V1_1 */

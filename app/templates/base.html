@@ -179,6 +179,14 @@
 
     {% endblock %}
 
+    <!-- BIKA-LIVE-GLOBAL-ALERTS-V1 -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/live_global_alerts.css') }}">
+
+<!-- BIKA-LIVE-UI-REFINEMENT-V2 -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/live_ui_refinement.css', v='refine2') }}">
+
+<!-- BIKA-LIVE-LAYOUT-TIDY-V3: CSS -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/bika_live_layout_tidy_v3.css', v='tidy3') }}">
 </head>
 
 
@@ -1108,6 +1116,8 @@
         filename='js/notifications.js'
     ) }}"
 ></script>
+<!-- BIKA-LIVE-GLOBAL-ALERTS-V1 -->
+<script defer src="{{ url_for('static', filename='js/live_global_alerts.js') }}"></script>
 
 
 <!-- =========================================================
@@ -1215,6 +1225,12 @@
 {% endblock %}
 
 
+
+<!-- BIKA-LIVE-UI-REFINEMENT-V2 -->
+<script defer src="{{ url_for('static', filename='js/live_ui_refinement.js', v='refine2') }}"></script>
+
+<!-- BIKA-LIVE-LAYOUT-TIDY-V3: JS -->
+<script defer src="{{ url_for('static', filename='js/bika_live_layout_tidy_v3.js', v='tidy3') }}"></script>
 </body>
 
 </html>

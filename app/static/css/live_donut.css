@@ -1,0 +1,13 @@
+/* Existing ring, now coloured by category. Keep page dimensions unchanged. */
+.lsi-page [data-ai-ring] {
+  background: conic-gradient(#e5e5e5 0deg 360deg);
+  box-shadow: 0 0 0 1px rgba(120, 75, 85, .05);
+  transition: box-shadow .18s ease;
+}
+.lsi-page [data-ai-ring].bika-donut-has-data {
+  box-shadow: 0 3px 13px rgba(85, 39, 51, .08);
+}
+.lsi-page [data-ai-ring]::before { background: var(--lsi-card, #fff); }
+@media (prefers-reduced-motion: reduce) {
+  .lsi-page [data-ai-ring] { transition: none; }
+}

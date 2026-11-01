@@ -1,0 +1,20 @@
+/* Independent history display; does not modify existing quality reports. */
+.bika-live-history { margin: 20px 0 24px; background: #fff; border-radius: 22px; box-shadow: 0 5px 22px rgba(54,30,36,.055); padding: 22px 26px; }
+.bika-live-history-head { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between; margin-bottom: 12px; }
+.bika-live-history-head h2 { font-size:20px; font-weight:650; margin:0; color:#303035; }
+.bika-live-history-head p, .bika-live-history-note { margin:6px 0 0; font-size:13px; color:#8d868b; line-height:1.55; }
+.bika-live-history-tag {color:#741f2e; background:#f8edf0; border-radius:999px; padding:7px 12px; font-size:12px; font-weight:600; }
+.bika-live-history-list {display:grid; gap:10px; margin-top:15px;}
+.bika-live-history-row {border:1px solid #efe5e8; border-radius:15px; padding:13px 16px; display:grid; grid-template-columns:minmax(170px,1.6fr) repeat(3,minmax(75px,1fr)); gap:12px; align-items:center;}
+.bika-live-history-when {font-weight:600; color:#302c2d; font-size:14px;}
+.bika-live-history-muted {color:#8c8589; font-size:12px; margin-top:4px;}
+.bika-live-history-metric {font-size:16px; color:#2f2c30; font-weight:600;}
+.bika-live-history-label {font-size:11px; color:#968f93; margin-top:3px;}
+.bika-live-history-classes {grid-column:1/-1; padding-top:8px; border-top:1px solid #f3ebed; color:#787176; font-size:12px; line-height:1.6;}
+.bika-live-history-empty {padding:22px 10px; text-align:center; color:#938b91; font-size:14px; }
+@media (max-width:680px) {.bika-live-history {padding:18px 16px;} .bika-live-history-row {grid-template-columns:1fr 1fr;} .bika-live-history-when {grid-column:1/-1;} }
+
+.bika-live-history-details {grid-column:1/-1; padding-top:2px; color:#741f2e; font-size:12px;}
+.bika-live-history-details summary {cursor:pointer; display:list-item; margin-left:15px; padding:5px; font-weight:600;}
+.bika-live-history-events {margin-top:8px; border-top:1px solid #f2ebed;}
+.bika-live-history-event {padding:8px 0; border-bottom:1px solid #f8f3f4; color:#575057; font-weight:400;}

@@ -5,6 +5,7 @@ Reports | BIKA
 {% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static',filename='css/unified_inspection_views.css',v='unified-v1') }}">
 <link
     rel="stylesheet"
     href="{{ url_for('static', filename='css/reports.css', v='20261013-export-format-v3') }}"
@@ -29,6 +30,7 @@ Reports | BIKA
     </header>
 
 
+    <p class="reports-unified-note">Image · Video · Live sessions in one history table. Live rows are provisional observations, not verified product totals.</p>
     <section class="reports-toolbar">
 
         <div
@@ -610,3 +612,5 @@ Reports | BIKA
     defer
 ></script>
 {% endblock %}
+
+<!-- BIKA-UNIFIED-VIEWS-V1 -->

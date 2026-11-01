@@ -181,6 +181,8 @@ class LiveAI:
         self.last_events = {}
         self._sample_sequence = -1
         self.mask_suppressed_last = 0
+        self.live_mask_mode = "Waiting for detection"
+        self.live_display_fps = 0.0
 
     def _reset(self):
         self.error = ''
@@ -196,6 +198,8 @@ class LiveAI:
         self.last_events = {}
         self._sample_sequence = -1
         self.mask_suppressed_last = 0
+        self.live_mask_mode = "Waiting for detection"
+        self.live_display_fps = 0.0
 
     def start(self, app, camera):
         if camera.status().get('state') != 'online':
@@ -243,6 +247,8 @@ class LiveAI:
                 'inference_seconds': round(self.last_duration, 2) if self.last_duration is not None else None,
                 'last_sample_at': self.annotated_at,
                 'overlay_ready': self.jpeg is not None,
+                'live_mask_mode': self.live_mask_mode,
+                'live_display_fps': round(self.live_display_fps,1),
                 'model_device': self.device,
                 'model_version': self.model_version,
                 'events': [{k: v for k, v in ev.items() if k not in ('preview', 'mask_preview')} for ev in self.events[:30]] if include_events else [],

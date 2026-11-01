@@ -3,8 +3,9 @@
 {% block title %}Live Stream Inspection | BIKA{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/live_stream.css', v='live-detail-20261029') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/live_stream.css', v='live-health-v1') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/live_camo.css', v='camo-a1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/live_donut.css', v='polish-1') }}">
 {% endblock %}
 
 {% block content %}
@@ -25,21 +26,21 @@
   <header class="lsi-header">
     <div class="lsi-heading">
       <h1>Live Stream Inspection</h1>
-      <p>Connect Hikvision or an iPhone (Camo) and inspect sampled AI keyframes.</p>
+      <p>Connect Hikvision or an iPhone (Camo) for continuous camera inspection.</p>
     </div>
   </header>
 
   <section class="lsi-stats" aria-label="Camera statistics">
     <article class="lsi-stat lsi-stat-online"><span class="lsi-stat-icon"><iconsax-icon name="video" type="twotone" size="23" color="currentColor"></iconsax-icon></span><div><p>Stream Status</p><strong data-stat-connection>Disconnected</strong><small data-stat-connection-note>Camera not connected</small></div><span class="lsi-status-dot" data-online-dot></span></article>
     <article class="lsi-stat"><span class="lsi-stat-icon"><iconsax-icon name="speedometer" type="twotone" size="23" color="currentColor"></iconsax-icon></span><div><p>Camera FPS</p><strong data-stat-fps>—</strong><small>Measured incoming frames</small></div></article>
-    <article class="lsi-stat"><span class="lsi-stat-icon"><iconsax-icon name="chart-2" type="twotone" size="23" color="currentColor"></iconsax-icon></span><div><p>Current Reject Rate</p><strong data-stat-reject>—</strong><small>Rate of analysed observations</small></div></article>
+    <article class="lsi-stat"><span class="lsi-stat-icon"><iconsax-icon name="chart-2" type="twotone" size="23" color="currentColor"></iconsax-icon></span><div><p>Detected Defect Share</p><strong data-stat-reject>—</strong><small>Classified Track IDs · provisional, not unique products</small></div></article>
     <article class="lsi-stat"><span class="lsi-stat-icon"><iconsax-icon name="box" type="twotone" size="23" color="currentColor"></iconsax-icon></span><div><p>AI Keyframes</p><strong data-stat-samples>—</strong><small>Sampled frames, not unique products</small></div></article>
   </section>
 
   <div class="lsi-content-columns">
     <div class="lsi-content-left">
     <section class="lsi-panel lsi-viewer-card" aria-labelledby="lsi-viewer-title">
-      <div class="lsi-card-heading"><div><h2 id="lsi-viewer-title">Live Camera Feed</h2><p>Continuous camera preview · sampled 09b mask keyframes</p></div><span class="lsi-mini-status" data-live-badge>Offline</span></div>
+      <div class="lsi-card-heading"><div><h2 id="lsi-viewer-title">Live Camera Feed</h2><p>Live camera · motion-aligned masks between AI detections</p></div><span class="lsi-mini-status" data-live-badge>Offline</span></div>
       <div class="lsi-video-stage" data-video-stage>
         <div class="lsi-video-top"><span class="lsi-live-tag"><i></i><span data-live-label>NOT CONNECTED</span></span><span class="lsi-video-tag"><span data-feed-source-label>Hikvision</span> · <span data-feed-stream-label>Main Stream</span></span></div>
         <img class="lsi-video-image" data-video-image alt="Live camera feed from selected camera" hidden>
@@ -99,7 +100,7 @@
       </section>
     </section>
 
-      <section class="lsi-panel lsi-events-card"><div class="lsi-card-heading"><div><h2>Recent Live Defect Events</h2><p>Sampled keyframe candidates · short-term position deduplication, not persistent Reports</p></div><span class="lsi-small-tag" data-ai-events-badge>Not collecting</span></div><div class="lsi-table-scroll"><table class="lsi-events-table"><thead><tr><th>Time</th><th>Preview</th><th>Defect Type</th><th>Confidence</th><th>Action</th></tr></thead><tbody data-ai-events-body><tr><td colspan="5" class="lsi-no-events">No live defect events yet. Start Detection after connecting the camera.</td></tr></tbody></table></div></section>
+      <section class="lsi-panel lsi-events-card"><div class="lsi-card-heading"><div><h2>Recent Live Defect Events</h2><p>Confirmed on-screen defect Track-ID observations · no counting-line crossing required · physical uniqueness unverified</p></div><span class="lsi-small-tag" data-ai-events-badge>Not collecting</span></div><div class="lsi-table-scroll"><table class="lsi-events-table"><thead><tr><th>Time</th><th>Preview</th><th>Defect Type</th><th>Confidence</th><th>Action</th></tr></thead><tbody data-ai-events-body><tr><td colspan="5" class="lsi-no-events">No live defect events yet. Start Detection after connecting the camera.</td></tr></tbody></table></div></section>
     </div>
 
     <div class="lsi-content-right">
@@ -140,24 +141,29 @@
       </div>
       <div class="lsi-inline-message" data-control-message role="status" aria-live="polite">Camera status will appear here.</div>
       <div class="lsi-controls-divider"></div>
-      <div class="lsi-mini-heading">Inspection Configuration <span class="lsi-small-tag">Validated 09b</span></div>
-      <div class="lsi-slider-line"><label for="lsi-ai-confidence">Confidence Threshold</label><strong>0.50</strong></div>
-      <input id="lsi-ai-confidence" type="range" value="50" min="0" max="100" disabled aria-label="AI confidence threshold, unavailable during preview phase">
-      <p class="lsi-helper">Uses the saved V2 model settings. The slider is read-only; live sampling does not change validation thresholds.</p>
+      <div class="lsi-mini-heading">Mask Colour Legend <span class="lsi-small-tag">YOLO + v4</span></div>
+      <div class="lsi-mask-legend" aria-label="AI prediction colour legend">
+        <span class="lsi-mask-legend-item"><i class="lsi-mask-legend-swatch" style="--mask-swatch:#37B56D" aria-hidden="true"></i>Normal</span>
+        <span class="lsi-mask-legend-item"><i class="lsi-mask-legend-swatch" style="--mask-swatch:#E6464C" aria-hidden="true"></i>Fractured</span>
+        <span class="lsi-mask-legend-item"><i class="lsi-mask-legend-swatch" style="--mask-swatch:#48A1E2" aria-hidden="true"></i>Too Short</span>
+        <span class="lsi-mask-legend-item"><i class="lsi-mask-legend-swatch" style="--mask-swatch:#FF00AA" aria-hidden="true"></i>Too Dark</span>
+        <span class="lsi-mask-legend-item"><i class="lsi-mask-legend-swatch" style="--mask-swatch:#B85DDE" aria-hidden="true"></i>Bent Snack</span>
+      </div>
+      <p class="lsi-mask-legend-help">Colours represent predicted classes, not verified defects. Between YOLO updates, live masks are motion-aligned estimates.</p>
       <div class="lsi-ai-performance" aria-live="polite">
         <div><span>AI State</span><strong data-ai-state>Stopped</strong></div>
         <div><span>AI Sampling FPS</span><strong data-ai-fps>—</strong></div>
         <div><span>Last Inference</span><strong data-ai-inference>—</strong></div>
         <div><span>Keyframe Age</span><strong data-ai-keyframe-age>—</strong></div>
       </div>
-      <p class="lsi-helper">Start Detection to show coloured masks on the latest analysed keyframe automatically. This is sampled AI, not per-frame tracking; other objects may still need a trained negative/background filter.</p>
+      <p class="lsi-helper">With Realtime YOLO enabled, masks follow camera motion between AI detections. Intermediate contours are motion estimates; tracking and unique counts require validation.</p>
       <div class="lsi-controls-divider"></div>
       <div class="lsi-mini-heading">Stream Information</div>
       <dl class="lsi-detail-grid"><div><dt>Connection</dt><dd data-detail-connection>Offline</dd></div><div><dt>Source</dt><dd data-detail-source>RTSP · Hikvision</dd></div><div><dt>Resolution</dt><dd data-detail-resolution>—</dd></div><div><dt>Live AI Inference</dt><dd data-detail-ai>Stopped</dd></div><div><dt>Preview Processing</dt><dd>CPU · OpenCV</dd></div><div><dt>Server Frame Age</dt><dd data-preview-age title="Age since the frame was received by Flask; not glass-to-glass camera latency.">—</dd></div><div><dt>CUDA Support</dt><dd data-live-cuda>Checking…</dd></div></dl>
       {% if not can_control_camera %}<div class="lsi-operator-note">You can view an existing camera feed. Only Admin and SuperAdmin can connect or disconnect the source.</div>{% endif %}
     </aside>
 
-      <section class="lsi-panel lsi-alerts-card"><div class="lsi-card-heading"><h2>Current Alerts</h2><span class="lsi-small-tag" data-ai-alert-badge>Waiting</span></div><div class="lsi-muted-line"><iconsax-icon name="notification" type="twotone" size="20" color="currentColor"></iconsax-icon><span data-ai-alert-text>Alerts activate when sampled AI detection is running.</span></div></section>
+      <section class="lsi-panel lsi-alerts-card"><div class="lsi-card-heading"><h2>Current Alerts</h2><span class="lsi-small-tag" data-ai-alert-badge>Waiting</span></div><div class="lsi-muted-line"><iconsax-icon name="notification" type="twotone" size="20" color="currentColor"></iconsax-icon><span data-ai-alert-text>Camera health warnings appear here (connection, stale frames, or black feed).</span></div></section>
 
       <section class="lsi-panel lsi-distribution-card"><div class="lsi-card-heading"><h2>Defect Distribution (Live)</h2><span class="lsi-small-tag" data-ai-distribution-badge>No data</span></div><div class="lsi-chart-empty"><span class="lsi-empty-ring" data-ai-ring><span data-ai-ring-total>—<small>Events</small></span></span><p data-ai-distribution-text>Waiting for sampled AI defect events. Counts are not unique biscuit totals.</p></div></section>
     </div>
@@ -171,7 +177,7 @@
         <div>
           <span class="lsi-event-kicker">LIVE INSPECTION · EVENT REVIEW</span>
           <h2 id="lsi-event-title">Defect Event Details</h2>
-          <p>Latest sampled AI observation · manual verification recommended</p>
+          <p>Selected defect event · manual verification recommended</p>
         </div>
         <button class="lsi-event-close" type="button" data-event-modal-close aria-label="Close event details">&times;</button>
       </div>
@@ -187,11 +193,13 @@
         <div><dt>Decision</dt><dd data-event-decision>Defect</dd></div>
         <div><dt>Model</dt><dd data-event-model>—</dd></div>
       </dl>
-      <p class="lsi-event-footnote">This event comes from one sampled keyframe, not from continuous tracking or a unique-product counter.</p>
+      <p class="lsi-event-footnote">This defect was observed on screen after repeated confirmed detections. No counting-line crossing is required. Physical uniqueness is unverified.</p>
     </section>
   </div>
 </div>
 {% endblock %}
 
-{% block extra_js %}<script src="{{ url_for('static', filename='js/live_stream.js', v='live-detail-20261029') }}" defer></script>
-<script src="{{ url_for('static', filename='js/live_stream_select.js', v='live-detail-20261029') }}" defer></script>{% endblock %}
+{% block extra_js %}<script src="{{ url_for('static', filename='js/live_stream.js', v='live-health-v1') }}" defer></script>
+<script src="{{ url_for('static', filename='js/live_stream_select.js', v='live-detail-20261029') }}" defer></script>
+<script defer src="{{ url_for('static', filename='js/live_donut.js', v='polish-1') }}"></script>
+{% endblock %}

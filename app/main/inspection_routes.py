@@ -46,6 +46,7 @@ from app.services.video_safe_zone import validate_zone
 from app.services.inspection_record_service import (
     persist_completed_image_inspection,
 )
+from app.services.video_record_service import persist_completed_video_inspection
 
 
 # =========================================================
@@ -1149,6 +1150,18 @@ def _run_video_job(app, job_id: str, video_bytes: bytes, filename: str, safe_zon
             )
             if cancel_event.is_set():
                 raise InspectionCancelled("Video inspection cancelled by user.")
+            try:
+                # Save new videos in the SAME DB and media store as Image runs.
+                record = persist_completed_video_inspection(
+                    source_bytes=video_bytes, source_filename=filename,
+                    annotated_path=output_path, result=result,
+                    user_id=job["user_id"],
+                )
+                result["record"] = {"saved": True, "batch_id": record.batch_id}
+            except Exception:
+                # Inference remains usable even if persistence fails.
+                current_app.logger.exception("Video completed but report persistence failed")
+                result["record"] = {"saved": False, "reason": "Report save failed; see server log"}
             with _INSPECTION_JOBS_LOCK:
                 job = _INSPECTION_JOBS.get(job_id)
                 if job is not None:
@@ -1279,3 +1292,5 @@ def run_inspection_video():
         status_url=url_for("main.inspection_job_status", job_id=job_id),
         cancel_url=url_for("main.cancel_inspection_job", job_id=job_id),
     ), 202
+
+# BIKA-UNIFIED-FIX-V2

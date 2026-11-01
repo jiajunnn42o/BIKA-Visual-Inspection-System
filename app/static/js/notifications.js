@@ -1108,6 +1108,20 @@
        INITIAL BADGE
        ===================================================== */
 
+    // BIKA-LIVE-GLOBAL-ALERTS-V1 — refresh the existing bell on health events.
+    window.addEventListener('bika:notifications-changed', loadNotifications);
+    // BIKA-DONUT-NOTIFICATION-POLISH-V1: refresh the existing badge immediately
+    // when the Live fault monitor adds or acknowledges a database notification.
+    let bikaBadgeRefreshTimer = null;
+    window.addEventListener('bika:notifications-changed', () => {
+        if (bikaBadgeRefreshTimer !== null) clearTimeout(bikaBadgeRefreshTimer);
+        bikaBadgeRefreshTimer = setTimeout(() => {
+            bikaBadgeRefreshTimer = null;
+            loadNotifications();
+        }, 140);
+    });
+
+
     loadNotifications();
 
 })();

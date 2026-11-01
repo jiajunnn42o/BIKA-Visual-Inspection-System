@@ -450,57 +450,91 @@ def _cropped_live_event(frame, o, model_version):
 
 
 def run_realtime_live_worker(state, app, camera, stopped, generation):
-    """Drop stale camera frames instead of queuing them; publish only analysed snapshots."""
+    """AI inference and a genuinely continuous newest-camera-frame mask view.
+
+    Detected masks are exact ONLY on AI frames. Intermediate frames use motion
+    projection; the visual projector never changes AI classes, Track IDs or counts.
+    """
+    from app.services.live_mask_projection_service import LiveMaskProjector
+    from app.services.live_defect_observer import LiveDefectObserver
+
     if not _RT_SESSION_LOCK.acquire(blocking=False):
         raise InspectionPipelineError('Video/Live realtime GPU engine is already busy.')
+    projector_thread = None
     try:
         with app.app_context():
-            direction = os.getenv('BIKA_REALTIME_DIRECTION','rtl').lower()
-            line = float(os.environ.get('BIKA_REALTIME_LINE','.75'))
+            direction = os.getenv('BIKA_REALTIME_DIRECTION', 'rtl').lower()
+            line = float(os.getenv('BIKA_REALTIME_LINE', '.75'))
             engine = RealtimeInspectionEngine(
-                device=os.getenv('BIKA_REALTIME_DEVICE','0'),direction=direction,line=line,
-                quota=_read_int('BIKA_REALTIME_CLASSIFY_BUDGET',16,1,100))
+                device=os.getenv('BIKA_REALTIME_DEVICE','0'), direction=direction,
+                line=line, quota=_read_int('BIKA_REALTIME_CLASSIFY_BUDGET',16,1,100))
+            observer = LiveDefectObserver()  # BIKA-LIVE-OBSERVE-CAMO-V3
+            projector = LiveMaskProjector(
+                state, generation, direction=direction, line=line,
+                target_fps=_read_int('BIKA_LIVE_MASK_DISPLAY_FPS',12,2,20))
+            projector_thread = threading.Thread(
+                target=projector.loop, args=(camera, stopped), daemon=True,
+                name='bika-live-continuous-mask')
+            projector_thread.start()
             while not stopped.is_set():
                 if camera.status().get('state') != 'online':
                     with state.lock:
                         if generation == state.generation:
-                            state.state='stopped';state.stage='Camera offline'
+                            state.state='stopped'; state.stage='Camera offline'
                     break
+                camera_health = camera.status()
+                if camera_health.get('feed_usable', True) is False:
+                    projector.clear_anchor()
+                    with state.lock:
+                        if generation == state.generation:
+                            state.stage = 'Camera feed unavailable — AI suspended (no logo detection)'
+                    stopped.wait(.10)
+                    continue
+                # AI always reads the freshest complete input. Its processing
+                # cadence is independent from the visual display frame cadence.
                 sequence, jpg = camera.latest()
                 if jpg is None or sequence == state._sample_sequence:
                     stopped.wait(.025)
                     continue
                 state._sample_sequence = sequence
-                frame = cv2.imdecode(np.frombuffer(jpg, np.uint8),cv2.IMREAD_COLOR)
+                frame = cv2.imdecode(np.frombuffer(jpg,np.uint8), cv2.IMREAD_COLOR)
                 if frame is None:
                     continue
-                start=time.monotonic()
+                started=time.monotonic()
                 with state.lock:
-                    if generation != state.generation: return
-                    state.state='running';state.stage='Tracking latest camera frame (YOLO + v4)'
-                result = engine.process(frame)
-                out, _ = annotate(frame.copy(),result,direction=direction,line=line)
-                ok,encoded=cv2.imencode('.jpg',out,[cv2.IMWRITE_JPEG_QUALITY,78])
+                    if generation != state.generation:
+                        return
+                    state.state='running'
+                    state.stage='YOLO tracking + continuous motion-aligned mask display'
+                result=engine.process(frame)
+                # Publish detections AND the exact source frame together.
+                # The projector aligns these polygons to NEW camera frames.
+                projector.publish_detection(frame,result)
+                observed = observer.observe(result['objects'], time.monotonic())
                 fresh_events=[_cropped_live_event(frame,e,'Realtime YOLO11n-Seg + v4')
-                              for e in result['events'] if e['label'] != 'normal']
-                fresh_events=[x for x in fresh_events if x]
+                              for e in observed]
+                fresh_events=[e for e in fresh_events if e]
                 with state.lock:
-                    if generation != state.generation: return
+                    if generation != state.generation:
+                        return
                     state.sample_count += 1
-                    state.observed = int(result['count'])
-                    state.normal = int(engine.totals['normal'])
-                    state.defective = state.observed - state.normal
-                    state.mask_suppressed_last = 0
-                    state.last_duration = time.monotonic()-start
-                    state.ai_fps = 1 / max(state.last_duration, 1e-3)
-                    state.device = 'CUDA GPU '+engine.device if engine.device!='cpu' else 'CPU'
-                    state.model_version = 'Realtime YOLO11n-Seg + v4'
+                    # Live metrics: unique classified TRACK IDs, not conveyor throughput.
+                    state.observed=len(observer.seen_class)
+                    state.normal=sum(v=='normal' for v in observer.seen_class.values())
+                    state.defective=state.observed-state.normal
+                    state.mask_suppressed_last=0
+                    state.last_duration=time.monotonic()-started
+                    state.ai_fps=1/max(state.last_duration,1e-3)
+                    state.device='CUDA GPU '+engine.device if engine.device!='cpu' else 'CPU'
+                    state.model_version='Realtime YOLO11n-Seg + v4'
                     state.annotated_at=datetime.now().astimezone().isoformat(timespec='seconds')
-                    state.events = (fresh_events+state.events)[:50]
+                    state.events=(fresh_events+state.events)[:50]
                     state.stage=(f"Live tracked {result['visible']} objects · pending {result['pending']}"
-                                 f" · provisional counts {result['count']}")
-                    if ok:
-                        state.jpeg=encoded.tobytes()
-                        state.jpeg_sequence += 1
+                                 f" · on-screen defect observations {observer.event_count} (provisional)")
+                    # DO NOT publish a whole-frame AI snapshot here: only the
+                    # projector thread publishes continuous newest-camera frames.
     finally:
+        stopped.set()
+        if projector_thread is not None:
+            projector_thread.join(timeout=2.0)
         _RT_SESSION_LOCK.release()

@@ -1,0 +1,37 @@
+/* BIKA burgundy/cream global warning surfaces, accessible in light & dark UI. */
+.bika-live-alert-toasts{position:fixed;top:82px;right:24px;z-index:5000;display:grid;gap:12px;width:min(390px,calc(100vw - 32px));pointer-events:none}
+.bika-live-alert-toast{pointer-events:auto;position:relative;display:flex;gap:12px;align-items:flex-start;padding:17px 42px 16px 16px;background:var(--app-card-bg,#fff);background-color:var(--app-surface,#fff);border:1px solid #eed4d9;border-left:4px solid #922d43;border-radius:15px;box-shadow:0 16px 44px #2b132629;color:var(--app-text,#333);animation:bika-alert-enter .22s ease-out;font-family:Inter,system-ui,sans-serif}
+.bika-live-alert-dot{flex:0 0 26px;height:26px;line-height:26px;text-align:center;background:#fae6ea;color:#8b2037;border-radius:50%;font-weight:800}
+.bika-live-alert-copy{min-width:0;flex:1}.bika-live-alert-copy strong{display:block;font-size:13px;line-height:1.4;color:var(--app-text,#30272b)}.bika-live-alert-copy p{margin:5px 0 10px;color:var(--app-muted,#7b6a70);font-size:12px;line-height:1.5}
+.bika-live-alert-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.bika-live-alert-actions a,.bika-live-alert-actions button{font-size:12px;font-weight:700;color:#8b2037;text-decoration:none;background:none;border:0;padding:3px 0;cursor:pointer}.bika-live-alert-actions button{color:var(--app-text,#444)}
+.bika-live-alert-close{position:absolute;top:8px;right:10px;font-size:20px;color:var(--app-muted,#999);border:0;background:transparent;cursor:pointer}
+.bika-live-persisted-alerts{border-top:1px solid #f0dce0;margin-top:12px;padding-top:12px;color:var(--app-text,#333)}.bika-live-persisted-alerts[hidden]{display:none}.bika-live-persisted-alerts>strong{font-size:12px;color:#952d43}
+.bika-live-persisted-row{display:flex;gap:8px;justify-content:space-between;align-items:flex-start;padding:9px 0;border-bottom:1px solid #eadfe1}.bika-live-persisted-row b{font-size:12px}.bika-live-persisted-row p{margin:3px 0 0;font-size:11px;line-height:1.5;color:var(--app-muted,#777)}.bika-live-persisted-row button{border:1px solid #dfb9c2;border-radius:8px;padding:6px 9px;background:transparent;color:#9e2843;font-size:11px;font-weight:600;cursor:pointer;flex-shrink:0}
+@keyframes bika-alert-enter{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:600px){.bika-live-alert-toasts{right:16px;top:70px}}
+@media(prefers-reduced-motion:reduce){.bika-live-alert-toast{animation:none}}
+
+
+/* BIKA-DONUT-NOTIFICATION-POLISH-V1 — wine-red primary action and clearer close. */
+.bika-live-alert-actions a {
+  display: inline-flex; align-items:center; justify-content:center;
+  padding: 8px 12px; border-radius: 9px; min-height:34px;
+  background: #772137; color: #fff; border: 1px solid #772137;
+  text-decoration:none; box-shadow:0 2px 5px rgba(88,22,43,.10);
+}
+.bika-live-alert-actions a:hover { background:#60162a; color:#fff; }
+.bika-live-alert-actions button { font-weight:650; padding:7px 9px; border-radius:9px; }
+.bika-live-alert-actions button:hover { background:rgba(139,32,55,.06); }
+.bika-live-alert-actions a:focus-visible,
+.bika-live-alert-actions button:focus-visible,
+.bika-live-alert-close:focus-visible {outline:2px solid #b64f69;outline-offset:3px;}
+.bika-live-alert-close {
+  top:9px;right:10px; width:28px;height:28px;
+  display:grid;place-items:center;line-height:1;
+  background:rgba(110,44,62,.07);border-radius:50%;
+  color:#692137;font-weight:600;transition:background .16s ease;
+}
+.bika-live-alert-close:hover {background:#f2dfe5;color:#53172a;}
+html[data-theme=dark] .bika-live-alert-close {color:#e9a9b9;background:rgba(255,255,255,.10);}
+html[data-theme=dark] .bika-live-alert-close:hover {background:rgba(255,255,255,.20);}
+@media (prefers-reduced-motion:reduce){.bika-live-alert-close{transition:none}}

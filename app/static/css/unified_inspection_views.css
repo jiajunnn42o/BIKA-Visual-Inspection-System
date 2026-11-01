@@ -1,0 +1,30 @@
+/* BIKA Unified Reports & Analytics — shared layout, no extra Live cards. */
+.reports-live-pill {display:inline-flex;vertical-align:middle;align-items:center;padding:3px 9px;margin-left:8px;border-radius:999px;background:#f6ebee;color:#742032;font-size:10px;font-weight:500;letter-spacing:.02em;}
+.reports-provisional-value {font-size:11px;color:#8b6872;white-space:nowrap}
+.reports-unified-note {margin:0 0 12px;color:#967b83;font-size:11px;line-height:1.45}
+.reports-live-detail-note {padding:10px 14px;background:#fcf6f7;border-radius:11px;color:#855562;font-size:12px;line-height:1.6;margin-bottom:14px;}
+.reports-live-event-list {max-height:200px;overflow:auto;margin:8px 0 0;padding:0;list-style:none;}
+.reports-live-event-list li {border-bottom:1px solid #eee5e7;padding:8px 0;color:#66565a;font-size:12px;}
+.analytics-unified-live-note {padding:9px 11px;background:var(--an-card, #fff);border:1px solid var(--an-outline, #eee4e8);border-radius:11px;color:var(--an-muted,#847a7c);font-size:11px;line-height:1.5;margin-top:8px;}
+.analytics-unified-live-note strong {color:var(--an-brand,#742032);font-weight:600;}
+.analytics-unified-live-daily {display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:7px;}
+.analytics-unified-live-daily span {background:#f8eef1;border-radius:999px;padding:4px 9px;color:#7b3043;font-size:10px;}
+.analytics-unified-live-foot {display:block;font-size:10px;color:#957b84;line-height:1.4;margin-top:4px;}
+html[data-theme=dark] .reports-live-pill,html[data-theme=dark] .analytics-unified-live-daily span{background:#482632;color:#f7c4d0}
+html[data-theme=dark] .reports-live-detail-note{background:#3a2931;color:#f0c4cf}
+html[data-theme=dark] .analytics-unified-live-note{background:#35282f;color:#e2c8cf}
+.analytics-unified-class-line {display:block;color:#8d5261;font-size:10px;font-weight:400;line-height:1.5;margin-top:3px;}
+.analytics-unified-class-line[hidden]{display:none!important}
+
+/* BIKA-UNIFIED-FIX-V2: keep original KPI card height, simplify Reports */
+.analytics-unified-class-line,.analytics-unified-live-note {display:none!important}
+.bika-report-name-line {display:flex;align-items:center;gap:8px;min-width:0;max-width:320px}
+.bika-report-name-line .reports-file-name {display:block;min-width:0;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bika-report-name-line .reports-live-pill {flex:none;margin:0;font-weight:500}
+.bika-report-video-preview {max-width:100%;margin:0 0 18px}
+.bika-report-video-preview video {display:block;width:100%;max-height:380px;background:#171717;border-radius:13px;object-fit:contain}
+.bika-report-video-actions {display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:9px;font-size:12px;color:#74686b}
+.bika-report-video-actions a {color:#741f2e;text-decoration:none;font-size:12px}
+.bika-report-video-preview p {font-size:11px;color:#8b777d;line-height:1.45}
+.reports-ratio,.reports-good {font-variant-numeric:tabular-nums}
+/* BIKA-UNIFIED-FIX-V2 */

@@ -149,20 +149,9 @@ document.addEventListener(
             sourceType
         ) {
 
-            const isVideo =
-                String(sourceType).toLowerCase()
-                ===
-                "video";
-
-            const label =
-                isVideo
-                    ? "Video"
-                    : "Image";
-
-            const iconName =
-                isVideo
-                    ? "video"
-                    : "gallery";
+            const source = String(sourceType).toLowerCase();
+            const label = source === "live" ? "Live" : source === "video" ? "Video" : "Image";
+            const iconName = source === "live" ? "camera" : source === "video" ? "video" : "gallery";
 
             return `
                 <span
@@ -709,6 +698,21 @@ document.addEventListener(
             row
         ) {
 
+            if (row?.source_type === "video" && row?.original_url) {
+                const videoUrl = row.annotated_url || row.original_url;
+                const videoCaption = row.annotated_url ? 'Detection Mask Video' : 'Original Video · Annotated MP4 unavailable';
+                const maskLink = row.annotated_url
+                    ? `<a href="${escapeHtml(row.annotated_url)}" target="_blank" rel="noopener">Open mask video</a>`
+                    : '<span>Mask video was not saved</span>';
+                return `<section class="bika-report-video-preview">
+                    <video controls playsinline preload="metadata" src="${escapeHtml(videoUrl)}"></video>
+                    <div class="bika-report-video-actions">
+                        <span>${videoCaption}</span>
+                        ${maskLink}<a href="${escapeHtml(row.original_url)}" target="_blank" rel="noopener">View original</a>
+                    </div>
+                    <p>AI classifications in this video are observations, not verified unique snack counts.</p>
+                </section>`;
+            }
             const originalUrl =
                 row?.original_url
                 ||
@@ -1031,11 +1035,9 @@ document.addEventListener(
                                 </td>
 
                                 <td>
-                                    <span
-                                        class="reports-file-name"
-                                        title="${escapeHtml(row.file_name)}"
-                                    >
-                                        ${escapeHtml(row.file_name)}
+                                    <span class="bika-report-name-line">
+                                        <span class="reports-file-name" title="${escapeHtml(row.file_name)}">${escapeHtml(row.file_name)}</span>
+                                        ${row.source_type === "live" ? '<span class="reports-live-pill">LIVE</span>' : ''}
                                     </span>
                                 </td>
 
@@ -1044,11 +1046,11 @@ document.addEventListener(
                                 </td>
 
                                 <td class="reports-ratio">
-                                    ${integerFormat.format(row.total)}
+                                    ${row.is_provisional && !row.has_estimated_counts ? "Not recorded" : integerFormat.format(row.total)}
                                 </td>
 
                                 <td class="reports-good">
-                                    ${integerFormat.format(row.good)}
+                                    ${row.is_provisional && !row.has_estimated_counts ? "Not recorded" : integerFormat.format(row.good)}
                                 </td>
 
                                 <td class="reports-bad">
@@ -1056,7 +1058,7 @@ document.addEventListener(
                                 </td>
 
                                 <td class="reports-ratio">
-                                    ${Number(row.good_ratio).toFixed(1)}%
+                                    ${row.is_provisional && !row.has_estimated_counts ? "Not recorded" : `${Number(row.good_ratio).toFixed(1)}%`}
                                 </td>
 
                                 <td>
@@ -1423,6 +1425,31 @@ document.addEventListener(
                 detailTitle.textContent =
                     row.file_name;
 
+                // BIKA-UNIFIED-VIEWS-V1: Live uses session details, not fabricated product totals.
+                if (row.source_type === "live") {
+                    const meta = row.live_session || {};
+                    const items = (meta.recent_events || []).map(event => {
+                        const probability = Number(event.confidence);
+                        const confidence = Number.isFinite(probability) ? `${(probability * 100).toFixed(1)}%` : "—";
+                        return `<li>${escapeHtml(event.label)} · ${confidence} · ${escapeHtml(event.detected_at)}</li>`;
+                    }).join("");
+                    const breakdown = (row.classes || []).map(item =>
+                        `<div class="reports-reason-row"><span class="reports-defect-dot" style="--defect-colour:${escapeHtml(item.colour)}"></span><span>${escapeHtml(item.label)}</span><strong>${integerFormat.format(item.count)}</strong></div>`
+                    ).join("");
+                    detailBody.innerHTML = `
+                        <div class="reports-live-detail-note">Provisional Live observations · product totals not verified. No session recording was saved.</div>
+                        <div class="reports-detail-grid">
+                            ${detailItem("Source", "Live · Camo")}
+                            ${detailItem("Duration", `${Number(meta.duration_seconds || 0).toFixed(1)} s`)}
+                            ${detailItem("AI Frames", integerFormat.format(meta.ai_frames || 0))}
+                            ${detailItem("Defect Observations", integerFormat.format(meta.event_count || 0))}
+                        </div>
+                        <section class="reports-reason-breakdown"><h3 class="reports-detail-section-title">Observed Defect Types</h3><div class="reports-reason-legend">${breakdown}</div></section>
+                        <section class="reports-reason-breakdown"><h3 class="reports-detail-section-title">Recent Saved Events</h3><ul class="reports-live-event-list">${items || '<li>No defect events saved.</li>'}</ul><p class="reports-provisional-value">Showing up to ${Number(meta.event_preview_limit || 20)} latest events. Full aggregated counts above include all saved observations.</p></section>`;
+                    detailModal.hidden = false;
+                    document.body.style.overflow = "hidden";
+                    return;
+                }
                 const classItems =
                     (
                         row.classes
@@ -1540,7 +1567,7 @@ document.addEventListener(
                             <strong>
                                 ${integerFormat.format(inspectedTotal)}
                             </strong>
-                            <span>products inspected</span>
+                            <span>${row.is_provisional ? "unverified observations" : "products inspected"}</span>
                         </div>
 
                         <div
@@ -2856,3 +2883,11 @@ document.addEventListener(
 
     }
 );
+
+/* BIKA-UNIFIED-VIEWS-V1 */
+
+/* BIKA-UNIFIED-FIX-V2 */
+
+/* BIKA-REPORT-COUNTS-V4 */
+
+/* BIKA-TREND-REVIEW-MASK-V1 */

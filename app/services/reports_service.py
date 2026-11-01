@@ -183,7 +183,7 @@ def _build_batch_row(
         or 0
     )
 
-    return {
+    row = {
         "batch_id":
             record.batch_id,
         "file_name":
@@ -297,6 +297,33 @@ def _build_batch_row(
                 record.result_key
             ),
     }
+    # BIKA-UNIFIED-FIX-V2: Video is saved alongside Image, but sampled video
+    # observations are NEVER treated as verified physical products.
+    if source_type == "video" and summary.get("_bika_provisional_video"):
+        observed = summary.get("observation_counts") or {}
+        row["classes"] = [
+            {"key": key, "label": CLASS_LABELS[key], "colour": CLASS_COLOURS[key],
+             "count": max(0,int(observed.get(key) or 0))}
+            for key in ("normal", *DEFECT_CLASS_ORDER)
+        ]
+        # Display actual model-estimated track counts, not invented verified yield.
+        # Never alter summary_json["judged"] or official quality/SPC calculations.
+        estimated_good = max(0, int(observed.get("normal") or 0))
+        estimated_bad = max(0, int(summary.get("observation_defects") or 0))
+        estimated_total = max(0, int(summary.get("observation_total") or 0))
+        # All three must reconcile before displaying a ratio.
+        reconciled = estimated_total > 0 and estimated_good + estimated_bad == estimated_total
+        row["total"] = estimated_total if reconciled else None
+        row["good"] = estimated_good if reconciled else None
+        row["bad"] = estimated_bad
+        row["good_ratio"] = _round_percent(estimated_good, estimated_total) if reconciled else None
+        row["has_estimated_counts"] = reconciled
+        row["is_provisional"] = True
+        row["status"] = "PROVISIONAL"
+        row["status_key"] = "review"
+        row["annotated_url"] = _media_url(summary.get("_annotated_video_key"))
+        row["total_runtime_seconds"] = float(summary.get("video_duration_seconds") or 0)
+    return row
 
 
 def build_reports_data() -> dict[str, Any]:
@@ -445,3 +472,7 @@ def build_reports_data() -> dict[str, Any]:
             },
         ],
     }
+
+# BIKA-UNIFIED-FIX-V2
+
+# BIKA-REPORT-COUNTS-V4

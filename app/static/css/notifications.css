@@ -764,3 +764,10 @@ html[data-theme="dark"]
 .app-notification-button {
     color: var(--app-brand);
 }
+
+/* BIKA-DONUT-NOTIFICATION-POLISH-V1: readable unread count badge. */
+.app-notification-badge:not([hidden]) {
+    top:-6px;right:-6px; min-width:20px;height:20px;
+    padding:0 4px;font-size:10px;line-height:1;
+    box-shadow:0 1px 4px rgba(81,16,36,.18);
+}

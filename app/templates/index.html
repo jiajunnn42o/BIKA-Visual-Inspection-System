@@ -57,6 +57,7 @@ Dashboard | BIKA
     data-dashboard-page
 
     data-dashboard-url="{{ url_for('main.dashboard_data') }}"
+    data-dashboard-live-runtime-url="{{ url_for('main.dashboard_api_live_runtime') }}"
 
 >
 
@@ -916,7 +917,7 @@ Dashboard | BIKA
                         </span>
                     </span>
 
-                    <p>Live once the camera is connected</p>
+                    <p data-bika-runtime-caption>Current Live Camera and AI session</p>
 
                 </div>
 
@@ -936,7 +937,7 @@ Dashboard | BIKA
 
                     <div>
 
-                        <dt>Frames processed</dt>
+                        <dt>AI frames processed</dt>
 
                         <dd data-camera-frames>—</dd>
 
@@ -946,7 +947,7 @@ Dashboard | BIKA
 
                     <div>
 
-                        <dt>Average pace</dt>
+                        <dt>AI inference FPS</dt>
 
                         <dd data-camera-fps>—</dd>
 
@@ -1067,3 +1068,4 @@ Dashboard | BIKA
 ></script>
 
 {% endblock %}
+<!-- BIKA-LIVE-SESSION-HISTORY-V1 -->

@@ -11,6 +11,7 @@ from flask_login import current_user, login_required
 from app.main import main_bp
 from app.services.live_camera_router import camera_router as live_camera
 from app.services.live_ai_service import live_ai
+from app.services.live_system_alerts import poll_camera_alerts, note_intentional_disconnect  # BIKA-LIVE-GLOBAL-ALERTS-V1
 
 
 CONTROL_ROLES = {"admin", "superadmin"}
@@ -57,6 +58,20 @@ def live_inspection_connect():
 def live_inspection_disconnect():
     if not can_control():
         abort(403)
+    # Capture an existing fault BEFORE a deliberate disconnect clears status.
+    try:
+        poll_camera_alerts(current_user.id)
+    except Exception:
+        from flask import current_app
+        current_app.logger.exception('Live camera alert snapshot failed')
+    note_intentional_disconnect()
+    # BIKA-LIVE-SESSION-HISTORY-V1: snapshot before AI buffers are cleared.
+    try:
+        from app.services.live_session_history import finish_live_session
+        finish_live_session()
+    except Exception:
+        from flask import current_app
+        current_app.logger.exception('Could not finalize Live Session History')
     live_ai.stop()
     live_camera.disconnect()
     return jsonify(ok=True, camera=live_camera_combined_status())
@@ -169,6 +184,12 @@ def live_inspection_ai_start():
         abort(403)
     from flask import current_app
     ok, message = live_ai.start(current_app._get_current_object(), live_camera)
+    if ok:
+        try:
+            from app.services.live_session_history import begin_live_session
+            begin_live_session(current_app.instance_path, current_user.get_id(), live_camera, live_ai)
+        except Exception:
+            current_app.logger.exception('Could not start Live Session History')
     return jsonify(ok=ok, message=message, ai=live_ai.status()), 200 if ok else 409
 
 
@@ -177,6 +198,13 @@ def live_inspection_ai_start():
 def live_inspection_ai_stop():
     if not can_control():
         abort(403)
+    # Snapshot the last events before stopping the AI worker.
+    try:
+        from app.services.live_session_history import finish_live_session
+        finish_live_session()
+    except Exception:
+        from flask import current_app
+        current_app.logger.exception('Could not finalize Live Session History')
     live_ai.stop()
     return jsonify(ok=True, message="AI stopped. Camera preview remains online.", ai=live_ai.status())
 
@@ -241,3 +269,5 @@ def live_inspection_event_image(event_id):
     response.headers["Cache-Control"] = "private, no-store"
     response.headers["X-Content-Type-Options"] = "nosniff"
     return response
+
+# BIKA-LIVE-SESSION-HISTORY-V1
