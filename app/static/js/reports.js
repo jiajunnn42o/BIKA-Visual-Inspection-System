@@ -1046,11 +1046,11 @@ document.addEventListener(
                                 </td>
 
                                 <td class="reports-ratio">
-                                    ${row.is_provisional && !row.has_estimated_counts ? "Not recorded" : integerFormat.format(row.total)}
+                                    ${row.is_provisional && !row.has_estimated_counts ? "—" : integerFormat.format(row.total)}
                                 </td>
 
                                 <td class="reports-good">
-                                    ${row.is_provisional && !row.has_estimated_counts ? "Not recorded" : integerFormat.format(row.good)}
+                                    ${row.is_provisional && !row.has_estimated_counts ? "—" : integerFormat.format(row.good)}
                                 </td>
 
                                 <td class="reports-bad">
@@ -1058,7 +1058,7 @@ document.addEventListener(
                                 </td>
 
                                 <td class="reports-ratio">
-                                    ${row.is_provisional && !row.has_estimated_counts ? "Not recorded" : `${Number(row.good_ratio).toFixed(1)}%`}
+                                    ${row.is_provisional && !row.has_estimated_counts ? "—" : `${Number(row.good_ratio).toFixed(1)}%`}
                                 </td>
 
                                 <td>
@@ -1436,10 +1436,36 @@ document.addEventListener(
                     const breakdown = (row.classes || []).map(item =>
                         `<div class="reports-reason-row"><span class="reports-defect-dot" style="--defect-colour:${escapeHtml(item.colour)}"></span><span>${escapeHtml(item.label)}</span><strong>${integerFormat.format(item.count)}</strong></div>`
                     ).join("");
+                    // The recording manifest is owner-filtered by the backend.
+                    const recording = meta.recording || {};
+                    // BIKA-LIVE-MASK-RECORDING-ADDON-V1: independent playback of saved motion-aligned masks.
+                    const segments = Array.isArray(recording.segments) ? recording.segments : [];
+                    const maskSegments = Array.isArray(recording.mask_segments) ? recording.mask_segments : [];
+                    const hasMask = maskSegments.length > 0;
+                    const recorded = segments.length > 0;
+                    const sizeMB = (Number(recording.size_bytes || 0) / (1024 * 1024)).toFixed(1);
+                    const playback = recorded ? `
+                      <section class="reports-live-recorder" aria-label="Live recording playback">
+                        <div class="reports-live-recorder-heading"><span>Live recording</span><span>${sizeMB} MB · ${segments.length} segment${segments.length === 1 ? '' : 's'}</span></div>
+                        ${hasMask ? `<div class="reports-live-views" role="group" aria-label="Recording view">
+                          <button type="button" class="reports-live-view is-current" data-live-report-mode="original" aria-pressed="true">Original</button>
+                          <button type="button" class="reports-live-view" data-live-report-mode="mask" aria-pressed="false">AI Mask</button>
+                        </div>` : ''}
+                        <video data-live-report-player controls playsinline preload="metadata" src="${escapeHtml(segments[0].url)}"></video>
+                        <div class="reports-live-recorder-chapters" data-live-report-parts>${segments.map((segment, i) => `
+                          <button type="button" class="reports-live-part ${i === 0 ? 'is-current' : ''}" data-live-report-part="${i}" data-live-part-url="${escapeHtml(segment.url)}">Part ${i + 1}</button>
+                        `).join('')}</div>
+                        <p data-live-report-description>Original camera footage · up to 10 minutes per part.</p>
+                      </section>` :
+                      ['recording', 'starting', 'finalizing'].includes(recording.status) ?
+                        '<div class="reports-live-detail-note">Recording in progress. Completed segments will appear here.</div>' :
+                      ['error', 'unavailable', 'storage_full', 'interrupted'].includes(recording.status) ?
+                        '<div class="reports-live-detail-note">Recording could not be saved. Please check the recorder status.</div>' : '';
                     detailBody.innerHTML = `
-                        <div class="reports-live-detail-note">Provisional Live observations · product totals not verified. No session recording was saved.</div>
+                        <div class="reports-live-detail-note">Provisional Live observations · product totals not verified.</div>
+                        ${playback}
                         <div class="reports-detail-grid">
-                            ${detailItem("Source", "Live · Camo")}
+                            ${detailItem("Source", meta.camera_source || "Live Camera")}
                             ${detailItem("Duration", `${Number(meta.duration_seconds || 0).toFixed(1)} s`)}
                             ${detailItem("AI Frames", integerFormat.format(meta.ai_frames || 0))}
                             ${detailItem("Defect Observations", integerFormat.format(meta.event_count || 0))}
@@ -1448,6 +1474,47 @@ document.addEventListener(
                         <section class="reports-reason-breakdown"><h3 class="reports-detail-section-title">Recent Saved Events</h3><ul class="reports-live-event-list">${items || '<li>No defect events saved.</li>'}</ul><p class="reports-provisional-value">Showing up to ${Number(meta.event_preview_limit || 20)} latest events. Full aggregated counts above include all saved observations.</p></section>`;
                     detailModal.hidden = false;
                     document.body.style.overflow = "hidden";
+                    const player = detailBody.querySelector('[data-live-report-player]');
+                    const partList = detailBody.querySelector('[data-live-report-parts]');
+                    const description = detailBody.querySelector('[data-live-report-description]');
+                    let currentMode = 'original';
+                    function bindParts() {
+                      partList?.querySelectorAll('[data-live-report-part]').forEach(button => {
+                        button.addEventListener('click', () => {
+                          if (!player) return;
+                          player.pause();
+                          player.src = button.dataset.livePartUrl;
+                          player.load();
+                          partList.querySelectorAll('[data-live-report-part]').forEach(b => b.classList.toggle('is-current', b === button));
+                          player.play().catch(() => {});
+                        });
+                      });
+                    }
+                    bindParts();
+                    detailBody.querySelectorAll('[data-live-report-mode]').forEach(button => {
+                      button.addEventListener('click', () => {
+                        const mode = button.dataset.liveReportMode;
+                        if (mode === currentMode || !player || !partList) return;
+                        const parts = mode === 'mask' ? maskSegments : segments;
+                        if (!parts.length) return;
+                        currentMode = mode;
+                        player.pause();
+                        player.src = parts[0].url;
+                        player.load();
+                        partList.innerHTML = parts.map((part, index) =>
+                          `<button type="button" class="reports-live-part ${index === 0 ? 'is-current' : ''}" data-live-report-part="${index}" data-live-part-url="${escapeHtml(part.url)}">Part ${index + 1}</button>`
+                        ).join('');
+                        bindParts();
+                        if (description) description.textContent = mode === 'mask'
+                          ? 'Saved continuous AI Mask view · up to 10 minutes per part. Masks may be absent while AI reacquires.'
+                          : 'Original camera footage · up to 10 minutes per part.';
+                        detailBody.querySelectorAll('[data-live-report-mode]').forEach(b => {
+                          const active = b === button;
+                          b.classList.toggle('is-current', active);
+                          b.setAttribute('aria-pressed', String(active));
+                        });
+                      });
+                    });
                     return;
                 }
                 const classItems =

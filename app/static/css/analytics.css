@@ -1562,3 +1562,577 @@ html[data-theme="dark"] .analytics-modal-backdrop .analytics-correct-class-field
   background:#282427;color:#f2eff0;border-color:#51444a
 }
 /* END BIKA-REVIEW-CORRECT-CLASS-V1_1 */
+
+/* BIKA_ANALYTICS_DEMO_VISUAL_V3_2_20261103
+   Allow the trend to fill the height of its neighbouring Shift + Review cards.
+   SVG is re-rendered for both width and height; no visual stretching. */
+@media (min-width:1051px){
+  .analytics-page .analytics-top-grid {align-items:stretch}
+  .analytics-page .analytics-top-grid>.analytics-chart-card,
+  .analytics-page .analytics-chart-card {
+    display:flex;flex-direction:column;align-self:stretch;
+    min-width:0;min-height:0;height:100%;
+  }
+  .analytics-page .analytics-chart-card [data-quality-chart] {
+    display:block;position:relative;flex:1 1 440px;
+    width:100%;min-width:0;min-height:440px;height:auto;
+    aspect-ratio:auto!important;
+  }
+  .analytics-page .analytics-chart-card [data-chart-legend],
+  .analytics-page .analytics-chart-card [data-trend-caption] {flex:0 0 auto}
+}
+@media (min-width:751px) and (max-width:1050px){
+  .analytics-page .analytics-chart-card [data-quality-chart] {
+    height:clamp(400px,45vw,570px);min-height:400px;aspect-ratio:auto!important;
+  }
+}
+@media (max-width:750px){
+  .analytics-page .analytics-chart-card [data-quality-chart] {
+    height:350px;min-height:350px;max-width:100%;aspect-ratio:auto!important;
+  }
+}
+.analytics-page .analytics-chart-card [data-quality-chart]>svg {
+  display:block;width:100%!important;height:100%!important;
+  max-width:none;max-height:none;
+}
+
+
+/* ==============================================================
+   BIKA Analytics layout balance + demo row fix | 2026-11-04
+   Keep right cards natural-height; let left chart resize to match.
+   ============================================================== */
+@media (min-width: 1051px){
+  .analytics-page .analytics-side-column{
+    grid-template-rows: auto auto;
+    align-content: start;
+  }
+  .analytics-page .analytics-chart-card{
+    display:flex;
+    flex-direction:column;
+  }
+  .analytics-page .analytics-chart-card .analytics-svg-chart{
+    flex: 1 1 auto;
+    min-height: 220px;
+  }
+}
+
+/* BIKA_BULK_REVIEW_V1 – scoped to the existing Human Review modal. */
+.analytics-modal-backdrop .bika-bulk-panel{
+  margin:12px 0 10px;padding:12px;border:1px solid var(--an-outline,#ece9e9);
+  border-radius:12px;background:var(--an-bg,#fafafa);display:flex;flex-direction:column;gap:9px;
+  color:var(--an-ink,#292929);min-width:0;
+}
+.analytics-modal-backdrop .bika-bulk-title{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.analytics-modal-backdrop .bika-bulk-title strong{font-size:12px;font-weight:750}
+.analytics-modal-backdrop .bika-bulk-title small,.analytics-modal-backdrop .bika-bulk-help{font-size:10px;color:var(--an-muted,#888);line-height:1.45}
+.analytics-modal-backdrop .bika-bulk-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end}
+.analytics-modal-backdrop .bika-bulk-label{display:flex;flex-direction:column;gap:4px;font-size:10.5px;font-weight:650;color:var(--an-ink,#222);min-width:0}
+.analytics-modal-backdrop .bika-bulk-actions .bika-bulk-label{flex:1 1 130px}
+.analytics-modal-backdrop .bika-bulk-panel select,.analytics-modal-backdrop .bika-bulk-panel textarea{
+  width:100%;border:1px solid var(--an-outline,#ddd);border-radius:9px;min-height:34px;
+  background:var(--an-card,#fff);color:var(--an-ink,#222);padding:7px 9px;font-size:11px;outline:0;
+}
+.analytics-modal-backdrop .bika-bulk-panel textarea{resize:vertical;max-height:115px;min-height:44px}
+.analytics-modal-backdrop .bika-bulk-panel select:focus-visible,.analytics-modal-backdrop .bika-bulk-panel textarea:focus-visible{outline:2px solid var(--an-brand,#741f2e);outline-offset:1px}
+.analytics-modal-backdrop .bika-bulk-actions button{border:1px solid var(--an-outline,#ddd);background:var(--an-card,#fff);color:var(--an-ink,#222);border-radius:8px;min-height:34px;padding:0 9px;font-size:10px;font-weight:650;cursor:pointer}
+.analytics-modal-backdrop .bika-bulk-actions button:hover{border-color:var(--an-brand,#741f2e)}
+.analytics-modal-backdrop .bika-bulk-counter{font-size:11px;color:var(--an-muted,#888);font-variant-numeric:tabular-nums}
+.analytics-modal-backdrop .bika-bulk-primary{background:var(--an-brand,#741f2e);color:#fff;border:0;border-radius:9px;font-size:12px;font-weight:730;min-height:36px;cursor:pointer}
+.analytics-modal-backdrop .bika-bulk-primary:disabled{opacity:.5;cursor:not-allowed}
+.analytics-modal-backdrop .bika-bulk-message{min-height:14px;font-size:10.5px;line-height:1.5;color:var(--an-brand,#741f2e);overflow-wrap:anywhere}
+.analytics-modal-backdrop .bika-bulk-object-row{display:flex;gap:6px;align-items:stretch;min-width:0}
+.analytics-modal-backdrop .bika-bulk-object-row[hidden]{display:none!important}
+.analytics-modal-backdrop .bika-bulk-check{display:flex;align-items:center;justify-content:center;min-width:30px;border:1px solid var(--an-outline,#ddd);border-radius:8px;background:var(--an-card,#fff);cursor:pointer}
+.analytics-modal-backdrop .bika-bulk-check input{accent-color:#741f2e;width:15px;height:15px;cursor:pointer}
+.analytics-modal-backdrop .bika-bulk-object-row .analytics-object-choice{min-width:0;flex:1}
+.analytics-modal-backdrop polygon.is-bulk-selected{stroke:#33b88b!important;stroke-width:4!important;fill-opacity:.48!important}
+.analytics-modal-backdrop .bika-bulk-panel [hidden]{display:none!important}
+
+/* BIKA_BULK_REVIEW_UX_V1_1 — compact, guided, theme-aware bulk review interface. */
+.analytics-modal-backdrop .bika-bulk-panel.bika-bulk-ux{
+  padding:14px 14px 12px;margin:12px 0 12px;gap:10px;
+  background:var(--an-bg,#fafafa);border:1px solid var(--an-outline,#ece9e9);
+  border-radius:14px;color:var(--an-ink,#292929);
+}
+.analytics-modal-backdrop .bika-ux-topline{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.analytics-modal-backdrop .bika-ux-top-title{display:flex;align-items:center;gap:7px;min-width:0;color:var(--an-ink,#222)}
+.analytics-modal-backdrop .bika-ux-top-title iconsax-icon{color:var(--an-brand,#741f2e);display:block;flex:none}
+.analytics-modal-backdrop .bika-ux-top-title strong{font-size:14px;font-weight:730}
+.analytics-modal-backdrop .bika-ux-topline small{font-size:10.5px;color:var(--an-muted,#888);white-space:nowrap;font-weight:550}
+.analytics-modal-backdrop .bika-ux-progress-track{height:4px;background:var(--an-outline,#eee);border-radius:99px;overflow:hidden}
+.analytics-modal-backdrop .bika-ux-progress-track span{display:block;width:0;height:100%;background:var(--an-green,#398b6e);border-radius:99px;transition:width .2s}
+.analytics-modal-backdrop .bika-ux-intro{font-size:11px;color:var(--an-muted,#888);line-height:1.5;margin:0}
+.analytics-modal-backdrop .bika-ux-step{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--an-outline,#ddd)}
+.analytics-modal-backdrop .bika-ux-step-heading,.analytics-modal-backdrop .bika-ux-save-heading{display:flex;align-items:center;gap:7px;min-width:0}
+.analytics-modal-backdrop .bika-ux-step-heading strong,.analytics-modal-backdrop .bika-ux-save-heading strong{font-size:12.5px;font-weight:700;color:var(--an-ink,#222)}
+.analytics-modal-backdrop .bika-ux-number{display:inline-grid;place-items:center;width:20px;height:20px;flex:0 0 20px;border-radius:7px;background:var(--an-brand-soft,#f8eff0);color:var(--an-brand,#741f2e);font-weight:760;font-size:11px}
+.analytics-modal-backdrop .bika-ux-selected{margin-left:auto;color:var(--an-brand,#741f2e);background:var(--an-card,#fff);border:1px solid var(--an-outline,#ddd);border-radius:7px;padding:4px 7px;font-size:10px;font-weight:650}
+.analytics-modal-backdrop .bika-ux-filter-row{display:flex;align-items:end;gap:7px;flex-wrap:wrap}
+.analytics-modal-backdrop .bika-ux-field{min-width:0;display:flex;flex-direction:column;gap:5px}
+.analytics-modal-backdrop .bika-ux-filter-field{flex:1 1 160px}
+.analytics-modal-backdrop .bika-ux-field-label{font-size:10.5px;color:var(--an-muted,#888);font-weight:630;line-height:1.3}
+.analytics-modal-backdrop .bika-ux-select-shown,.analytics-modal-backdrop .bika-ux-clear{
+  min-height:36px;border-radius:9px;padding:0 12px;font-size:11px;font-weight:680;
+  border:1px solid var(--an-outline,#ddd);background:var(--an-card,#fff);
+  color:var(--an-ink,#222);white-space:nowrap;cursor:pointer;
+}
+.analytics-modal-backdrop .bika-ux-select-shown{border-color:var(--an-brand,#741f2e);color:var(--an-brand,#741f2e);background:var(--an-brand-soft,#f8eff0)}
+.analytics-modal-backdrop .bika-ux-select-shown:hover:not(:disabled){filter:brightness(.98)}
+.analytics-modal-backdrop .bika-ux-clear{margin-left:0;border:0;min-height:24px;background:transparent;padding:0 2px;color:var(--an-brand,#741f2e);font-size:10px}
+.analytics-modal-backdrop .bika-ux-select-shown:disabled,.analytics-modal-backdrop .bika-ux-clear:disabled{opacity:.44;cursor:not-allowed}
+.analytics-modal-backdrop .bika-ux-guidance{font-size:10.5px;line-height:1.5;color:var(--an-muted,#888);margin:0}
+.analytics-modal-backdrop .bika-ux-guidance strong{color:var(--an-ink,#222);font-weight:670}
+.analytics-modal-backdrop .bika-ux-step-decision{gap:8px}
+.analytics-modal-backdrop .bika-ux-dropdown{position:relative;min-width:0}
+.analytics-modal-backdrop .bika-bulk-panel.bika-bulk-ux select.bika-ux-native-select{
+  position:absolute!important;opacity:0!important;pointer-events:none!important;
+  width:1px!important;height:1px!important;min-height:0!important;
+  padding:0!important;border:0!important;clip-path:inset(50%)!important;
+}
+.analytics-modal-backdrop .bika-ux-dropdown-trigger{
+  height:37px;min-height:37px;width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:var(--an-card,#fff);border:1px solid var(--an-outline,#ddd);border-radius:10px;
+  color:var(--an-ink,#222);padding:0 11px;text-align:left;font-size:12px;font-weight:570;
+  cursor:pointer;box-sizing:border-box;
+}
+.analytics-modal-backdrop .bika-ux-dropdown-trigger iconsax-icon{flex:none;color:var(--an-brand,#741f2e);transition:transform .14s}
+.analytics-modal-backdrop .bika-ux-dropdown.is-open .bika-ux-dropdown-trigger iconsax-icon{transform:rotate(180deg)}
+.analytics-modal-backdrop .bika-ux-dropdown-trigger:hover{border-color:var(--an-brand,#741f2e)}
+.analytics-modal-backdrop .bika-ux-dropdown-trigger:focus-visible,.analytics-modal-backdrop .bika-ux-select-shown:focus-visible,.analytics-modal-backdrop .bika-ux-clear:focus-visible{outline:2px solid var(--an-brand,#741f2e);outline-offset:2px}
+.bika-ux-dropdown-menu{
+  --bx-bg:#fff;--bx-border:#e9e4e6;--bx-text:#2a2728;--bx-hover:#f8eff0;--bx-accent:#741f2e;
+  position:fixed;z-index:10010;display:flex;flex-direction:column;gap:3px;
+  background:var(--bx-bg);border:1px solid var(--bx-border);border-radius:12px;
+  box-shadow:0 18px 40px rgba(35,21,27,.16);padding:5px;overflow:auto;box-sizing:border-box;
+}
+html[data-theme=dark] .bika-ux-dropdown-menu{--bx-bg:#302a2e;--bx-border:#54464d;--bx-text:#f6f0f1;--bx-hover:#45333b;--bx-accent:#f0a5b2}
+.bika-ux-dropdown-menu[hidden]{display:none!important}
+.bika-ux-dropdown-option{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  min-height:34px;width:100%;background:transparent;border:0;border-radius:8px;
+  color:var(--bx-text);padding:7px 9px;font-size:12px;font-weight:520;text-align:left;cursor:pointer;
+}
+.bika-ux-dropdown-option iconsax-icon{display:none;color:var(--bx-accent);flex:none}
+.bika-ux-dropdown-option[aria-selected=true]{color:var(--bx-accent);font-weight:720;background:var(--bx-hover)}
+.bika-ux-dropdown-option[aria-selected=true] iconsax-icon{display:inline-block}
+.bika-ux-dropdown-option:hover,.bika-ux-dropdown-option:focus-visible{background:var(--bx-hover);outline:none}
+.analytics-modal-backdrop .bika-ux-note-details{font-size:11px;color:var(--an-ink,#222)}
+.analytics-modal-backdrop .bika-ux-note-details summary{display:inline-flex;align-items:center;gap:5px;cursor:pointer;color:var(--an-brand,#741f2e);font-weight:670;padding:3px 0;list-style:none}
+.analytics-modal-backdrop .bika-ux-note-details summary::before{content:'+';font-size:14px;font-weight:600;width:12px;text-align:center}
+.analytics-modal-backdrop .bika-ux-note-details[open] summary::before{content:'−'}
+.analytics-modal-backdrop .bika-ux-note-details summary::-webkit-details-marker{display:none}
+.analytics-modal-backdrop .bika-ux-note-details summary span{color:var(--an-muted,#888);font-weight:450}
+.analytics-modal-backdrop .bika-ux-note-details textarea{margin-top:6px;min-height:56px;max-height:110px;resize:vertical;font-size:11.5px;box-sizing:border-box}
+.analytics-modal-backdrop .bika-ux-save-area{display:flex;flex-direction:column;gap:7px;padding-top:10px;border-top:1px solid var(--an-outline,#ddd)}
+.analytics-modal-backdrop .bika-bulk-panel.bika-bulk-ux .bika-bulk-primary{min-height:39px;border-radius:10px;background:var(--an-brand,#741f2e);font-size:12px;font-weight:710;color:white;box-shadow:none}
+.analytics-modal-backdrop .bika-bulk-panel.bika-bulk-ux .bika-bulk-primary:disabled{opacity:.52;cursor:not-allowed}
+.analytics-modal-backdrop .bika-bulk-panel.bika-bulk-ux .bika-bulk-primary:not(:disabled):hover{filter:brightness(1.08)}
+.analytics-modal-backdrop .bika-bulk-panel.bika-bulk-ux .bika-bulk-message{font-size:10.8px;line-height:1.45;min-height:0;margin:0;color:var(--an-brand,#741f2e)}
+.analytics-modal-backdrop .bika-bulk-panel.bika-bulk-ux .bika-bulk-message:empty{display:none}
+.analytics-modal-backdrop .bika-ux-footnote{font-size:10px;color:var(--an-muted,#888);line-height:1.4;margin:0}
+.analytics-modal-backdrop .bika-bulk-object-row{display:flex;gap:6px;align-items:stretch;min-width:0}
+.analytics-modal-backdrop .bika-bulk-check{min-width:30px}
+.analytics-modal-backdrop .bika-bulk-check input:disabled{cursor:not-allowed;opacity:.45}
+.analytics-modal-backdrop .bika-ux-list-empty{padding:17px 9px;text-align:center;color:var(--an-muted,#888);font-size:11px}
+.analytics-modal-backdrop .bika-ux-list-empty[hidden]{display:none!important}
+.analytics-modal-backdrop .analytics-object-list:has(.bika-bulk-object-row){max-height:240px}
+@media(max-width:550px){
+  .analytics-modal-backdrop .bika-bulk-panel.bika-bulk-ux{padding:12px 10px;gap:8px}
+  .analytics-modal-backdrop .bika-ux-filter-field{flex:1 1 100%}
+  .analytics-modal-backdrop .bika-ux-select-shown{flex:1}
+  .analytics-modal-backdrop .bika-ux-clear{flex:0 0 auto}
+}
+
+.analytics-modal-backdrop .bika-ux-single-heading{display:flex;flex-direction:column;gap:4px;margin:2px 0 10px;padding-top:12px;border-top:1px solid var(--an-outline,#ddd)}
+.analytics-modal-backdrop .bika-ux-single-heading strong{font-size:12.5px;color:var(--an-ink,#222);font-weight:710}
+.analytics-modal-backdrop .bika-ux-single-heading small{font-size:10.5px;color:var(--an-muted,#888);line-height:1.45}
+
+/* BIKA_BULK_REVIEW_UX_V1_2
+   Human Review UI: regular 400 / medium 500, no uppercase headings,
+   no grey boxed subsections, pill buttons, explicit SVG dropdown chevrons.
+   Scoped only to Human Review modal and detached Bulk dropdown menus. */
+.analytics-modal-backdrop .analytics-modal,
+.analytics-modal-backdrop .analytics-modal *{
+  font-weight:400!important;
+  text-transform:none!important;
+}
+.analytics-modal-backdrop .analytics-modal :is(h1,h2,h3,h4,strong,b),
+.analytics-modal-backdrop .analytics-modal .analytics-modal-head h2,
+.analytics-modal-backdrop .analytics-modal .bika-ux-step-heading strong,
+.analytics-modal-backdrop .analytics-modal .bika-ux-save-heading strong,
+.analytics-modal-backdrop .analytics-modal .bika-ux-top-title strong,
+.analytics-modal-backdrop .analytics-modal .analytics-object-choice strong,
+.analytics-modal-backdrop .analytics-modal .analytics-object-detail strong,
+.analytics-modal-backdrop .analytics-modal .bika-ux-number{
+  font-weight:500!important;
+}
+/* One review path only: leave legacy fields in DOM for original BIKA JS. */
+.analytics-modal-backdrop .analytics-modal .analytics-feedback-form,
+.analytics-modal-backdrop .analytics-modal .bika-ux-single-heading{
+  display:none!important;
+}
+/* Make the bulk interface a clean section, not a grey card in a card. */
+.analytics-modal-backdrop .analytics-modal .bika-bulk-panel.bika-bulk-ux{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  margin:0 0 12px!important;
+  padding:4px 0 8px!important;
+  gap:10px!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-step,
+.analytics-modal-backdrop .analytics-modal .bika-ux-save-area{
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  padding:8px 0 2px!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-number{
+  background:transparent!important;
+  color:var(--an-brand,#741f2e)!important;
+  border:0!important;
+  width:16px!important;
+  height:22px!important;
+  flex-basis:16px!important;
+  font-size:12px!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-selected{
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  padding:0!important;
+  font-weight:400!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-top-title strong{font-size:14px!important}
+.analytics-modal-backdrop .analytics-modal .bika-ux-step-heading strong,
+.analytics-modal-backdrop .analytics-modal .bika-ux-save-heading strong{font-size:12.5px!important}
+.analytics-modal-backdrop .analytics-modal .bika-ux-field-label,
+.analytics-modal-backdrop .analytics-modal .bika-ux-guidance,
+.analytics-modal-backdrop .analytics-modal .bika-ux-footnote{font-weight:400!important}
+.analytics-modal-backdrop .analytics-modal .bika-ux-guidance strong{font-weight:500!important}
+/* Light separators are fine; avoid grey tiles around object list and details. */
+.analytics-modal-backdrop .analytics-modal .analytics-object-detail{
+  background:transparent!important;
+  border:0!important;
+  border-bottom:1px solid var(--an-outline,#eee)!important;
+  border-radius:0!important;
+  margin:8px 0!important;
+  padding:11px 0 14px!important;
+}
+.analytics-modal-backdrop .analytics-modal .analytics-object-choice{
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  padding:10px 3px!important;
+  font-weight:400!important;
+}
+.analytics-modal-backdrop .analytics-modal .analytics-object-choice.is-selected{
+  background:transparent!important;
+  border:0!important;
+  color:var(--an-brand,#741f2e)!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-bulk-object-row{
+  background:transparent!important;
+  border-bottom:1px solid var(--an-outline,#ece9e9)!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-bulk-object-row:last-of-type{border-bottom:0!important}
+/* Consistent long pill buttons with regular labels. */
+.analytics-modal-backdrop .analytics-modal .bika-ux-select-shown,
+.analytics-modal-backdrop .analytics-modal .bika-ux-clear,
+.analytics-modal-backdrop .analytics-modal .bika-ux-dropdown-trigger,
+.analytics-modal-backdrop .analytics-modal .bika-bulk-primary,
+.analytics-modal-backdrop .analytics-modal .analytics-btn{
+  border-radius:999px!important;
+  font-weight:400!important;
+  letter-spacing:0!important;
+  text-transform:none!important;
+  box-shadow:none!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-select-shown{
+  min-height:37px!important;
+  background:var(--an-card,#fff)!important;
+  color:var(--an-brand,#741f2e)!important;
+  border:1px solid var(--an-brand,#741f2e)!important;
+  padding:0 17px!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-clear{
+  background:transparent!important;
+  border:0!important;
+  min-height:34px!important;
+  padding:0 10px!important;
+  font-weight:400!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-dropdown-trigger{
+  min-height:40px!important;
+  padding:0 14px!important;
+  background:var(--an-card,#fff)!important;
+  border:1px solid var(--an-outline,#e7e2e4)!important;
+  font-size:12px!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-dropdown-value{
+  font-weight:400!important;
+  flex:1 1 auto;
+  min-width:0;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-dropdown-trigger .bika-ux-chevron{
+  width:17px!important;
+  height:17px!important;
+  flex:0 0 17px!important;
+  color:var(--an-brand,#741f2e)!important;
+  display:block!important;
+  transition:transform .16s ease;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-dropdown.is-open .bika-ux-chevron{transform:rotate(180deg)}
+.analytics-modal-backdrop .analytics-modal .bika-bulk-panel.bika-bulk-ux .bika-bulk-primary{
+  width:100%!important;
+  min-height:43px!important;
+  padding:0 17px!important;
+  border-radius:999px!important;
+  font-size:12.5px!important;
+  font-weight:500!important;
+  color:white!important;
+  background:var(--an-brand,#741f2e)!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-bulk-panel.bika-bulk-ux .bika-bulk-primary:disabled{
+  opacity:.42!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-note-details summary{
+  font-weight:400!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-note-details textarea{
+  background:var(--an-card,#fff)!important;
+  border:1px solid var(--an-outline,#ddd)!important;
+  border-radius:12px!important;
+  font-weight:400!important;
+}
+/* Custom menus are mounted in body, outside the modal. */
+.bika-ux-dropdown-menu .bika-ux-dropdown-option,
+.bika-ux-dropdown-menu .bika-ux-dropdown-option[aria-selected=true]{
+  font-weight:400!important;
+  text-transform:none!important;
+  border-radius:9px!important;
+}
+.bika-ux-dropdown-menu .bika-ux-dropdown-option[aria-selected=true]{
+  font-weight:500!important;
+}
+
+/* BIKA_BULK_REVIEW_MARKERS_V1_4
+   Show which saved review objects were reviewed. Scoped to Human Review.
+   Only regular/medium font weights, pill controls, no grey panels. */
+.analytics-modal-backdrop .analytics-modal .bika-bulk-panel [hidden],
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-shortcuts[hidden],
+.analytics-modal-backdrop .analytics-modal .bika-ux-step[hidden],
+.analytics-modal-backdrop .analytics-modal .bika-ux-save-area[hidden]{display:none!important}
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-shortcuts{
+  display:flex;flex-direction:column;gap:8px;margin:8px 0 2px;padding:0;
+  border:0;background:transparent;box-shadow:none;
+}
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-shortcuts-label{
+  font-size:12px;font-weight:400;color:var(--an-muted,#8d8d8d)
+}
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-shortcuts-items{
+  display:flex;flex-wrap:wrap;align-items:center;gap:7px;
+}
+.analytics-modal-backdrop .analytics-modal button.bika-reviewed-shortcut{
+  display:inline-flex;align-items:center;justify-content:center;min-height:34px;
+  padding:0 13px;border:1px solid var(--an-outline,#e5dfe1);
+  border-radius:999px;background:var(--an-card,#fff);color:var(--an-brand,#741f2e);
+  font-size:12px;font-weight:400;white-space:nowrap;cursor:pointer;
+  transition:border-color .15s ease,background .15s ease;
+}
+.analytics-modal-backdrop .analytics-modal button.bika-reviewed-shortcut:hover,
+.analytics-modal-backdrop .analytics-modal button.bika-reviewed-shortcut.is-active{
+  border-color:var(--an-brand,#741f2e);background:var(--an-brand-soft,#f8eff0)
+}
+.analytics-modal-backdrop .analytics-modal button.bika-reviewed-shortcut:focus-visible{
+  outline:2px solid var(--an-brand,#741f2e);outline-offset:2px
+}
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-overflow{
+  color:var(--an-muted,#8d8d8d);font-size:11px;font-weight:400
+}
+/* The normal review masks are unchanged unless the user selects Already reviewed. */
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon:not(.bika-reviewed-mask){
+  stroke-opacity:.13!important;fill-opacity:.025!important
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask{
+  stroke:#8c2840!important;fill:#c88997!important;fill-opacity:.32!important;
+  stroke-width:4.5!important;stroke-opacity:1!important;
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask.is-selected{
+  stroke:#741f2e!important;stroke-width:5.5!important;fill-opacity:.43!important;
+}
+.analytics-modal-backdrop .analytics-mask-svg .bika-reviewed-marker ellipse{
+  fill:#741f2e;stroke:white;stroke-width:1.4;
+  vector-effect:non-scaling-stroke
+}
+.analytics-modal-backdrop .analytics-mask-svg .bika-reviewed-marker text{
+  fill:white;font-family:Inter,system-ui,sans-serif;font-weight:500;
+}
+
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-details{
+  font-size:11.5px;font-weight:400;color:var(--an-muted,#8d8d8d);
+  line-height:1.55;margin:1px 0 0;overflow-wrap:anywhere
+}
+
+/* BIKA_BULK_REVIEW_IMAGE_CLICK_V1_5
+   Show reviewed snacks directly in the main image and inspect by clicking the highlight.
+   Keep regular/medium weights, clean layout, and no extra grey boxes. */
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-hint[hidden]{display:none!important}
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-hint{
+  margin:8px 0 0;padding:0;border:0;background:transparent;box-shadow:none;
+}
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-details{
+  font-size:12px;font-weight:400;color:var(--an-muted,#8d8d8d);line-height:1.6;margin:0;
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask{
+  cursor:pointer;
+  stroke:#8c2840!important;fill:#c88997!important;fill-opacity:.34!important;
+  stroke-width:4.8!important;stroke-opacity:1!important;
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask:hover{
+  fill-opacity:.42!important;stroke:#7d2034!important;
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask-active,
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask.is-selected{
+  stroke:#741f2e!important;stroke-width:5.8!important;fill:#b75f73!important;fill-opacity:.48!important;
+}
+.analytics-modal-backdrop .analytics-mask-svg .bika-reviewed-marker{opacity:.96}
+.analytics-modal-backdrop .analytics-mask-svg .bika-reviewed-marker.is-active ellipse{
+  fill:#4d1320;stroke:#fff;stroke-width:1.8;
+}
+.analytics-modal-backdrop .analytics-mask-svg .bika-reviewed-marker.is-active text{
+  fill:#fff;
+}
+
+/* BIKA_BULK_REVIEW_MAIN_IMAGE_HIGHLIGHT_V1_6
+   Only regular (400) and medium (500). Reviewed masks live on main image.
+   No reviewed shortcuts, no duplicate review-list preview. */
+.analytics-modal-backdrop .analytics-modal [data-object-list][hidden]{display:none!important}
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-shortcuts,
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-hint,
+.analytics-modal-backdrop .analytics-modal [data-bulk-reviewed-shortcuts],
+.analytics-modal-backdrop .analytics-modal [data-bulk-reviewed-links]{display:none!important}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon:not(.bika-reviewed-mask){
+  stroke-opacity:.10!important;fill-opacity:.012!important;pointer-events:none!important;
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask{
+  stroke:#8a2943!important;fill:#b64a69!important;
+  fill-opacity:.42!important;stroke-opacity:1!important;
+  stroke-width:4.5!important;pointer-events:all!important;cursor:pointer;
+  vector-effect:non-scaling-stroke;
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask:hover{
+  stroke:#63192d!important;fill-opacity:.54!important;stroke-width:5.2!important;
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask-active,
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask.is-selected{
+  stroke:#521427!important;fill:#a72b50!important;
+  fill-opacity:.62!important;stroke-opacity:1!important;stroke-width:6!important;
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask:focus-visible{
+  outline:none;stroke:#521427!important;stroke-width:6!important;
+}
+.analytics-modal-backdrop .analytics-modal .analytics-object-detail{
+  font-weight:400!important;background:transparent!important;border:0!important;
+  border-top:1px solid var(--an-outline,#eee)!important;padding:12px 0!important;
+}
+.analytics-modal-backdrop .analytics-modal .analytics-object-detail strong{font-weight:500!important}
+
+/* BIKA_BULK_REVIEW_ONE_CLICK_STYLE_V1_8
+   Direct click-to-toggle masks, no Ctrl/Cmd or drag selection needed.
+   No new panels; existing BIKA regular/medium typography is retained. */
+.analytics-modal-backdrop .analytics-mask-stage,
+.analytics-modal-backdrop .analytics-mask-stage *{
+  user-select:none;
+  -webkit-user-select:none;
+}
+.analytics-modal-backdrop .analytics-mask-stage img{
+  -webkit-user-drag:none;
+  user-drag:none;
+}
+.analytics-modal-backdrop .analytics-mask-stage .analytics-mask-svg polygon[data-object-index]{
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.analytics-modal-backdrop .analytics-mask-stage .analytics-mask-svg polygon[data-object-index]:focus-visible{
+  outline:none;
+  stroke:var(--an-brand,#741f2e)!important;
+  stroke-width:4!important;
+}
+
+/* BIKA_BULK_REVIEW_FILTER_FIRST_STYLE_V1_9
+   A filter only fades nonmatches. Never use the selected color for a filter match.
+   Manual click selection still uses the existing green bulk selection outline. */
+.analytics-modal-backdrop .analytics-mask-stage .analytics-mask-svg polygon.bika-filter-muted {
+  stroke-opacity: .10 !important;
+  fill-opacity: .025 !important;
+  pointer-events: none !important;
+}
+.analytics-modal-backdrop .analytics-mask-stage .analytics-mask-svg polygon.bika-filter-match:not(.is-bulk-selected) {
+  stroke-opacity: 1 !important;
+  fill-opacity: .25 !important;
+}
+.analytics-modal-backdrop .analytics-mask-stage .analytics-mask-svg polygon.bika-filter-match.is-bulk-selected {
+  stroke-opacity: 1 !important;
+  pointer-events: all !important;
+}
+.analytics-modal-backdrop .bika-bulk-ux .bika-ux-filter-field { flex: 1 1 100%; }
+.analytics-modal-backdrop .bika-bulk-ux .bika-ux-guidance {
+  font-size: 11px;
+  line-height: 1.55;
+  font-weight: 400;
+  color: var(--an-muted, #8d8d8d);
+}
+
+/* BIKA_BULK_REVIEW_CONFIRM_COLOR_STYLE_V2_0
+   Human corrected classification color (display only) and compact in-app dialog.
+   Uses regular 400 / medium 500 typography, no gray content boxes. */
+.analytics-modal-backdrop .analytics-mask-stage .analytics-mask-svg polygon.bika-filter-match.bika-human-corrected:not(.is-bulk-selected),
+.analytics-modal-backdrop .analytics-mask-stage .analytics-mask-svg polygon.bika-human-corrected:not(.is-bulk-selected):not(.bika-filter-muted){
+  fill:var(--bika-human-review-color) !important;
+  stroke:var(--bika-human-review-color) !important;
+  fill-opacity:.37 !important;
+  stroke-opacity:1 !important;
+  stroke-width:3.5 !important;
+}
+/* Dim masks not in the active filter, even when they have a saved correction. */
+.analytics-modal-backdrop .analytics-mask-stage .analytics-mask-svg polygon.bika-filter-muted.bika-human-corrected{
+  fill-opacity:.025 !important;
+  stroke-opacity:.10 !important;
+}
+/* Deliberately selected objects keep the established green selection color. */
+.analytics-modal-backdrop .analytics-modal .bika-human-corrected-detail{
+  margin:7px 0 0;
+  color:var(--an-brand,#741f2e);
+  font-size:11.5px;
+  font-weight:400;
+  line-height:1.6;
+}
+.bika-bulk-confirm-overlay{
+  position:fixed;inset:0;z-index:11000;display:flex;justify-content:center;
+  align-items:center;padding:18px;background:rgba(24,17,20,.34);
+}
+.bika-bulk-confirm-dialog{
+  width:min(410px,100%);max-height:calc(100vh - 36px);overflow:auto;
+  padding:24px 25px 22px;border:1px solid var(--an-outline,#ece9e9);
+  border-radius:20px;background:var(--an-card,#fff);color:var(--an-ink,#292929);
+  box-shadow:0 20px 64px rgba(23,16,19,.17);
+  font-family:Inter,system-ui,sans-serif;font-weight:400;text-align:left;
+}
+.bika-bulk-confirm-heading{display:flex;align-items:center;gap:10px;margin:0 0 14px;
+  font-size:15px;font-weight:500;line-height:1.35;color:var(--an-ink,#292929)}
+.bika-bulk-confirm-heading iconsax-icon{color:var(--an-brand,#741f2e);flex:0 0 auto}
+.bika-bulk-confirm-dialog p{margin:0;font-size:13px;font-weight:400;line-height:1.6}
+.bika-bulk-confirm-dialog .bika-bulk-confirm-help{margin-top:9px;color:var(--an-muted,#8d8d8d);font-size:11.5px}
+.bika-bulk-confirm-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap;margin-top:22px}
+.bika-bulk-confirm-actions button{min-height:39px;padding:0 21px;border-radius:999px;
+  font:400 12px/1.3 Inter,system-ui,sans-serif;cursor:pointer;transition:background .15s,border-color .15s}
+.bika-bulk-confirm-actions [data-bika-confirm-cancel]{border:1px solid var(--an-outline,#e2d9dc);background:transparent;color:var(--an-ink,#292929)}
+.bika-bulk-confirm-actions [data-bika-confirm-accept]{border:1px solid #741f2e;background:#741f2e;color:white;font-weight:500}
+.bika-bulk-confirm-actions button:focus-visible{outline:2px solid var(--an-brand,#741f2e);outline-offset:3px}
+.bika-bulk-confirm-actions [data-bika-confirm-cancel]:hover{background:var(--an-brand-soft,#f8eff0)}
+.bika-bulk-confirm-actions [data-bika-confirm-accept]:hover{background:#5c1824}
+@media(max-width:480px){.bika-bulk-confirm-dialog{padding:21px 19px}}
+

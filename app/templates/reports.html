@@ -10,6 +10,23 @@ Reports | BIKA
     rel="stylesheet"
     href="{{ url_for('static', filename='css/reports.css', v='20261013-export-format-v3') }}"
 >
+<!-- BIKA_LIVE_RECORDING_V1: Reports playback styling, regular and medium only. -->
+<style>
+.reports-live-recorder{margin:16px 0 22px;background:transparent;border:0}
+.reports-live-recorder-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 10px;font-weight:500;font-size:14px}
+.reports-live-recorder-heading span:last-child{font-size:12px;color:#8d8588;font-weight:400}
+.reports-live-recorder video{display:block;width:100%;max-height:420px;aspect-ratio:16/9;object-fit:contain;background:#161616;border-radius:14px}
+.reports-live-recorder-chapters{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.reports-live-recorder-chapters .reports-live-part{border-radius:999px;border:1px solid #e7e1e3;background:#fff;padding:9px 15px;color:#651d31;font-size:12px;font-weight:400;cursor:pointer}
+.reports-live-recorder-chapters .reports-live-part.is-current{background:#761f34;color:#fff;border-color:#761f34}
+.reports-live-recorder p{font-size:12px;font-weight:400;color:#8d8588;margin:10px 0 0}
+/* BIKA-LIVE-MASK-RECORDING-ADDON-V1: small, round Original / AI Mask recording tabs. */
+.reports-live-views{display:flex;gap:7px;align-items:center;margin:9px 0 13px;flex-wrap:wrap}
+.reports-live-views .reports-live-view{border:1px solid #e8dfe2;background:#fff;color:#742338;border-radius:999px;padding:8px 17px;font-size:12px;font-weight:400;line-height:1.4;cursor:pointer;transition:background .15s,border-color .15s}
+.reports-live-views .reports-live-view.is-current{background:#751f34;border-color:#751f34;color:#fff;font-weight:500}
+.reports-live-views .reports-live-view:focus-visible{outline:2px solid #b76f83;outline-offset:2px}
+
+</style>
 {% endblock %}
 
 {% block content %}

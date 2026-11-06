@@ -18,9 +18,11 @@ def _label(value):
 def build_live_report_rows(instance_path, owner_id, limit=60):
     """Most recent max 60 user-owned sessions, no writes, full report-row adapter."""
     sessions = list_sessions(instance_path, owner_id, limit=min(60,max(1,int(limit))))
+    from app.services.live_recording_service import recording_manifest
     result = []
     for s in sessions:
         source = str(s.get('camera_source') or 'Camera')[:100]
+        recording = recording_manifest(instance_path, owner_id, s['session_id']) or {'status': 'unavailable', 'segments': []}
         when = str(s.get('started_at') or '')
         try:
             dt = datetime.fromisoformat(when.replace('Z','+00:00'))
@@ -60,7 +62,8 @@ def build_live_report_rows(instance_path, owner_id, limit=60):
             'live_session': {'status':str(s.get('status') or 'unknown'), 'ai_frames':max(0,int(s.get('ai_frames') or 0)),
                 'duration_seconds':round(float(s.get('duration_seconds') or 0),1),
                 'camera_source':source, 'event_count':total_observations,
-                'recent_events':events, 'event_preview_limit':20},
+                'recent_events':events, 'event_preview_limit':20,
+                'recording':recording},
         })
     return result
 

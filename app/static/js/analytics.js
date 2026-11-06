@@ -129,6 +129,39 @@
     }
     renderShifts();
     if (admin) renderReviewQueue();
+    scheduleTopGridBalance();
+  }
+
+  let topGridBalanceQueued = false;
+  function balanceTopAnalyticsGrid(){
+    const topGrid = one('.analytics-top-grid');
+    const leftCard = one('.analytics-chart-card');
+    const sideCol = one('.analytics-side-column');
+    const chart = one('[data-quality-chart]');
+    if (!topGrid || !leftCard || !sideCol || !chart) return;
+    if (window.innerWidth <= 1050) {
+      chart.style.height = '';
+      leftCard.style.height = '';
+      return;
+    }
+    chart.style.height = '';
+    leftCard.style.height = '';
+    const rightHeight = Math.round(sideCol.getBoundingClientRect().height);
+    const currentChartHeight = Math.round(chart.getBoundingClientRect().height);
+    const currentCardHeight = Math.round(leftCard.getBoundingClientRect().height);
+    if (!(rightHeight > 0 && currentChartHeight > 0 && currentCardHeight > currentChartHeight)) return;
+    const fixedPart = currentCardHeight - currentChartHeight;
+    const targetChartHeight = Math.max(220, rightHeight - fixedPart);
+    chart.style.height = `${targetChartHeight}px`;
+  }
+
+  function scheduleTopGridBalance(){
+    if (topGridBalanceQueued) return;
+    topGridBalanceQueued = true;
+    requestAnimationFrame(() => {
+      topGridBalanceQueued = false;
+      balanceTopAnalyticsGrid();
+    });
   }
 
   const svgLine = (vals, X, Y, klass, dashed=false) => {
@@ -560,7 +593,17 @@
     }
     const ctx=masked.getContext('2d');
     if(ctx&&pointCount){
-      const colour=/^#[0-9a-f]{6}$/i.test(selectedObject.colour)?selectedObject.colour:'#741f2e';
+      // Human-reviewed class drives display color only. Source prediction is kept.
+      const savedReview=reviewRecord.reviews?.[selectedObject.object_id];
+      const correctedKey=savedReview?.decision==='incorrect_class'
+        ? String(savedReview.corrected_class||'').trim().toLowerCase().replace(/[\s-]+/g,'_') : '';
+      const existingClassColor=correctedKey && reviewRecord.objects.find(o=>
+        String(o.class_name||'').trim().toLowerCase().replace(/[\s-]+/g,'_')===correctedKey &&
+        /^#[0-9a-f]{6}$/i.test(String(o.colour||'')))?.colour;
+      const knownDefectColors={too_dark:'#cf9458',too_short:'#8b77b2',fractured:'#c55e64',bent_snack:'#6686a2'};
+      const preferred=existingClassColor || (correctedKey!=='normal'?knownDefectColors[correctedKey]:null);
+      const colour=/^#[0-9a-f]{6}$/i.test(String(preferred||'')) ? preferred :
+        (/^#[0-9a-f]{6}$/i.test(String(selectedObject.colour||''))?selectedObject.colour:'#741f2e');
       const toX=x=>(x-x1)/(x2-x1)*cw;
       const toY=y=>(y-y1)/(y2-y1)*ch;
       polys.forEach(poly=>{
@@ -641,7 +684,629 @@
       if(!reviewRecord.objects.length){list.innerHTML='<div class="analytics-empty">No saved detection objects.</div>';return;}
       list.innerHTML=reviewRecord.objects.map((obj,i)=>`<button type="button" class="analytics-object-choice" data-object-index="${i}"><span class="analytics-object-dot" style="background:${/^#[0-9a-f]{6}$/i.test(obj.colour)?obj.colour:'#741f2e'}"></span><span><strong>${esc(obj.object_id)} · ${esc(obj.class_name)}</strong><small>${obj.in_safe_zone?'Judged':'Edge / Not judged'} · ${obj.confidence==null?'—':pct(num(obj.confidence)*100)}${reviewRecord.reviews[obj.object_id]?' · Reviewed':''}</small></span></button>`).join('');
       selectObject(0);
+      initBulkReview(modal);
     }catch(e){one('[data-mask-stage]',modal).innerHTML=`<div class="analytics-mask-loading">${esc(e.message)}</div>`;one('[data-modal-subtitle]',modal).textContent='Review unavailable';}
+  }
+
+  // BIKA_BULK_REVIEW_UX_V1_7: use the same bulk review workflow for every filter. Reviewed objects can be corrected in bulk, with backend history preservation.
+  // BIKA_BULK_REVIEW_CONFIRM_COLOR_V2_0: filters dim nonmatching masks only; manual clicks explicitly group snacks for one review result.
+  // Select snacks -> choose result -> save; avoid confirming predictions automatically.
+  function initBulkReview(modal) {
+    const list = one('[data-object-list]',modal);
+    if (!reviewRecord || !list) return;
+    // Safely dispose listeners / popovers from previously opened images.
+    if (modal._bikaBulkUxDispose) modal._bikaBulkUxDispose();
+    modal.querySelector('[data-bika-bulk-panel]')?.remove();
+    Array.from(modal.querySelectorAll('.bika-bulk-object-row')).forEach(row => {
+      const choice = row.querySelector('button[data-object-index]');
+      if (choice) row.replaceWith(choice);
+    });
+    const objects = reviewRecord.objects || [];
+    const marked = new Set();
+    const cleanup = new AbortController();
+    const signal = cleanup.signal;
+    const detachedMenus = [];
+    const panel = document.createElement('section');
+    panel.className = 'bika-bulk-panel bika-bulk-ux';
+    panel.dataset.bikaBulkPanel = '';
+    panel.innerHTML = `
+      <div class="bika-ux-topline">
+        <div class="bika-ux-top-title"><iconsax-icon name="tick-square" type="twotone" size="19" color="currentColor" aria-hidden="true"></iconsax-icon><strong>Bulk review</strong></div>
+        <small data-bulk-progress aria-live="polite">0 / ${objects.length} reviewed</small>
+      </div>
+      <div class="bika-ux-progress-track" aria-hidden="true"><span data-bulk-progress-bar></span></div>
+      <p class="bika-ux-intro">Select the snacks you checked, choose a result, then save.</p>
+
+      <div class="bika-ux-step">
+        <div class="bika-ux-step-heading"><span class="bika-ux-number">1</span><strong>Select snacks</strong><span class="bika-ux-selected" data-bulk-count>0 selected</span><button type="button" class="bika-ux-clear" data-bulk-clear>Clear</button></div>
+        <div class="bika-ux-filter-row">
+          <div class="bika-ux-field bika-ux-filter-field"><label class="bika-ux-field-label" for="bika-bulk-filter-native">Show</label>
+            <select id="bika-bulk-filter-native" data-bulk-filter aria-label="Show review objects">
+              <option value="pending" selected>Not reviewed</option><option value="all">All snacks</option>
+              <option value="defects">AI-detected defects</option><option value="uncertain">Low confidence (&lt;75%)</option>
+              <option value="reviewed">Already reviewed</option>
+            </select>
+          </div>
+        </div>
+        <p class="bika-ux-guidance" aria-live="polite">The filter only fades unrelated snacks. Click the ones you want to review together.</p>
+
+      </div>
+
+      <div class="bika-ux-step bika-ux-step-decision">
+        <div class="bika-ux-step-heading"><span class="bika-ux-number">2</span><strong>Choose a result</strong></div>
+        <div class="bika-ux-field"><label class="bika-ux-field-label" for="bika-bulk-decision-native">Same decision for all selected snacks</label>
+          <select id="bika-bulk-decision-native" data-bulk-decision aria-label="Review result">
+            <option value="correct">Correct detection &amp; mask</option>
+            <option value="incorrect_mask">Mask is incorrect</option>
+            <option value="incorrect_class">Classification is incorrect</option>
+            <option value="false_positive">Not a snack (false detection)</option>
+          </select>
+        </div>
+        <div class="bika-ux-field" data-bulk-class-wrap hidden><label class="bika-ux-field-label" for="bika-bulk-class-native">Choose the correct class</label>
+          <select id="bika-bulk-class-native" data-bulk-class aria-label="Correct class">
+            <option value="">Select correct class…</option>
+            <option value="normal">Normal</option><option value="fractured">Fractured</option>
+            <option value="too_dark">Too Dark</option><option value="too_short">Too Short</option>
+            <option value="bent_snack">Bent Snack</option>
+          </select>
+        </div>
+        <details class="bika-ux-note-details"><summary>Add a note <span>(optional)</span></summary><textarea data-bulk-note rows="2" maxlength="400" placeholder="This note will be saved for every selected snack."></textarea></details>
+      </div>
+
+      <div class="bika-ux-save-area">
+        <div class="bika-ux-save-heading"><span class="bika-ux-number">3</span><strong>Save review</strong></div>
+        <button type="button" data-bulk-submit class="bika-bulk-primary" disabled>Select snacks to continue</button>
+        <p class="bika-bulk-message" data-bulk-message role="status" aria-live="polite"></p>
+        <p class="bika-ux-footnote">Up to 500 snacks per save. Previous review decisions remain in history when corrected.</p>
+      </div>`;
+    list.parentElement?.insertBefore(panel, list);
+    // Keep legacy single-review controls for script compatibility, but remove
+    // their separate form from the visible workflow. Existing API is untouched.
+    const singleForm = modal.querySelector('.analytics-feedback-form');
+    if (singleForm) {
+      singleForm.hidden = true;
+      singleForm.setAttribute('aria-hidden', 'true');
+      singleForm.classList.add('bika-bulk-single-hidden');
+    }
+    modal.querySelector('.bika-ux-single-heading')?.remove();
+    const modalEyebrow = modal.querySelector('.analytics-modal-head > div > span');
+    if (modalEyebrow) modalEyebrow.textContent = 'Human review';
+
+    function decorateSelect(select) {
+      const parent = select.parentElement;
+      const shell = document.createElement('div');
+      shell.className = 'bika-ux-dropdown';
+      parent.insertBefore(shell,select);
+      shell.appendChild(select);
+      select.classList.add('bika-ux-native-select');
+      select.tabIndex = -1;
+      select.setAttribute('aria-hidden','true');
+      const trigger = document.createElement('button');
+      trigger.type = 'button'; trigger.className = 'bika-ux-dropdown-trigger';
+      trigger.setAttribute('aria-haspopup','listbox'); trigger.setAttribute('aria-expanded','false');
+      const selectedLabel = document.createElement('span'); selectedLabel.className = 'bika-ux-dropdown-value';
+      // Inline stroke SVG: reliable chevron even when the Iconsax name differs.
+      const chevron = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      chevron.setAttribute('class','bika-ux-chevron');
+      chevron.setAttribute('viewBox','0 0 20 20');
+      chevron.setAttribute('width','17'); chevron.setAttribute('height','17');
+      chevron.setAttribute('fill','none'); chevron.setAttribute('aria-hidden','true');
+      const chevronPath = document.createElementNS('http://www.w3.org/2000/svg','path');
+      chevronPath.setAttribute('d','M5 7.5l5 5 5-5');
+      chevronPath.setAttribute('stroke','currentColor');
+      chevronPath.setAttribute('stroke-width','1.7');
+      chevronPath.setAttribute('stroke-linecap','round');
+      chevronPath.setAttribute('stroke-linejoin','round');
+      chevron.appendChild(chevronPath);
+      trigger.append(selectedLabel,chevron);
+      shell.appendChild(trigger);
+      const linkedLabel=parent.querySelector('label[for="'+select.id+'"]');
+      if(linkedLabel){
+        trigger.id=select.id+'-trigger';
+        linkedLabel.setAttribute('for',trigger.id);
+      }
+      trigger.setAttribute('aria-label',(linkedLabel?.textContent?.trim()||'Choose option')+' selection');
+      const menu = document.createElement('div');
+      menu.className = 'bika-ux-dropdown-menu';
+      menu.hidden = true; menu.setAttribute('role','listbox');
+      menu.id = 'bika-ux-menu-' + Math.random().toString(36).slice(2,10);
+      trigger.setAttribute('aria-controls',menu.id);
+      document.body.appendChild(menu);
+      detachedMenus.push(menu);
+      const optionButtons = Array.from(select.options).map(option => {
+        const item = document.createElement('button');
+        item.type = 'button'; item.className = 'bika-ux-dropdown-option';
+        item.setAttribute('role','option'); item.dataset.value = option.value;
+        const value = document.createElement('span'); value.textContent = option.textContent;
+        const tick = document.createElement('iconsax-icon'); tick.setAttribute('name','tick-circle');
+        tick.setAttribute('type','twotone'); tick.setAttribute('size','17'); tick.setAttribute('color','currentColor');
+        tick.setAttribute('aria-hidden','true');
+        item.append(value,tick);
+        menu.append(item);
+        item.addEventListener('click',() => {choose(option.value);close(true);}, {signal});
+        return item;
+      });
+      const activeOption = () => optionButtons.find(item=>item.dataset.value===select.value) || optionButtons[0];
+      const refresh = () => {
+        selectedLabel.textContent = select.selectedOptions[0]?.textContent || 'Choose an option';
+        optionButtons.forEach(item=>item.setAttribute('aria-selected',String(item.dataset.value===select.value)));
+      };
+      const position = () => {
+        if(menu.hidden)return;
+        const r=trigger.getBoundingClientRect(), margin=10;
+        const width=Math.min(Math.max(r.width,190),window.innerWidth-2*margin);
+        menu.style.width=`${width}px`;
+        menu.style.left=`${Math.max(margin,Math.min(r.left,window.innerWidth-width-margin))}px`;
+        const need=Math.min(menu.scrollHeight||240,240);
+        const below=window.innerHeight-r.bottom-margin;
+        const above=r.top-margin;
+        menu.style.top=`${Math.max(margin,below<need && above>below?r.top-need-7:r.bottom+7)}px`;
+        menu.style.maxHeight=`${Math.min(240,Math.max(100,window.innerHeight-2*margin))}px`;
+      };
+      const close = (restore=false) => {
+        menu.hidden=true; trigger.setAttribute('aria-expanded','false'); shell.classList.remove('is-open');
+        if(restore)trigger.focus();
+      };
+      const open = () => {
+        // Only one menu should be open within this panel.
+        panel.querySelectorAll('.bika-ux-dropdown-trigger[aria-expanded="true"]').forEach(b => {
+          if(b!==trigger)b.click();
+        });
+        menu.hidden=false; trigger.setAttribute('aria-expanded','true'); shell.classList.add('is-open');
+        refresh();position();activeOption()?.focus();
+      };
+      const choose = value => {
+        select.value=value;
+        select.dispatchEvent(new Event('change',{bubbles:true}));
+        refresh();
+      };
+      trigger.addEventListener('click',()=>menu.hidden?open():close(),{signal});
+      trigger.addEventListener('keydown',event=>{
+        if(['ArrowDown','ArrowUp','Enter',' '].includes(event.key)){
+          event.preventDefault();
+          if(menu.hidden)open(); else activeOption()?.focus();
+        }
+      },{signal});
+      optionButtons.forEach((btn,i)=>btn.addEventListener('keydown',event=>{
+        if(event.key==='Escape'){event.preventDefault();close(true);}
+        else if(event.key==='Tab'){close();}
+        else if(event.key==='ArrowDown'||event.key==='ArrowUp'){
+          event.preventDefault(); optionButtons[(i+(event.key==='ArrowDown'?1:-1)+optionButtons.length)%optionButtons.length].focus();
+        } else if(event.key==='Home'){event.preventDefault();optionButtons[0].focus();}
+        else if(event.key==='End'){event.preventDefault();optionButtons[optionButtons.length-1].focus();}
+      },{signal}));
+      document.addEventListener('pointerdown',event=>{
+        if(!menu.hidden && !menu.contains(event.target) && !shell.contains(event.target))close();
+      },{signal});
+      document.addEventListener('keydown',event=>{
+        if(event.key==='Escape'&&!menu.hidden)close(true);
+      },{signal});
+      modal.querySelector('.analytics-mask-side')?.addEventListener('scroll',position,{signal,passive:true});
+      window.addEventListener('resize',position,{signal,passive:true});
+      window.addEventListener('scroll',position,{signal,passive:true});
+      select.addEventListener('change',refresh,{signal});
+      refresh();
+      return {close, refresh};
+    }
+    const filter = panel.querySelector('[data-bulk-filter]');
+    const decision = panel.querySelector('[data-bulk-decision]');
+    const corrected = panel.querySelector('[data-bulk-class]');
+    const note = panel.querySelector('[data-bulk-note]');
+    const submit = panel.querySelector('[data-bulk-submit]');
+    const message = panel.querySelector('[data-bulk-message]');
+    const pickers = [filter,decision,corrected].map(decorateSelect);
+    const inputs = new Map();
+    const isReviewed = i => Boolean(reviewRecord.reviews?.[objects[i]?.object_id]);
+    // Display-only color. Human corrections never overwrite source AI predictions.
+    // Match the current image's existing class palette first; use the BIKA
+    // analytics defect palette when that class is absent from this image.
+    const humanDefectPalette = {
+      too_dark:'#cf9458', too_short:'#8b77b2',
+      fractured:'#c55e64', bent_snack:'#6686a2'
+    };
+    const normalizeClassName = value => String(value||'').trim().toLowerCase().replace(/[\s-]+/g,'_');
+    function getHumanClassColor(index) {
+      const object=objects[index];
+      if(!object)return null;
+      const review=reviewRecord.reviews?.[object.object_id];
+      if(review?.decision!=='incorrect_class')return null;
+      const target=normalizeClassName(review.corrected_class);
+      if(!['normal','too_dark','too_short','fractured','bent_snack'].includes(target))return null;
+      const similar=objects.find(item=>normalizeClassName(item.class_name)===target && /^#[0-9a-f]{6}$/i.test(String(item.colour||'')));
+      if(similar)return similar.colour;
+      // Normal has no defect color in the analytics palette. Keep the source
+      // color rather than inventing a supposedly authoritative color.
+      if(target==='normal')return /^#[0-9a-f]{6}$/i.test(String(object.colour||'')) ? object.colour : null;
+      return humanDefectPalette[target] || null;
+    }
+    function refreshHumanCorrectionDetail() {
+      const current=selectedObject;
+      const detail=one('[data-object-detail]',modal);
+      if(!current || !detail)return;
+      detail.querySelector('[data-human-corrected-label]')?.remove();
+      const saved=reviewRecord.reviews?.[current.object_id];
+      if(saved?.decision!=='incorrect_class' || !saved.corrected_class)return;
+      const humanName=String(saved.corrected_class).replace(/_/g,' ').replace(/\b\w/g,char=>char.toUpperCase());
+      const line=document.createElement('p');
+      line.dataset.humanCorrectedLabel='';
+      line.className='bika-human-corrected-detail';
+      line.textContent=`Human corrected: ${humanName} · AI prediction remains ${current.class_name}`;
+      detail.append(line);
+    }
+    // The image SVG is created asynchronously by openReview().
+    // Use the same selection highlighting for every filter; no special
+    // red reviewed-only view or second list of reviewed object previews.
+    const stage = one('[data-mask-stage]',modal);
+    function paintCurrentSelection() {
+      if (!stage) return;
+      stage.classList.remove('bika-reviewed-filter-active');
+      const svg=stage.querySelector('.analytics-mask-svg');
+      if (!svg) return;
+      svg.querySelector('[data-bika-reviewed-markers]')?.remove();
+      svg.querySelectorAll('polygon[data-object-index]').forEach(polygon=>{
+        const index=Number(polygon.dataset.objectIndex);
+        const match=Number.isInteger(index) && index>=0 && index<objects.length && visible(index);
+        const selected=match && marked.has(index);
+        polygon.classList.remove('bika-reviewed-mask','bika-reviewed-mask-active');
+        // Filtering is NEVER selection. Only a deliberate click adds to marked.
+        polygon.classList.toggle('bika-filter-muted', !match);
+        polygon.classList.toggle('bika-filter-match', match);
+        polygon.classList.toggle('is-bulk-selected', selected);
+        polygon.classList.toggle('is-selected', selected);
+        const humanColor=getHumanClassColor(index);
+        polygon.classList.toggle('bika-human-corrected',Boolean(humanColor));
+        if(humanColor) polygon.style.setProperty('--bika-human-review-color',humanColor);
+        else polygon.style.removeProperty('--bika-human-review-color');
+        const title=polygon.querySelector('title');
+        if(title && objects[index]){
+          const saved=reviewRecord.reviews?.[objects[index].object_id];
+          title.textContent=`${objects[index].object_id}: AI ${objects[index].class_name}` +
+            (saved?.decision==='incorrect_class' && saved.corrected_class ? `; human corrected ${saved.corrected_class.replaceAll('_',' ')}` : '');
+        }
+        polygon.setAttribute('tabindex',match ? '0' : '-1');
+        polygon.setAttribute('aria-hidden',match ? 'false' : 'true');
+        const objectId=objects[index]?.object_id || 'Snack';
+        polygon.setAttribute('aria-label', `${objectId}, ${match ? 'matches filter' : 'outside filter'}${selected ? ', selected' : ''}`);
+      });
+    }
+    const stageObserver=stage && typeof MutationObserver!=='undefined'
+      ? new MutationObserver(()=>requestAnimationFrame(paintCurrentSelection))
+      : null;
+    stageObserver?.observe(stage,{childList:true});
+    const hasDefect = i => !['normal','good'].includes(String(objects[i]?.class_name||'').trim().toLowerCase().replaceAll(' ','_'));
+    const confidence = i => {
+      const value=objects[i]?.confidence;
+      return value===null||value===undefined?null:Number(value);
+    };
+    const visible = i => {
+      switch(filter.value){
+        case 'pending': return !isReviewed(i);
+        case 'reviewed': return isReviewed(i);
+        case 'defects': return hasDefect(i);
+        case 'uncertain': return confidence(i)!==null && Number.isFinite(confidence(i)) && confidence(i)<.75;
+        default: return true;
+      }
+    };
+    Array.from(list.querySelectorAll('button[data-object-index]')).forEach((button,index)=>{
+      const row=document.createElement('div'); row.className='bika-bulk-object-row'; row.dataset.bulkIndex=String(index);
+      const label=document.createElement('label'); label.className='bika-bulk-check';
+      const check=document.createElement('input'); check.type='checkbox'; check.dataset.bulkCheck=String(index);
+      check.setAttribute('aria-label',`Select object ${objects[index]?.object_id||index+1} for bulk review`);
+      label.append(check); button.parentElement.insertBefore(row,button); row.append(label,button);
+      check.addEventListener('change',()=>{
+        if(check.checked && eligibleForSelection(index))marked.add(index);
+        else marked.delete(index);
+        sync();
+      },{signal});
+      inputs.set(index,check);
+    });
+    const emptyList=document.createElement('div');emptyList.className='bika-ux-list-empty';emptyList.hidden=true;
+    emptyList.textContent='No snacks match this filter. Try another view.';
+    list.appendChild(emptyList);
+    let saving=false;
+    function eligibleForSelection(i) {
+      return visible(i) && (filter.value === 'reviewed' ? isReviewed(i) : !isReviewed(i));
+    }
+    function sync() {
+      const correctionMode=filter.value==='reviewed';
+      let reviewed=0,shown=0,eligibleShown=0;
+      objects.forEach((obj,i)=>{
+        if(isReviewed(i)) reviewed++;
+        if(!eligibleForSelection(i)) marked.delete(i);
+        const show=visible(i);
+        if(show) {
+          shown++;
+          if(eligibleForSelection(i)) eligibleShown++;
+        }
+        const row=inputs.get(i)?.closest('.bika-bulk-object-row');
+        if(row) row.hidden=!show;
+        const checkbox=inputs.get(i);
+        if(checkbox){
+          checkbox.checked=marked.has(i);
+          checkbox.disabled=!eligibleForSelection(i) || saving;
+        }
+        const choice=row?.querySelector('button[data-object-index]');
+        if(choice)choice.classList.toggle('is-selected',marked.has(i));
+      });
+      list.hidden=false;
+      panel.querySelector('.bika-ux-step-decision').hidden=false;
+      panel.querySelector('.bika-ux-save-area').hidden=false;
+      panel.querySelector('[data-bulk-clear]').hidden=false;
+      const firstStep=panel.querySelector('.bika-ux-step-heading strong');
+      if(firstStep) firstStep.textContent='Select snacks';
+      panel.querySelector('.bika-ux-step-heading .bika-ux-number').hidden=false;
+      panel.querySelector('[data-bulk-count]').hidden=false;
+      panel.querySelector('.bika-ux-step-decision .bika-ux-step-heading strong').textContent=correctionMode
+        ? 'Correct a result' : 'Choose a result';
+      panel.querySelector('.bika-ux-intro').textContent=correctionMode
+        ? 'Select the reviewed snacks that need correction, choose the new result, then save.'
+        : 'Select the snacks you checked, choose a result, then save.';
+      const footnote=panel.querySelector('.bika-ux-footnote');
+      if(footnote)footnote.textContent=correctionMode
+        ? 'Corrections replace the current decision, while previous reviews remain in history.'
+        : 'Up to 500 unreviewed snacks per save. Existing reviews stay unchanged.';
+      // Counts come from saved reviews, not client selections.
+      const optionPending=filter.querySelector('option[value="pending"]');
+      const optionReviewed=filter.querySelector('option[value="reviewed"]');
+      const optionAll=filter.querySelector('option[value="all"]');
+      if(optionPending)optionPending.textContent=`Not reviewed (${objects.length-reviewed})`;
+      if(optionReviewed)optionReviewed.textContent=`Already reviewed (${reviewed})`;
+      if(optionAll)optionAll.textContent=`All snacks (${objects.length})`;
+      const filterMenu=document.getElementById(filter.closest('.bika-ux-dropdown')?.querySelector('.bika-ux-dropdown-trigger')?.getAttribute('aria-controls')||'');
+      if(filterMenu){
+        Array.from(filter.options).forEach(opt=>{
+          const btn=Array.from(filterMenu.querySelectorAll('[data-value]')).find(x=>x.dataset.value===opt.value);
+          const span=btn?.querySelector('span');
+          if(span)span.textContent=opt.textContent;
+        });
+      }
+      pickers[0]?.refresh();
+      const guidance=panel.querySelector('.bika-ux-guidance');
+      if(guidance){
+        const context=filter.value==='all' ? 'All snacks visible' : `${shown} matching snack${shown===1?'':'s'}`;
+        guidance.textContent=`${context}. Unrelated masks are faded, not selected. Click a matching snack to select; click again to remove.`;
+      }
+      paintCurrentSelection();
+      refreshHumanCorrectionDetail();
+      panel.querySelector('[data-bulk-progress]').textContent=`${reviewed} / ${objects.length} reviewed`;
+      panel.querySelector('[data-bulk-progress-bar]').style.width=`${objects.length ? reviewed/objects.length*100 : 0}%`;
+      panel.querySelector('[data-bulk-count]').textContent=`${marked.size} selected`;
+      panel.querySelector('[data-bulk-clear]').disabled=marked.size===0 || saving;
+      const count=marked.size;
+      submit.textContent=!count ? 'Select snacks to continue' : correctionMode
+        ? `Save correction for ${count} snack${count===1?'':'s'}`
+        : decision.value==='correct'
+          ? `Confirm ${count} selected snack${count===1?'':'s'}`
+          : `Save result for ${count} snack${count===1?'':'s'}`;
+      submit.disabled=!count || count>500 || saving;
+      corrected.closest('[data-bulk-class-wrap]').hidden=decision.value!=='incorrect_class';
+      emptyList.hidden=shown>0;
+      emptyList.textContent=correctionMode
+        ? 'No previously reviewed snacks in this image.'
+        : 'No snacks match this filter. Try another view.';
+    }
+    filter.addEventListener('change',()=>{
+      // Previous filter selection should never be submitted while viewing
+      // a different set of objects (e.g. switching to Already reviewed).
+      marked.clear();
+      message.textContent='';
+      // Filter changes only the dimming; never bulk-select any matches.
+      sync();
+    },{signal});
+    decision.addEventListener('change',sync,{signal});
+    panel.querySelector('[data-bulk-clear]').addEventListener('click',()=>{marked.clear();message.textContent='';sync();},{signal});
+    // Single-click selection is shared by the main image and the object list.
+    // v1.7 required Ctrl/Cmd; that also caused unwanted browser interactions.
+    function toggleSnackByIndex(i) {
+      if (saving || !Number.isInteger(i) || !inputs.has(i)) return;
+      if (!eligibleForSelection(i)) {
+        // Non-eligible objects can still be inspected, but must not be mixed
+        // into a new-review batch or a correction batch.
+        selectObject(i);
+        message.textContent = isReviewed(i)
+          ? 'Already reviewed. Choose Already reviewed to correct this snack.'
+          : 'This snack is not available in the current filter.';
+        sync();
+        return;
+      }
+      message.textContent = '';
+      if (marked.has(i)) {
+        marked.delete(i);
+      } else {
+        if (marked.size >= 500) {
+          message.textContent = 'Up to 500 snacks can be selected at once.';
+          return;
+        }
+        marked.add(i);
+      }
+      // Update the individual crop and details without letting the old
+      // polygon click handler independently change visual selection.
+      selectObject(i);
+      sync();
+      const choice = inputs.get(i)?.closest('.bika-bulk-object-row')?.querySelector('button[data-object-index]');
+      if (choice) choice.classList.toggle('is-selected', marked.has(i));
+    }
+    if (stage?._bikaBulkClickHandler) stage.removeEventListener('click',stage._bikaBulkClickHandler,true);
+    if (stage?._bikaBulkKeyHandler) stage.removeEventListener('keydown',stage._bikaBulkKeyHandler,true);
+    const onMaskClick = event => {
+      const polygon = event.target.closest?.('polygon[data-object-index]');
+      if (!polygon) return;
+      const i = Number(polygon.dataset.objectIndex);
+      if (!Number.isInteger(i) || !inputs.has(i)) return;
+      // Always capture plain clicks before the legacy selectObject click.
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      toggleSnackByIndex(i);
+    };
+    const onMaskKeydown = event => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      const polygon = event.target.closest?.('polygon[data-object-index]');
+      if (!polygon) return;
+      const i = Number(polygon.dataset.objectIndex);
+      if (!Number.isInteger(i) || !inputs.has(i)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      toggleSnackByIndex(i);
+    };
+    // Selecting from the list should behave exactly like clicking the image.
+    const onListClick = event => {
+      const choice = event.target.closest?.('button[data-object-index]');
+      if (!choice || !list.contains(choice)) return;
+      const i = Number(choice.dataset.objectIndex);
+      if (!Number.isInteger(i) || !inputs.has(i)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+      toggleSnackByIndex(i);
+    };
+    if (stage) {
+      stage.addEventListener('click',onMaskClick,true);
+      stage.addEventListener('keydown',onMaskKeydown,true);
+      stage._bikaBulkClickHandler=onMaskClick;
+      stage._bikaBulkKeyHandler=onMaskKeydown;
+    }
+    list.addEventListener('click',onListClick,true);
+    modal._bikaBulkUxDispose=()=>{
+      if(dismissBulkConfirm)dismissBulkConfirm();
+      cleanup.abort();
+      stageObserver?.disconnect();
+      detachedMenus.forEach(el=>el.remove());
+      pickers.forEach(p=>p.close());
+      if(stage){
+        stage.removeEventListener('click',onMaskClick,true);
+        stage.removeEventListener('keydown',onMaskKeydown,true);
+        if(stage._bikaBulkClickHandler===onMaskClick)stage._bikaBulkClickHandler=null;
+        if(stage._bikaBulkKeyHandler===onMaskKeydown)stage._bikaBulkKeyHandler=null;
+        stage.classList.remove('bika-reviewed-filter-active');
+      }
+      list.removeEventListener('click',onListClick,true);
+      const current=stage?.querySelector('.analytics-mask-svg');
+      current?.querySelector('[data-bika-reviewed-markers]')?.remove();
+      current?.querySelectorAll('polygon').forEach(polygon=>{
+        polygon.classList.remove('bika-reviewed-mask','bika-reviewed-mask-active','is-bulk-selected','bika-filter-muted','bika-filter-match');
+        polygon.removeAttribute('aria-hidden');
+      });
+      list.hidden=false;
+    };
+    window.addEventListener('resize',paintCurrentSelection,{signal,passive:true});
+    const modalObserver=new MutationObserver(()=>{
+      if(modal.hidden){pickers.forEach(p=>p.close());}
+    });
+    modalObserver.observe(modal,{attributes:true,attributeFilter:['hidden']});
+    signal.addEventListener('abort',()=>modalObserver.disconnect(),{once:true});
+    // BIKA in-app confirmation replaces the browser's native 127.0.0.1 dialog.
+    let dismissBulkConfirm=null;
+    async function showBulkConfirm(body,help,acceptLabel){
+      if(dismissBulkConfirm)dismissBulkConfirm();
+      return new Promise(resolve=>{
+        const overlay=document.createElement('div');
+        overlay.className='bika-bulk-confirm-overlay';
+        overlay.innerHTML=`
+          <section class="bika-bulk-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="bika-bulk-confirm-title" aria-describedby="bika-bulk-confirm-description">
+            <div class="bika-bulk-confirm-heading"><iconsax-icon name="tick-circle" type="twotone" size="20" color="currentColor" aria-hidden="true"></iconsax-icon><span id="bika-bulk-confirm-title">Confirm review</span></div>
+            <p id="bika-bulk-confirm-description" data-bika-confirm-body></p>
+            <p class="bika-bulk-confirm-help" data-bika-confirm-help></p>
+            <div class="bika-bulk-confirm-actions"><button type="button" data-bika-confirm-cancel>Cancel</button><button type="button" data-bika-confirm-accept></button></div>
+          </section>`;
+        overlay.querySelector('[data-bika-confirm-body]').textContent=body;
+        overlay.querySelector('[data-bika-confirm-help]').textContent=help;
+        const accept=overlay.querySelector('[data-bika-confirm-accept]');
+        const cancel=overlay.querySelector('[data-bika-confirm-cancel]');
+        accept.textContent=acceptLabel;
+        const oldFocus=document.activeElement;
+        const controller=new AbortController();
+        let settled=false;
+        const finish=value=>{
+          if(settled)return;
+          settled=true;
+          controller.abort();
+          overlay.remove();
+          if(dismissBulkConfirm===closeWithoutSaving)dismissBulkConfirm=null;
+          if(oldFocus?.isConnected)oldFocus.focus({preventScroll:true});
+          resolve(value);
+        };
+        const closeWithoutSaving=()=>finish(false);
+        dismissBulkConfirm=closeWithoutSaving;
+        accept.addEventListener('click',()=>finish(true),{signal:controller.signal});
+        cancel.addEventListener('click',closeWithoutSaving,{signal:controller.signal});
+        overlay.addEventListener('pointerdown',event=>{
+          if(event.target===overlay)closeWithoutSaving();
+        },{signal:controller.signal});
+        overlay.addEventListener('keydown',event=>{
+          if(event.key==='Escape'){event.preventDefault();closeWithoutSaving();}
+          if(event.key==='Tab'){
+            const choices=[cancel,accept];
+            const current=choices.indexOf(document.activeElement);
+            if(event.shiftKey && current<=0){event.preventDefault();accept.focus();}
+            if(!event.shiftKey && current===choices.length-1){event.preventDefault();cancel.focus();}
+          }
+        },{signal:controller.signal});
+        document.body.appendChild(overlay);
+        cancel.focus({preventScroll:true});
+      });
+    }
+    submit.addEventListener('click',async()=>{
+      if(saving)return;
+      const correctionMode=filter.value==='reviewed';
+      const chosen=Array.from(marked).filter(i=>objects[i]&&eligibleForSelection(i)).map(i=>objects[i].object_id);
+      if(!chosen.length||chosen.length>500)return;
+      if(decision.value==='incorrect_class'&&!corrected.value){
+        message.textContent='Choose the correct class first.';
+        panel.querySelector('[data-bulk-class-wrap] .bika-ux-dropdown-trigger')?.focus();return;
+      }
+      if(decision.value==='incorrect_class'){
+        const conflicting=chosen.find(oid=>{
+          const obj=objects.find(x=>x.object_id===oid);
+          return String(obj?.class_name||'').trim().toLowerCase().replace(/[\s-]+/g,'_')===corrected.value;
+        });
+        if(conflicting){message.textContent=`The corrected class must differ from the prediction (${conflicting}).`;return;}
+      }
+      const action=decision.selectedOptions[0]?.textContent?.trim()||'Review';
+      const confirmation=correctionMode
+        ? `Apply "${action}" to ${chosen.length} previously reviewed snack${chosen.length===1?'':'s'}?`
+        : `Apply "${action}" to ${chosen.length} selected snack${chosen.length===1?'':'s'}?`;
+      const extra=correctionMode
+        ? 'Previous review decisions remain in history. Original AI predictions are unchanged.'
+        : 'Existing reviews are protected. Original AI predictions are unchanged.';
+      if(!await showBulkConfirm(confirmation,extra,correctionMode?'Save corrections':'Save reviews'))return;
+      saving=true;sync();message.textContent=`Saving ${chosen.length} review${chosen.length===1?'':'s'}…`;
+      const token=document.querySelector('meta[name="csrf-token"]')?.content||'';
+      const activeBatch=reviewRecord?.batch_id;
+      try{
+        const response=await fetch(`${root.dataset.reviewUrlRoot}${encodeURIComponent(activeBatch)}/bulk`,{
+          method:'POST',credentials:'same-origin',
+          headers:{'Content-Type':'application/json','X-CSRFToken':token},
+          body:JSON.stringify({
+            object_ids:chosen,decision:decision.value,note:note.value,
+            corrected_class:decision.value==='incorrect_class'?corrected.value:null,
+            review_mode:correctionMode?'correct_reviewed':'new',
+            expected_reviewed_at:correctionMode?Object.fromEntries(chosen.map(id=>[id,String(reviewRecord.reviews?.[id]?.reviewed_at||'')])):undefined
+          })
+        });
+        const payload=await response.json();
+        if(!response.ok||!payload.ok)throw new Error(payload.message||`HTTP ${response.status}`);
+        if(!reviewRecord||reviewRecord.batch_id!==activeBatch)return;
+        Object.assign(reviewRecord.reviews,payload.reviews||{});
+        // Only the confirmed, saved reviews change the displayed class color.
+        // Refresh both the main masks and the cropped mask preview.
+        refreshHumanCorrectionDetail();
+        if(selectedObject && payload.reviews?.[selectedObject.object_id])renderSelectedCrop();
+        marked.clear();
+        for(const [i,check] of inputs){
+          const small=check.closest('.bika-bulk-object-row')?.querySelector('.analytics-object-choice small');
+          if(small&&isReviewed(i)&&!small.textContent.includes('Reviewed'))small.textContent+=' · Reviewed';
+        }
+        message.textContent=correctionMode
+          ? `Updated ${payload.count||0} review${payload.count===1?'':'s'}; previous decisions are kept in history.`
+          : `Saved ${payload.count||0} review${payload.count===1?'':'s'}.${payload.skipped?.length?` ${payload.skipped.length} already reviewed and skipped.`:''}`;
+        sync();
+        await load();
+      }catch(error){message.textContent=`Could not save: ${error.message}`;}
+      finally{saving=false;sync();}
+    },{signal});
+    sync();
   }
 
   function selectObject(index) {
@@ -958,6 +1623,14 @@
     window.addEventListener('scroll',hide,true);
     window.addEventListener('resize',hide);
   })();
+  window.addEventListener('resize', scheduleTopGridBalance, { passive: true });
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(scheduleTopGridBalance);
+    const sideCol = one('.analytics-side-column');
+    const chartCard = one('.analytics-chart-card');
+    if (sideCol) ro.observe(sideCol);
+    if (chartCard) ro.observe(chartCard);
+  }
   restorePeriodAndLoad();
 })();
 

@@ -1,0 +1,14 @@
+{
+  "app/services/live_system_alerts.py": {
+    "before": "9bc67eb484f7de43aa8955e339fd9149ab9ba68220d582088658d94731eba491",
+    "after": "5d93a7bb555662d3f800aacbeee426675ead118ba10dd67c79934afc669eeac3"
+  },
+  "app/notifications/routes.py": {
+    "before": "5ea35b6dc4484ddc2ee00ff877ac40b826d2bdaff7b94f646236fddeef0f2de8",
+    "after": "0c4bd75e12f0d8f4d3ebe5e56ae0593347a577a5975e994a9df545d43150c36c"
+  },
+  "app/static/js/live_global_alerts.js": {
+    "before": "e352c5a0b681f5032e618a6cf74765917aa52a63da588cc46b8c7f3806610b0c",
+    "after": "fc5973b2fd45c8a587d0039fbe5f874270276b9fde18007a03daee9178c9581b"
+  }
+}

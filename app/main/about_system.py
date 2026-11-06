@@ -63,6 +63,13 @@ DEFAULT_STATE = {
         "last_updated": None,
     },
     "retention_policy": "keep_all",
+    # BIKA_VIDEO_RETENTION_PHASE1_V1: configuration only, no video deletion.
+    "video_retention": {
+        "full_days": 7,
+        "anomaly_days": 30,
+        "storage_limit_gb": 50,
+        "updated_at": None,
+    },
     "backup": {
         "type": "database",
         "auto_enabled": True,
@@ -342,6 +349,38 @@ def preview_about_system_retention():
     return jsonify(ok=True, **result)
 
 
+
+# BIKA_VIDEO_RETENTION_PHASE1_V1
+# Settings are persisted now; the Live recorder and cleanup worker are not
+# present in the supplied source bundle. Never report cleanup as active.
+VIDEO_RETENTION_RANGES = {
+    "full_days": (1, 365),
+    "anomaly_days": (1, 365),
+    "storage_limit_gb": (1, 1000),
+}
+
+
+def _video_retention_state(raw):
+    defaults = DEFAULT_STATE["video_retention"]
+    saved = raw if isinstance(raw, dict) else {}
+    values = {}
+    for name, (minimum, maximum) in VIDEO_RETENTION_RANGES.items():
+        original = saved.get(name)
+        if type(original) is int and minimum <= original <= maximum:
+            values[name] = original
+        else:
+            values[name] = defaults[name]
+    values["updated_at"] = saved.get("updated_at") if isinstance(saved.get("updated_at"), str) else None
+    return values
+
+
+def _video_retention_preview():
+    # Video recording is connected; retention expiry is shown for planning.
+    # Automatic deletion remains disabled until a separate safe-cleanup phase.
+    from app.services.live_recording_service import recording_inventory
+    return recording_inventory(current_app.instance_path)
+
+
 def _page_context() -> dict:
     state = _load_state()
 
@@ -406,6 +445,8 @@ def _page_context() -> dict:
     return {
         "about_state": state,
         "about_retention_status": retention_preview,
+        "about_video_retention": _video_retention_state(state.get("video_retention")),
+        "about_video_status": _video_retention_preview(),
         "about_model_accuracy": accuracy_label,
         "about_retention_options": RETENTION_POLICIES,
         "about_backup_types": BACKUP_TYPES,
@@ -500,6 +541,62 @@ def update_about_system_retention():
         ok=True,
         message="Retention policy saved.",
         policy=policy,
+    )
+
+
+# BIKA_VIDEO_RETENTION_PHASE1_V1: administrator-configurable retention.
+# This endpoint saves policy only. It does not start recording or delete videos.
+@main_bp.route("/about-system/video-retention", methods=["POST"])
+@about_system_required
+def update_about_system_video_retention():
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify(ok=False, message="A JSON settings object is required."), 400
+
+    incoming = {}
+    for name, (minimum, maximum) in VIDEO_RETENTION_RANGES.items():
+        value = payload.get(name)
+        if type(value) is not int or not minimum <= value <= maximum:
+            return jsonify(
+                ok=False,
+                message=f"{name.replace('_', ' ').title()} must be a whole number between {minimum} and {maximum}.",
+            ), 400
+        incoming[name] = value
+
+    state = _load_state()
+    previous = _video_retention_state(state.get("video_retention"))
+    incoming["updated_at"] = datetime.now(timezone.utc).isoformat()
+    state["video_retention"] = incoming
+    _save_state(state)
+    recorder_available = bool(_video_retention_preview().get('recording_connected'))
+    _write_audit(
+        category="Config",
+        action="Updated video retention settings",
+        details=(
+            f"Full {previous['full_days']} → {incoming['full_days']} days, "
+            f"clips {previous['anomaly_days']} → {incoming['anomaly_days']} days, "
+            f"storage cap {previous['storage_limit_gb']} → {incoming['storage_limit_gb']} GB. "
+            "Live recorder installed; automatic cleanup remains disabled."
+        ),
+    )
+    return jsonify(
+        ok=True,
+        message=("Video retention settings saved. Automatic cleanup is not enabled."
+                 if recorder_available else "Video retention saved. FFmpeg is not available; recording is not active."),
+        settings=incoming,
+        recording_connected=recorder_available,
+        cleanup_enabled=False,
+    )
+
+
+@main_bp.route("/about-system/video-retention/preview", methods=["GET"])
+@about_system_required
+def preview_about_system_video_retention():
+    return jsonify(
+        ok=True,
+        settings=_video_retention_state(_load_state().get("video_retention")),
+        status=_video_retention_preview(),
+        message="Configuration preview only. No recordings are being deleted.",
     )
 
 

@@ -198,6 +198,14 @@ def begin_live_session(instance_path, owner_id, camera, ai):
 
 
 def finish_live_session(outcome='completed'):
+    # Close recorder before publishing a completed report. Also called by the
+    # history monitor if camera feed fails without a browser API request.
+    try:
+        from app.services.live_recording_service import stop_active_recording
+        stop_active_recording()
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception('Could not finalize Live recording')
     with _MONITOR_LOCK:
         if _MONITOR is not None:
             _MONITOR.finish(outcome)

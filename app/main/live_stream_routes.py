@@ -36,7 +36,9 @@ def live_inspection():
 @main_bp.get("/live-inspection/api/status")
 @login_required
 def live_inspection_status():
-    return jsonify(ok=True, camera=live_camera_combined_status(), ai=live_ai.status(), can_control=can_control())
+    from app.services.live_recording_service import active_recording_status
+    return jsonify(ok=True, camera=live_camera_combined_status(), ai=live_ai.status(),
+                   recording=active_recording_status(), can_control=can_control())
 
 
 @main_bp.post("/live-inspection/api/connect")
@@ -183,14 +185,29 @@ def live_inspection_ai_start():
     if not can_control():
         abort(403)
     from flask import current_app
+    # BIKA-REALTIME-MASK-RESTORE-V2: never silently fall back to the old 09b sampler.
+    # Only selects the already-installed real-time worker; no mask/YOLO code changed.
+    import os
+    from pathlib import Path
+    realtime_worker = Path(current_app.root_path) / "services" / "realtime_inspection_service.py"
+    if not realtime_worker.is_file():
+        return jsonify(ok=False,
+                       message="Real-time YOLO mask worker is missing. Detection was not started; sampled keyframes were not substituted.",
+                       ai=live_ai.status(include_events=False)), 409
+    os.environ["BIKA_REALTIME_LIVE_ENABLED"] = "1"
     ok, message = live_ai.start(current_app._get_current_object(), live_camera)
     if ok:
         try:
             from app.services.live_session_history import begin_live_session
-            begin_live_session(current_app.instance_path, current_user.get_id(), live_camera, live_ai)
+            from app.services.live_recording_service import start_recording
+            live_session_id = begin_live_session(current_app.instance_path, current_user.get_id(), live_camera, live_ai)
+            record_result = start_recording(current_app.instance_path, live_session_id, current_user.get_id(), live_camera)
+            if not record_result['ok']:
+                current_app.logger.warning('Live recording unavailable: %s', record_result['message'])
         except Exception:
             current_app.logger.exception('Could not start Live Session History')
-    return jsonify(ok=ok, message=message, ai=live_ai.status()), 200 if ok else 409
+    from app.services.live_recording_service import active_recording_status
+    return jsonify(ok=ok, message=message, ai=live_ai.status(), recording=active_recording_status()), 200 if ok else 409
 
 
 @main_bp.post("/live-inspection/api/ai/stop")

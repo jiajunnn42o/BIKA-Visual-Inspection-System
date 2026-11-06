@@ -1,0 +1,26 @@
+{
+  "name": "BIKA-LIVE-MASK-RECORDING-ADDON-V1",
+  "created_at": "2026-11-06T14:57:39.810171",
+  "files": {
+    "app/services/live_recording_service.py": {
+      "prior_sha256": "4a8ae9d40ddd1b7e78eda9096d75bf3052ac1ea48d651dc4b32dc4d680ea9efd",
+      "after_sha256": "b4086d4334e87110d5630b4aaa8eaf0a46bcd1a1056043991f64e2e1f2cac25e"
+    },
+    "app/main/reports_routes.py": {
+      "prior_sha256": "7fcfb806553aac48abcb655823312ec1cc275fb5aab7db63ce91d568c7aab2da",
+      "after_sha256": "90a514a59b070f46952ca64d750858daf389a4c7a228ad7c2a38280cbc934cea"
+    },
+    "app/static/js/reports.js": {
+      "prior_sha256": "57a9c491fb5aacbe4626ea4a0efe7ac0ba28278a32b4c613b47b486e03b0e324",
+      "after_sha256": "feae252a908f57c85af541f632e7c2c68eb632fecf955520f9e84d8e23be760e"
+    },
+    "app/templates/reports.html": {
+      "prior_sha256": "aafbc3a1b10ae5ddf5b2b3ee6cf15c4333dac8d79d3000c04558aca78e2c3b09",
+      "after_sha256": "c95dc12eff58ed911584736ac08bcb8367e85932081854484c6dff694fd4baa7"
+    },
+    "app/services/live_mask_recording_service.py": {
+      "prior_sha256": null,
+      "after_sha256": "a336bbfdd2790284ec8a702dce66988b0158fcad236e9c649a193cc09cfbe01c"
+    }
+  }
+}

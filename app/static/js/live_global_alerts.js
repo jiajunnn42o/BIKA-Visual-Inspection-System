@@ -146,11 +146,23 @@
     } catch (err) { console.warn('[BIKA Live Alerts] health poll failed',err); }
     finally { busy = false; }
   }
+  // EventSource refreshes other accounts as soon as their global bell record appears.
+  // Periodic health checks remain both the fault detector and an SSE fallback.
+  if ('EventSource' in window) {
+    const stream = new EventSource('/notifications/api/live-alert-stream');
+    stream.addEventListener('alert-change', () => {
+      window.dispatchEvent(new Event('bika:notifications-changed'));
+      poll();
+    });
+    stream.addEventListener('retry', () => console.warn('[BIKA Live Alerts] SSE will reconnect'));
+    // Browser-managed reconnect is intentional; normal polling continues if SSE fails.
+    window.addEventListener('pagehide', () => stream.close(), {once:true});
+  }
   poll();
   setInterval(poll, 3500);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
   window.addEventListener('bika:notifications-changed', () => {
-    // Allow bell-side 'Mark all as read' to update the Live persisted alerts.
+    // Bell's Mark all as read updates persisted Live cards and both views.
     if (!busy) poll();
   });
 })();

@@ -682,6 +682,21 @@
       const data = await response.json();
       render(data.camera);
       renderAI(data.ai, data.camera);
+      const recordingLabel = get('[data-live-recording-state]');
+      if (recordingLabel) {
+        const recording = data.recording || {};
+        const state = recording.status || 'idle';
+        recordingLabel.classList.toggle('is-active', ['recording','starting','finalizing'].includes(state));
+        recordingLabel.classList.toggle('is-error', ['error','unavailable','storage_full','interrupted'].includes(state));
+        recordingLabel.textContent = state === 'recording' ? 'Recording original camera video · MP4 segments' :
+          state === 'starting' ? 'Preparing video recorder…' :
+          state === 'finalizing' ? 'Finalizing recording…' :
+          state === 'completed' ? 'Recording saved. Open Reports to play it.' :
+          state === 'disabled' ? 'Recording paused for AI mask test (BIKA_LIVE_RECORDING_ENABLED=0).' :
+          ['error','unavailable','storage_full','interrupted'].includes(state) ?
+            ('Recording stopped: ' + (recording.message || state)) :
+          data.ai?.active ? 'Video recorder not active. Check FFmpeg setup.' : 'Recording starts with AI detection.';
+      }
       healthFailedPolls = 0;
       updateCameraHealthAlerts(data.camera, data.ai);
       return data.camera;

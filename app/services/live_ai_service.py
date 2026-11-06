@@ -204,6 +204,12 @@ class LiveAI:
     def start(self, app, camera):
         if camera.status().get('state') != 'online':
             return False, 'Connect the camera before starting AI detection.'
+        # BIKA-CONTINUOUS-WORKER-GUARD-V3: keep the proven live Mask system.
+        from pathlib import Path
+        directory = Path(__file__).resolve().parent
+        if not (directory / 'realtime_inspection_service.py').is_file() or not (directory / 'live_mask_projection_service.py').is_file():
+            return False, 'Continuous YOLO worker/projector missing. Refusing sampled fallback.'
+        os.environ['BIKA_REALTIME_LIVE_ENABLED'] = '1'
         with self.lock:
             if self.thread is not None and self.thread.is_alive():
                 return False, 'AI worker is already active or stopping; please wait.'
@@ -213,11 +219,9 @@ class LiveAI:
             self.stop_signal = threading.Event()
             self.thread = threading.Thread(target=self._worker,
                                            args=(app, camera, self.stop_signal, self.generation),
-                                           daemon=True, name='bika-live-ai-09b')
+                                           daemon=True, name='bika-live-ai-continuous')
             self.thread.start()
-        if os.environ.get('BIKA_REALTIME_LIVE_ENABLED', '0').strip().lower() in ('1','true','yes','on'):
-            return True, 'Starting YOLO + selective v4 camera tracking (provisional counts).'
-        return True, 'Starting sampled 09b AI inspection on the latest camera frames.'
+        return True, 'Starting YOLO + selective v4 with continuous motion-aligned masks.'
 
     def stop(self):
         with self.lock:
@@ -255,8 +259,9 @@ class LiveAI:
                 'event_total': len(self.events),
                 'mask_suppressed_last': self.mask_suppressed_last,
                 'mask_filter_mode': 'live-preview-only',
-                'counts_are_observations': not (os.environ.get('BIKA_REALTIME_LIVE_ENABLED','0').strip().lower() in ('1','true','yes','on')),
-                'counts_are_provisional': os.environ.get('BIKA_REALTIME_LIVE_ENABLED','0').strip().lower() in ('1','true','yes','on'),
+                'counts_are_observations': False,
+                'counts_are_provisional': True,
+                'live_runtime_mode': 'continuous_yolo',
             }
 
     def latest_overlay(self):
@@ -350,9 +355,11 @@ class LiveAI:
     def _worker(self, app, camera, stopped, generation):
         # Only the worker loads model modules. The preview/status endpoints never do.
         try:
-            if os.environ.get('BIKA_REALTIME_LIVE_ENABLED','0').strip().lower() in ('1','true','yes','on'):
-                from app.services.realtime_inspection_service import run_realtime_live_worker
-                return run_realtime_live_worker(self, app, camera, stopped, generation)
+            # Directly invoke the successful YOLO + LiveMaskProjector worker.
+            # No environment-dependent sampled-keyframe fallback.
+            from app.services.realtime_inspection_service import run_realtime_live_worker
+            return run_realtime_live_worker(self, app, camera, stopped, generation)
+            # Historical sampled implementation below remains unreachable.
             import cv2
             import numpy as np
             from app.services.inspection_pipeline_service import inspect_image_bytes_with_progress

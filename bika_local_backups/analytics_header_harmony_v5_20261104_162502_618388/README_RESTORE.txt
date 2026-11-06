@@ -1,0 +1,1 @@
+To restore: copy analytics.html to app/templates/analytics.html, then remove app/static/css/analytics_header_harmony_v5.css and app/static/js/analytics_header_harmony_v5.js. No existing Analytics JS/CSS was overwritten.

@@ -1,0 +1,13 @@
+{
+  "created_at": "2026-11-06T13:48:55",
+  "files": {
+    "app/services/live_recording_service.py": {
+      "before_sha256": "82c8c907625bc41febe58528611b12b5762e947edf0fea62e79c3272942e5e62",
+      "after_sha256": "4a8ae9d40ddd1b7e78eda9096d75bf3052ac1ea48d651dc4b32dc4d680ea9efd"
+    },
+    "app/static/js/live_stream.js": {
+      "before_sha256": "4ff0ae31109869edf6c74053e053e03e1740e254b9e72de75b3d9a2a9415bd03",
+      "after_sha256": "d281640c0ff87fac06575b3463ac1af0ea2b895ccd2cc656abd3253d57c93fd5"
+    }
+  }
+}

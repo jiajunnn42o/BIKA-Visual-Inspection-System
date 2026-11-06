@@ -25,6 +25,7 @@ About System | BIKA
 >
 <link rel="stylesheet" href="{{ url_for('static', filename='css/backup_schedule_pickers.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/backup_destination_picker.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/about_video_retention.css', v='20261105-video-v1') }}">
 {% endblock %}
 
 
@@ -41,6 +42,7 @@ About System | BIKA
     data-backup-folder-picker-url="{{ url_for('main.pick_about_backup_folder') }}"
 
     data-retention-url="{{ url_for('main.update_about_system_retention') }}"
+    data-video-retention-url="{{ url_for('main.update_about_system_video_retention') }}"
 
         {% if about_permissions.can_manage_model %}
 
@@ -393,11 +395,15 @@ About System | BIKA
                     <h2>Data Retention</h2>
 
                 </div>
-
+                <div class="bika-retention-tabs" role="tablist" aria-label="Data retention type" data-retention-tabs="settings">
+                    <button type="button" role="tab" id="bika-records-settings-tab" aria-selected="true" aria-controls="bika-records-settings" data-bika-retention-tab="records">Inspection records</button>
+                    <button type="button" role="tab" id="bika-video-settings-tab" aria-selected="false" aria-controls="bika-video-settings" data-bika-retention-tab="video">Live recordings</button>
+                </div>
             </div>
 
 
 
+            <div id="bika-records-settings" class="bika-retention-pane" data-bika-retention-pane="records" role="tabpanel" aria-labelledby="bika-records-settings-tab">
             <div class="about-retention-options" data-retention-options>
 
                 {% for key, option in about_retention_options.items() %}
@@ -484,17 +490,157 @@ About System | BIKA
 
             </div>
 
+            </div>
+
+            <div id="bika-video-settings" class="bika-retention-pane bika-video-pane" data-bika-retention-pane="video" role="tabpanel" aria-labelledby="bika-video-settings-tab" hidden>
+                <p class="bika-video-intro">Choose how long future Live recordings should be kept.</p>
+                <div class="bika-video-settings-grid">
+                    <label class="bika-video-field">
+                        <span>Full recording retention</span>
+                        <span class="bika-video-select-wrap">
+                            <select data-video-full-days aria-label="Full recording retention">
+                                {% for days in [1, 3, 7, 14, 30, 60, 90, 180, 365] %}
+                                <option value="{{ days }}" {% if about_video_retention.full_days == days %}selected{% endif %}>{{ days }} {{ 'day' if days == 1 else 'days' }}</option>
+                                {% endfor %}
+                                <option value="custom" {% if about_video_retention.full_days not in [1, 3, 7, 14, 30, 60, 90, 180, 365] %}selected{% endif %}>Custom duration</option>
+                            </select>
+                            <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </span>
+                        <span class="bika-video-custom" data-video-custom="full" {% if about_video_retention.full_days in [1, 3, 7, 14, 30, 60, 90, 180, 365] %}hidden{% endif %}><input type="number" data-video-full-custom value="{{ about_video_retention.full_days }}" min="1" max="365" step="1" aria-label="Custom full recording retention in days"><span>days</span></span>
+                    </label>
+                    <label class="bika-video-field">
+                        <span>Anomaly clip retention</span>
+                        <span class="bika-video-select-wrap">
+                            <select data-video-anomaly-days aria-label="Anomaly clip retention">
+                                {% for days in [1, 3, 7, 14, 30, 60, 90, 180, 365] %}
+                                <option value="{{ days }}" {% if about_video_retention.anomaly_days == days %}selected{% endif %}>{{ days }} {{ 'day' if days == 1 else 'days' }}</option>
+                                {% endfor %}
+                                <option value="custom" {% if about_video_retention.anomaly_days not in [1, 3, 7, 14, 30, 60, 90, 180, 365] %}selected{% endif %}>Custom duration</option>
+                            </select>
+                            <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </span>
+                        <span class="bika-video-custom" data-video-custom="anomaly" {% if about_video_retention.anomaly_days in [1, 3, 7, 14, 30, 60, 90, 180, 365] %}hidden{% endif %}><input type="number" data-video-anomaly-custom value="{{ about_video_retention.anomaly_days }}" min="1" max="365" step="1" aria-label="Custom anomaly retention in days"><span>days</span></span>
+                    </label>
+                </div>
+                <div class="bika-video-setting-bottom">
+                    <label class="bika-video-field bika-video-storage">
+                        <span>Planned video storage limit</span>
+                        <span class="bika-video-select-wrap">
+                            <select data-video-limit aria-label="Planned video storage limit">
+                                {% for gb in [20, 50, 100, 200, 500, 1000] %}
+                                <option value="{{ gb }}" {% if about_video_retention.storage_limit_gb == gb %}selected{% endif %}>{{ gb }} GB</option>
+                                {% endfor %}
+                                <option value="custom" {% if about_video_retention.storage_limit_gb not in [20, 50, 100, 200, 500, 1000] %}selected{% endif %}>Custom limit</option>
+                            </select>
+                            <svg viewBox="0 0 20 20" width="16" height="16" fill="none" aria-hidden="true"><path d="m5 8 5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        </span>
+                        <span class="bika-video-custom" data-video-custom="limit" {% if about_video_retention.storage_limit_gb in [20, 50, 100, 200, 500, 1000] %}hidden{% endif %}><input type="number" data-video-limit-custom value="{{ about_video_retention.storage_limit_gb }}" min="1" max="1000" step="1" aria-label="Custom video storage limit in GB"><span>GB</span></span>
+                    </label>
+                    <button class="bika-video-save" type="button" data-video-save>Save settings</button>
+                </div>
+                <p class="bika-video-config-note" data-video-save-message role="status" aria-live="polite">Settings are saved for future recording integration; automatic cleanup is not active yet.</p>
+            </div>
         </section>
 
 
 
 
 
+        <!-- BIKA_ABOUT_RETENTION_REORDER_V1: full-width row after Data Retention -->
+        <div class="about-retention-status-row">
+    <!-- Independent read-only status panel: no change to the original two-column grid. -->
+    {% set rs = about_retention_status %}
+    {% set all_count = rs.total|int %}
+    {% set overdue = rs.eligible|int %}
+    {% set current_count = [all_count - overdue, 0]|max %}
+    {% set share = ((overdue / all_count * 100) if all_count else 0) %}
+    <section class="about-panel retention-insight-panel" aria-label="Retention status">
+        <div class="about-panel-heading retention-insight-heading">
+            <div>
+                <iconsax-icon name="chart-square" type="twotone" size="19" color="currentColor"></iconsax-icon>
+                <h2>Retention Status</h2>
+            </div>
+            <div class="bika-retention-status-tools">
+                <div class="bika-retention-tabs" role="tablist" aria-label="Retention status type" data-retention-tabs="status">
+                    <button type="button" role="tab" id="bika-records-status-tab" aria-selected="true" aria-controls="bika-records-status" data-bika-retention-tab="records">Inspection records</button>
+                    <button type="button" role="tab" id="bika-video-status-tab" aria-selected="false" aria-controls="bika-video-status" data-bika-retention-tab="video">Live recordings</button>
+                </div>
+                <span class="retention-readonly-pill">Read-only · Dry Run</span>
+            </div>
+        </div>
+        <div id="bika-records-status" data-bika-retention-status-pane="records" role="tabpanel" aria-labelledby="bika-records-status-tab">
+        <div class="retention-explainer">
+            <div class="retention-policy-copy">
+                <span class="retention-eyebrow">CURRENT POLICY</span>
+                <strong>
+                    {% if rs.policy == 'archive_90' %}Archive after 90 days
+                    {% elif rs.policy == 'delete_1y' %}Delete after 1 year
+                    {% else %}Keep all records{% endif %}
+                </strong>
+                <p>
+                    {% if rs.policy == 'archive_90' %}Inspections older than 90 days are eligible for archival. No files are being moved yet.
+                    {% elif rs.policy == 'delete_1y' %}Inspections older than 365 days are eligible for deletion. Deletion is not enabled yet.
+                    {% else %}All inspection records are retained. No records qualify for an action under this policy.{% endif %}
+                </p>
+            </div>
+            <div class="retention-summary-cards">
+                <div><span>Inspection records</span><strong>{{ all_count }}</strong><small>Currently stored</small></div>
+                <div><span>Eligible now</span><strong>{{ overdue }}</strong><small>Under selected policy</small></div>
+            </div>
+        </div>
+        <div class="retention-visual-grid">
+            <div class="retention-chart-section">
+                <div class="retention-chart-head"><strong>Records under the selected policy</strong><span>{{ '%.1f'|format(share) }}% eligible</span></div>
+                <div class="retention-stacked-track" role="img" aria-label="{{ current_count }} records not eligible and {{ overdue }} eligible records">
+                    {% if all_count %}
+                    <div class="retention-stacked-current" data-retention-progress="{{ '%.3f'|format(100 - share) }}"></div>
+                    <div class="retention-stacked-eligible" data-retention-progress="{{ '%.3f'|format(share) }}"></div>
+                    {% endif %}
+                </div>
+                <div class="retention-chart-legend">
+                    <span><i class="retention-dot retention-dot-current"></i>Not eligible <b>{{ current_count }}</b></span>
+                    <span><i class="retention-dot retention-dot-eligible"></i>Eligible <b>{{ overdue }}</b></span>
+                </div>
+                <p class="retention-chart-note">Eligibility is calculated from the inspection date. Selecting a policy does not move or delete records in this version.</p>
+            </div>
+            <div class="retention-threshold-section">
+                <strong>Age threshold overview</strong>
+                <div class="retention-threshold-row"><span>90+ days <small>Archive candidates</small></span><strong>{{ rs.archive_candidates_90d }}</strong></div>
+                <div class="retention-threshold-bar"><div data-retention-progress="{{ '%.3f'|format((rs.archive_candidates_90d / all_count * 100) if all_count else 0) }}"></div></div>
+                <div class="retention-threshold-row"><span>365+ days <small>Delete candidates</small></span><strong>{{ rs.delete_candidates_365d }}</strong></div>
+                <div class="retention-threshold-bar"><div data-retention-progress="{{ '%.3f'|format((rs.delete_candidates_365d / all_count * 100) if all_count else 0) }}"></div></div>
+                <p class="retention-chart-note">These thresholds overlap: records older than 365 days are also included in the 90+ day count.</p>
+            </div>
+        </div>
+        <div class="retention-status-footer">
+            <a class="retention-preview-action" href="{{ url_for('main.preview_about_system_retention') }}" target="_blank" rel="noopener noreferrer">Preview eligible records (Dry Run)</a>
+            <span>Preview only — no records will be moved or deleted.</span>
+        </div>
+        </div>
+        <div id="bika-video-status" class="bika-video-status-pane" data-bika-retention-status-pane="video" role="tabpanel" aria-labelledby="bika-video-status-tab" hidden>
+            <div class="bika-video-status-summary">
+                <div><span>Full recording retention</span><strong data-video-status-full>{{ about_video_retention.full_days }} days</strong></div>
+                <div><span>Anomaly clip retention</span><strong data-video-status-anomaly>{{ about_video_retention.anomaly_days }} days</strong></div>
+                <div><span>Planned storage limit</span><strong data-video-status-limit>{{ about_video_retention.storage_limit_gb }} GB</strong></div>
+            </div>
+            <div class="bika-video-status-detail">
+                <div class="bika-video-status-title"><iconsax-icon name="video" type="twotone" size="20" color="currentColor" aria-hidden="true"></iconsax-icon><span>Live recording storage is not connected yet</span></div>
+                <p>BIKA currently saves Live inspection summaries in Reports, but a persistent recording inventory and automatic cleanup worker are not included in this version. No videos are deleted by these settings.</p>
+                <div class="bika-video-status-list">
+                    <span>Saved video inventory <strong>Not available</strong></span>
+                    <span>Video storage used <strong>Not measured</strong></span>
+                    <span>Automatic cleanup <strong>Inactive</strong></span>
+                </div>
+            </div>
+        </div>
+    </section>
+        </div>
+
         {% if about_permissions.can_manage_backup_settings %}
 
         <!-- BACKUP SETTINGS -->
 
-        <section class="about-panel">
+        <section class="about-panel about-backup-settings-panel">
 
             <div class="about-panel-heading">
 
@@ -857,68 +1003,6 @@ About System | BIKA
 
     </div>
 
-    <!-- Independent read-only status panel: no change to the original two-column grid. -->
-    {% set rs = about_retention_status %}
-    {% set all_count = rs.total|int %}
-    {% set overdue = rs.eligible|int %}
-    {% set current_count = [all_count - overdue, 0]|max %}
-    {% set share = ((overdue / all_count * 100) if all_count else 0) %}
-    <section class="about-panel retention-insight-panel" aria-label="Retention status">
-        <div class="about-panel-heading retention-insight-heading">
-            <div>
-                <iconsax-icon name="chart-square" type="twotone" size="19" color="currentColor"></iconsax-icon>
-                <h2>Retention Status</h2>
-            </div>
-            <span class="retention-readonly-pill">Read-only · Dry Run</span>
-        </div>
-        <div class="retention-explainer">
-            <div class="retention-policy-copy">
-                <span class="retention-eyebrow">CURRENT POLICY</span>
-                <strong>
-                    {% if rs.policy == 'archive_90' %}Archive after 90 days
-                    {% elif rs.policy == 'delete_1y' %}Delete after 1 year
-                    {% else %}Keep all records{% endif %}
-                </strong>
-                <p>
-                    {% if rs.policy == 'archive_90' %}Inspections older than 90 days are eligible for archival. No files are being moved yet.
-                    {% elif rs.policy == 'delete_1y' %}Inspections older than 365 days are eligible for deletion. Deletion is not enabled yet.
-                    {% else %}All inspection records are retained. No records qualify for an action under this policy.{% endif %}
-                </p>
-            </div>
-            <div class="retention-summary-cards">
-                <div><span>Inspection records</span><strong>{{ all_count }}</strong><small>Currently stored</small></div>
-                <div><span>Eligible now</span><strong>{{ overdue }}</strong><small>Under selected policy</small></div>
-            </div>
-        </div>
-        <div class="retention-visual-grid">
-            <div class="retention-chart-section">
-                <div class="retention-chart-head"><strong>Records under the selected policy</strong><span>{{ '%.1f'|format(share) }}% eligible</span></div>
-                <div class="retention-stacked-track" role="img" aria-label="{{ current_count }} records not eligible and {{ overdue }} eligible records">
-                    {% if all_count %}
-                    <div class="retention-stacked-current" data-retention-progress="{{ '%.3f'|format(100 - share) }}"></div>
-                    <div class="retention-stacked-eligible" data-retention-progress="{{ '%.3f'|format(share) }}"></div>
-                    {% endif %}
-                </div>
-                <div class="retention-chart-legend">
-                    <span><i class="retention-dot retention-dot-current"></i>Not eligible <b>{{ current_count }}</b></span>
-                    <span><i class="retention-dot retention-dot-eligible"></i>Eligible <b>{{ overdue }}</b></span>
-                </div>
-                <p class="retention-chart-note">Eligibility is calculated from the inspection date. Selecting a policy does not move or delete records in this version.</p>
-            </div>
-            <div class="retention-threshold-section">
-                <strong>Age threshold overview</strong>
-                <div class="retention-threshold-row"><span>90+ days <small>Archive candidates</small></span><strong>{{ rs.archive_candidates_90d }}</strong></div>
-                <div class="retention-threshold-bar"><div data-retention-progress="{{ '%.3f'|format((rs.archive_candidates_90d / all_count * 100) if all_count else 0) }}"></div></div>
-                <div class="retention-threshold-row"><span>365+ days <small>Delete candidates</small></span><strong>{{ rs.delete_candidates_365d }}</strong></div>
-                <div class="retention-threshold-bar"><div data-retention-progress="{{ '%.3f'|format((rs.delete_candidates_365d / all_count * 100) if all_count else 0) }}"></div></div>
-                <p class="retention-chart-note">These thresholds overlap: records older than 365 days are also included in the 90+ day count.</p>
-            </div>
-        </div>
-        <div class="retention-status-footer">
-            <a class="retention-preview-action" href="{{ url_for('main.preview_about_system_retention') }}" target="_blank" rel="noopener noreferrer">Preview eligible records (Dry Run)</a>
-            <span>Preview only — no records will be moved or deleted.</span>
-        </div>
-    </section>
 
     {% if about_permissions.can_view_audit_log %}
 
@@ -2156,6 +2240,7 @@ About System | BIKA
 {% block extra_js %}
 
 <script src="{{ url_for('static', filename='js/about_system.js') }}"></script>
+<script src="{{ url_for('static', filename='js/about_video_retention.js', v='20261105-video-v1') }}"></script>
 <script src="{{ url_for('static', filename='js/backup_schedule_pickers.js') }}"></script>
 <script src="{{ url_for('static', filename='js/backup_destination_picker.js') }}"></script>
 {% endblock %}

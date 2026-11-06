@@ -1,0 +1,1 @@
+To revert, restore analytics.js and analytics.css from this backup to their respective app/static/js and app/static/css folders.

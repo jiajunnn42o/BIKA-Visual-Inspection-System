@@ -1,0 +1,22 @@
+{
+  "version": "v3.2",
+  "chart_based_on_user_uploaded_sha256": "d19f864efad077acf3a785fcc008a0570a720b437ab4885df5bd54eae50967ef",
+  "files": {
+    "chart": {
+      "path": "D:\\BDS\\BIKA_inspectionWebsite\\app\\static\\js\\analytics.js",
+      "before": "d19f864efad077acf3a785fcc008a0570a720b437ab4885df5bd54eae50967ef",
+      "after": "c5066d1fde60e46981a6a706c6ccebb54461307e0a1477a42872cb1b2a73ffb5"
+    },
+    "demo": {
+      "path": "D:\\BDS\\BIKA_inspectionWebsite\\app\\static\\js\\analytics_demo_mode.js",
+      "before": "e6863667a9f3c9a804db3e6867df3ca318da95281a6cedd26cea550232cb047a",
+      "after": "24daff66ed2638139bd9064c0ca69d9339a86c7efe15fa2cefe2e5beb65ef503"
+    },
+    "style": {
+      "path": "D:\\BDS\\BIKA_inspectionWebsite\\app\\static\\css\\analytics.css",
+      "before": "549e16d1d18cf0e227340c517c341b79098c850cc3cdcac5b549c22f733c62eb",
+      "after": "6e757714e1b6441d7e9b52960765905ec95e4d5eb85fba495a4249daad6e6c27"
+    }
+  },
+  "changes_to_backend_database_models": false
+}

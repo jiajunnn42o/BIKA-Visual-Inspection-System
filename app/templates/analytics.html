@@ -2,7 +2,10 @@
 {% block title %}Data Analytics | BIKA{% endblock %}
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static',filename='css/unified_inspection_views.css',v='unified-v1') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css', v='20261101-correct-class-1-1') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css', v='20261104-user-pipeline-v2') }}">
+
+<!-- BIKA-ANALYTICS-HEADER-HARMONY-V5 -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/analytics_header_harmony_v5.css', v='harmony-v5') }}">
 {% endblock %}
 {% block content %}
 <div class="analytics-page" data-analytics-page
@@ -146,7 +149,7 @@
   {% if can_review %}
   <section class="analytics-card analytics-anomalous-card" id="analytics-anomalous" data-admin-review>
     <div class="analytics-card-header analytics-card-header-wrap">
-      <div class="analytics-card-title"><span class="analytics-card-icon"><iconsax-icon name="eye" type="twotone" size="19" color="currentColor"></iconsax-icon></span><div><h2>Inspection &amp; Pipeline Review Log <span class="analytics-admin-tag">ADMIN REVIEW</span></h2><p>View Image, Video and Live runs together; filter genuine pipeline anomalies separately</p></div></div>
+      <div class="analytics-card-title"><span class="analytics-card-icon"><iconsax-icon name="eye" type="twotone" size="19" color="currentColor"></iconsax-icon></span><div><h2>Inspection &amp; Pipeline Review Log <span class="analytics-admin-tag">TEAM REVIEW</span></h2><p>Review flagged inspection runs together; original AI predictions stay unchanged</p></div></div>
       <div class="analytics-review-filter">
         <div class="analytics-queue-select" data-review-select>
           <label class="analytics-sr" for="analytics-review-mode">Review queue</label>
@@ -215,10 +218,17 @@
 {% endif %}
 {% endblock %}
 {% block extra_js %}
-<script defer src="{{ url_for('static', filename='js/analytics.js', v='20261101-correct-class-1-1') }}"></script>{% endblock %}
+<script defer src="{{ url_for('static', filename='js/analytics_demo_mode.js', v='20261103-1') }}"></script>
+<script defer src="{{ url_for('static', filename='js/analytics.js', v='20261101-correct-class-1-1') }}"></script>
+
+<!-- BIKA-ANALYTICS-HEADER-HARMONY-V5 -->
+<script defer src="{{ url_for('static', filename='js/analytics_header_harmony_v5.js', v='harmony-v5') }}"></script>
+{% endblock %}
 
 <!-- BIKA-UNIFIED-VIEWS-V1 -->
 
 <!-- BIKA-TREND-REVIEW-MASK-V1 -->
 
 <!-- BIKA-REVIEW-CORRECT-CLASS-V1_1 -->
+
+<!-- BIKA_USER_PIPELINE_LAYOUT_V2 -->

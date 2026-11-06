@@ -706,9 +706,7 @@ def mark_all_notifications_read():
 @notifications_bp.route('/api/live-system-health', methods=['POST'])
 @login_required
 def live_system_health_notifications():
-    """Poll camera health across all signed-in pages; append persistent bell alerts."""
-    if getattr(current_user, 'role', None) not in {'admin', 'superadmin'}:
-        return jsonify(ok=True, unread_alerts=[]), 200
+    """Monitor global camera health for any logged-in user; return own alerts."""
     from app.services.live_system_alerts import poll_camera_alerts
     try:
         data = poll_camera_alerts(current_user.id)
@@ -717,3 +715,50 @@ def live_system_health_notifications():
         current_app.logger.exception('Unable to retrieve Live system alerts')
         return jsonify(ok=False, message='Camera health monitoring temporarily unavailable'), 503
     return jsonify(data)
+
+
+# BIKA-GLOBAL-ALERT-ALL-ACCOUNTS-V2: per-account event stream.
+# No background worker needed for the small single-process BIKA demonstration.
+# A short database check sees events committed by the global broadcaster.
+@notifications_bp.get('/api/live-alert-stream')
+@login_required
+def live_alert_stream():
+    """SSE: push a refresh signal on new bell records for THIS account only."""
+    import time
+    from flask import Response, current_app, stream_with_context
+
+    user_id = current_user.id  # Capture before the generator starts.
+    app = current_app._get_current_object()
+
+    def generate():
+        previous = None
+        deadline = time.monotonic() + 120  # Reconnect to release long-lived threads.
+        with app.app_context():
+            while time.monotonic() < deadline:
+                try:
+                    newest = db.session.scalar(
+                        db.select(db.func.max(Notification.id)).where(
+                            Notification.recipient_user_id == user_id
+                        )
+                    ) or 0
+                    if previous is None:
+                        previous = newest
+                        yield ': BIKA alert stream connected\n\n'
+                    elif newest != previous:
+                        previous = newest
+                        yield f'event: alert-change\ndata: {newest}\n\n'
+                    else:
+                        yield ': heartbeat\n\n'
+                except Exception:
+                    app.logger.exception('Global notification SSE query failed')
+                    yield 'event: retry\ndata: {}\n\n'
+                    return
+                finally:
+                    # Do not hold open a DB session for the life of the stream.
+                    db.session.remove()
+                time.sleep(1.5)
+
+    response = Response(stream_with_context(generate()), mimetype='text/event-stream')
+    response.headers['Cache-Control'] = 'no-cache, no-transform'
+    response.headers['X-Accel-Buffering'] = 'no'
+    return response

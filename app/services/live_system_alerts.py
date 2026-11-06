@@ -1,4 +1,4 @@
-"""Persistent, per-user alerts for Live camera failures.
+"""Persistent, per-account global alerts for Live camera and AI health failures.
 
 No AI models are loaded. Camera health is sampled when logged-in browsers poll;
 notifications survive manual Disconnect, navigation, and Python restarts.
@@ -63,32 +63,51 @@ def _fault_for(status, now):
     return None
 
 
-def _record_if_needed(user_id, fault):
+def _broadcast_if_needed(fault):
+    """Persist one independently readable notification for each active account.
+
+    Called while _LOCK is held; one database commit covers the whole audience.
+    This shares the same episode id across recipients but never shares is_read.
+    """
+    from app.models import User, UserStatus
     episode_id, title, message = fault
-    recent = db.session.execute(
-        db.select(Notification)
-        .where(Notification.recipient_user_id == user_id,
-               Notification.notification_type == _ALERT_TYPE)
-        .order_by(Notification.id.desc()).limit(50)
+    active_ids = db.session.execute(
+        db.select(User.id)
+        .where(User.status == UserStatus.ACTIVE.value)
+        .order_by(User.id.asc())
     ).scalars().all()
-    for item in recent:
-        payload = item.payload_json or {}
-        if isinstance(payload, dict) and payload.get("episode_id") == episode_id:
-            return
-    create_notification(
-        recipient_user_id=user_id,
-        notification_type=_ALERT_TYPE,
-        title=title,
-        message=message,
-        link="/live-inspection",
-        payload_json={"episode_id": episode_id, "kind": "camera_health"},
-        force=True,  # Safety/operational alerts should not rely on marketing preferences.
-    )
+
+    # Keep idempotency even if polling is repeated or a partial set was inserted.
+    # Use recipient-scoped queries rather than database-specific JSON SQL operators.
+    for user_id in active_ids:
+        recent = db.session.execute(
+            db.select(Notification.payload_json)
+            .where(Notification.recipient_user_id == user_id,
+                   Notification.notification_type == _ALERT_TYPE)
+            .order_by(Notification.id.desc())
+            .limit(50)
+        ).scalars().all()
+        if any(isinstance(p, dict) and p.get('episode_id') == episode_id
+               for p in recent):
+            continue
+        create_notification(
+            recipient_user_id=user_id,
+            notification_type=_ALERT_TYPE,
+            title=title,
+            message=message,
+            link='/live-inspection',
+            payload_json={
+                'episode_id': episode_id,
+                'kind': 'camera_health',
+                'scope': 'global',
+            },
+            force=True,  # Operational safety notifications ignore marketing preferences.
+        )
     db.session.commit()
 
 
 def poll_camera_alerts(user_id):
-    """Sample active camera, persist new fault for this user, return unread history."""
+    """Sample camera; broadcast a fault to all active accounts; return own unread."""
     global _LAST_STATE, _LAST_STREAM, _ATTEMPTED, _WAS_ONLINE
     global _CURRENT_FAULT, _INTENTIONAL_DISCONNECT, _CONNECTING_SINCE
     status = camera_router.status()
@@ -120,7 +139,7 @@ def poll_camera_alerts(user_id):
             if _CURRENT_FAULT is None:
                 _CURRENT_FAULT = (uuid.uuid4().hex, detail[0], detail[1])
             try:
-                _record_if_needed(user_id, _CURRENT_FAULT)
+                _broadcast_if_needed(_CURRENT_FAULT)
             except Exception:
                 db.session.rollback()
                 raise

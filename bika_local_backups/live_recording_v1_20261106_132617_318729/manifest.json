@@ -1,0 +1,45 @@
+{
+  "files": {
+    "app/main/about_system.py": {
+      "existed": true,
+      "installed_hash": "d21f99c5e03fcb9a86f9fc0678d782ecc47ad5b8b7b3aec31a6e6b048b4ddab2"
+    },
+    "app/main/live_stream_routes.py": {
+      "existed": true,
+      "installed_hash": "b0a04d0affcb5f53a40cb79f96df866372e47b2f8ef17b935c15f7fbc6630398"
+    },
+    "app/main/reports_routes.py": {
+      "existed": true,
+      "installed_hash": "7fcfb806553aac48abcb655823312ec1cc275fb5aab7db63ce91d568c7aab2da"
+    },
+    "app/services/live_session_history.py": {
+      "existed": true,
+      "installed_hash": "7d8eafb890010579fbeec813d5a1005576a9de98f959b0d75a71283f64cf8b0d"
+    },
+    "app/services/unified_live_reports.py": {
+      "existed": true,
+      "installed_hash": "430b8f4bf2159abe6e0399957dd614e3f690d2cfa9b12e8336e9fb064824d008"
+    },
+    "app/static/js/live_stream.js": {
+      "existed": true,
+      "installed_hash": "4ff0ae31109869edf6c74053e053e03e1740e254b9e72de75b3d9a2a9415bd03"
+    },
+    "app/static/js/reports.js": {
+      "existed": true,
+      "installed_hash": "e90c813a4ce8411a5ccb604a8fb55ae1be4af0f7917f8590460f5d2fbe9f969c"
+    },
+    "app/templates/live_stream.html": {
+      "existed": true,
+      "installed_hash": "57c0dc246dee848efe3f6d4d3180b1eb6ed049cc8b6dbbb8dabfd188c8cb45e6"
+    },
+    "app/templates/reports.html": {
+      "existed": true,
+      "installed_hash": "aafbc3a1b10ae5ddf5b2b3ee6cf15c4333dac8d79d3000c04558aca78e2c3b09"
+    },
+    "app/services/live_recording_service.py": {
+      "existed": false,
+      "installed_hash": "82c8c907625bc41febe58528611b12b5762e947edf0fea62e79c3272942e5e62"
+    }
+  },
+  "created_at": "2026-11-06T13:26:17"
+}

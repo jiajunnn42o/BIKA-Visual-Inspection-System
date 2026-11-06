@@ -19,6 +19,15 @@ def _is_reviewer():
     return str(getattr(current_user, "role", "")) in ("admin", "superadmin")
 
 
+# BIKA_TEAM_PIPELINE_REVIEW_V3
+# Team members may submit *human review feedback*; this does not give them
+# account administration, settings or permission to alter original AI outputs.
+def _can_quality_review():
+    return str(getattr(current_user, "role", "")).strip().lower() in (
+        "user", "admin", "superadmin"
+    )
+
+
 def _lookup_record(batch_id):
     return db.session.scalar(db.select(InspectionBatch).where(InspectionBatch.batch_id == batch_id))
 
@@ -26,7 +35,7 @@ def _lookup_record(batch_id):
 @main_bp.route("/analytics", methods=["GET"])
 @login_required
 def analytics():
-    return render_template("analytics.html", user=current_user, can_review=_is_reviewer())
+    return render_template("analytics.html", user=current_user, can_review=_can_quality_review())
 
 
 @main_bp.route("/analytics/api/data", methods=["GET"])
@@ -40,7 +49,7 @@ def analytics_data():
     date_from = request.args.get("from")
     date_to = request.args.get("to")
     summary = build_analytics_data(range_key=period, date_from=date_from,
-                                   date_to=date_to, admin=_is_reviewer())
+                                   date_to=date_to, admin=_can_quality_review())
     try:
         summary['live'] = build_live_analytics(current_app.instance_path,
             current_user.get_id(), range_key=period,
@@ -55,7 +64,7 @@ def analytics_data():
 @main_bp.route("/analytics/api/review/<batch_id>", methods=["GET"])
 @login_required
 def analytics_review_detail(batch_id):
-    if not _is_reviewer():
+    if not _can_quality_review():
         abort(403)
     record = _lookup_record(batch_id)
     if not record:
@@ -100,7 +109,7 @@ def analytics_review_detail(batch_id):
 @main_bp.route("/analytics/api/review/<batch_id>", methods=["POST"])
 @login_required
 def analytics_review_save(batch_id):
-    if not _is_reviewer():
+    if not _can_quality_review():
         abort(403)
     record = _lookup_record(batch_id)
     if not record:
@@ -161,6 +170,122 @@ def analytics_review_save(batch_id):
         current_app.logger.exception("Unable to save review")
         return jsonify(ok=False, message="Could not save review. Please retry."), 500
     return jsonify(ok=True, review=event)
+
+
+# BIKA_BULK_REVIEW_V1: save multiple human review decisions in a single commit.
+# BIKA_BULK_REVIEW_CORRECTION_V1_7: allow deliberate corrections to saved reviews,
+# preserving history and rejecting stale client versions.
+@main_bp.route('/analytics/api/review/<batch_id>/bulk', methods=['POST'])
+@login_required
+def analytics_review_bulk_save(batch_id):
+    # This endpoint intentionally reuses the team-review permission from v3.
+    if not _can_quality_review():
+        abort(403)
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify(ok=False, message='Invalid JSON request.'), 400
+    ids = payload.get('object_ids')
+    if (not isinstance(ids, list) or not 1 <= len(ids) <= 500 or
+            any(not isinstance(v, str) or not v.strip() or len(v) > 80 for v in ids) or
+            len(ids) != len(set(ids))):
+        return jsonify(ok=False, message='Choose 1–500 unique object IDs.'), 400
+    review_mode=payload.get('review_mode','new')
+    if review_mode not in ('new','correct_reviewed'):
+        return jsonify(ok=False, message='Invalid bulk review mode.'), 400
+    correction=review_mode=='correct_reviewed'
+    expected_versions=payload.get('expected_reviewed_at') if correction else None
+    if correction and (not isinstance(expected_versions,dict) or set(expected_versions)!=set(ids)
+            or any(not isinstance(t,str) or not t or len(t)>80 for t in expected_versions.values())):
+        return jsonify(ok=False, message='Saved review versions are required to make corrections. Refresh first.'), 400
+    decision = payload.get('decision')
+    if decision not in ('correct', 'incorrect_mask', 'incorrect_class', 'false_positive'):
+        return jsonify(ok=False, message='Invalid review decision.'), 400
+    note = payload.get('note', '')
+    corrected_class = payload.get('corrected_class') or ''
+    if not isinstance(note, str) or len(note) > 400 or not isinstance(corrected_class, str):
+        return jsonify(ok=False, message='Invalid note or corrected class.'), 400
+    corrected_class = corrected_class.strip().lower()
+    allowed_classes = {'normal', 'fractured', 'too_short', 'too_dark', 'bent_snack'}
+    if decision == 'incorrect_class':
+        if corrected_class not in allowed_classes:
+            return jsonify(ok=False, message='Select a corrected class.'), 400
+    elif corrected_class:
+        return jsonify(ok=False, message='Corrected class is only allowed for incorrect classification.'), 400
+    record = _lookup_record(batch_id)
+    if not record:
+        abort(404)
+    if record.source_type != 'image' or not record.result_key or not record.original_key:
+        return jsonify(ok=False, message='Bulk review supports stored image inspections only.'), 409
+    try:
+        original = json.loads(read_bytes(record.result_key).decode('utf-8'))
+    except (OSError, ValueError, UnicodeError, KeyError):
+        current_app.logger.warning('Bulk review source unavailable for %s', batch_id)
+        return jsonify(ok=False, message='Saved detection results are unavailable.'), 409
+    objects = original.get('objects') or []
+    if not isinstance(objects, list):
+        return jsonify(ok=False, message='Malformed stored detection objects.'), 409
+    objects_by_id = {
+        str(o.get('object_id')): o
+        for o in objects[:2000] if isinstance(o, dict) and o.get('object_id') is not None
+    }
+    invalid = [oid for oid in ids if oid not in objects_by_id]
+    if invalid:
+        return jsonify(ok=False, message='One or more objects no longer match saved predictions.'), 400
+    if decision == 'incorrect_class':
+        for oid in ids:
+            source = objects_by_id[oid]
+            source_class = str(source.get('class_name') or source.get('display_name') or '').strip().lower().replace(' ', '_').replace('-', '_')
+            if source_class == corrected_class:
+                return jsonify(ok=False, message=f'{oid}: corrected class must differ from original prediction.'), 400
+    # Preserve first-time review behavior; correcting previously reviewed
+    # objects requires the explicit mode and the versions shown to the user.
+    summary = deepcopy(record.summary_json or {})
+    reviews = dict(summary.get('_human_reviews_v1') or {})
+    if correction:
+        stale = [oid for oid in ids if not isinstance(reviews.get(oid),dict)
+                 or str(reviews[oid].get('reviewed_at') or '') != expected_versions[oid]]
+        if stale:
+            return jsonify(ok=False, message='Some reviews were updated or removed since you opened this image. Reopen it and try again.'), 409
+        accepted=list(ids)
+        skipped=[]
+    else:
+        accepted = [oid for oid in ids if not isinstance(reviews.get(oid),dict)]
+        skipped = [oid for oid in ids if oid not in accepted]
+    if not accepted:
+        response = jsonify(ok=True, count=0, skipped=skipped, reviews={})
+        response.headers['Cache-Control'] = 'no-store'
+        return response
+    now = datetime.now(timezone.utc).isoformat()
+    reviewed_by = str(current_user.id)
+    reviewer_name = str(getattr(current_user, 'username', 'Reviewer'))[:100]
+    new_entries = {}
+    for oid in accepted:
+        previous=reviews.get(oid) if correction else None
+        history=list(previous.get('history') or []) if isinstance(previous,dict) and isinstance(previous.get('history') or [],list) else []
+        if isinstance(previous,dict):
+            history.append({key:previous.get(key) for key in ('decision','note','corrected_class','reviewed_by','reviewer_name','reviewed_at')})
+        event = {
+            'decision': decision,
+            'note': note.strip(),
+            'corrected_class': corrected_class if decision == 'incorrect_class' else None,
+            'reviewed_by': reviewed_by,
+            'reviewer_name': reviewer_name,
+            'reviewed_at': now,
+            'history': history[-50:],
+        }
+        reviews[oid] = event
+        new_entries[oid] = event
+    summary['_human_reviews_v1'] = reviews
+    record.summary_json = summary
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception('Unable to save bulk review for %s', batch_id)
+        return jsonify(ok=False, message='Unable to save bulk review. No review decisions committed.'), 500
+    response = jsonify(ok=True, count=len(new_entries), skipped=skipped, reviews=new_entries)
+    response.headers['Cache-Control'] = 'no-store'
+    return response
 
 
 # BIKA_ANALYTICS_PERIOD_MEMORY_V1: user-specific server-side date-range preference.
@@ -225,7 +350,7 @@ def analytics_provisional_data():
             current_app.instance_path, current_user.get_id(),
             range_key=request.args.get('range','30d'),
             date_from=request.args.get('from'),date_to=request.args.get('to'),
-            include_review=_is_reviewer())
+            include_review=_can_quality_review())
     except (sqlite3.Error, OSError, ValueError) as exc:
         current_app.logger.warning('Provisional Analytics unavailable: %s', exc)
         return jsonify(ok=False,message='Live/Video activity temporarily unavailable'),503

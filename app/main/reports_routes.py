@@ -63,3 +63,46 @@ def reports_live_sessions_api():
     response = jsonify(ok=True, sessions=rows, note='Provisional defect observations; not verified unique products')
     response.headers['Cache-Control'] = 'private, no-store'
     return response
+
+
+# BIKA_LIVE_RECORDING_V1: authenticated owner-only, safe segmented MP4 playback.
+@main_bp.get('/reports/api/live-recordings/<session_id>/manifest')
+@login_required
+def reports_live_recording_manifest(session_id):
+    from flask import current_app, jsonify, abort
+    from app.services.live_recording_service import recording_manifest
+    data = recording_manifest(current_app.instance_path, current_user.get_id(), session_id)
+    if data is None:
+        abort(404)
+    response = jsonify(ok=True, recording=data)
+    response.headers['Cache-Control'] = 'private, no-store'
+    return response
+
+
+@main_bp.get('/reports/api/live-recordings/<session_id>/segments/<int:segment_index>')
+@login_required
+def reports_live_recording_segment(session_id, segment_index):
+    from flask import current_app, send_file, abort
+    from app.services.live_recording_service import recording_segment_path
+    path = recording_segment_path(current_app.instance_path, current_user.get_id(), session_id, segment_index)
+    if path is None:
+        abort(404)
+    response = send_file(path, mimetype='video/mp4', as_attachment=False, conditional=True)
+    response.headers['Cache-Control'] = 'private, no-store'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    return response
+
+
+# BIKA-LIVE-MASK-RECORDING-ADDON-V1: read-only MP4 of the existing continuous AI mask overlay.
+@main_bp.get('/reports/api/live-recordings/<session_id>/mask-segments/<int:segment_index>')
+@login_required
+def reports_live_recording_mask_segment(session_id, segment_index):
+    from flask import current_app, send_file, abort
+    from app.services.live_recording_service import recording_mask_segment_path
+    path = recording_mask_segment_path(current_app.instance_path, current_user.get_id(), session_id, segment_index)
+    if path is None:
+        abort(404)
+    response = send_file(path, mimetype='video/mp4', as_attachment=False, conditional=True)
+    response.headers['Cache-Control'] = 'private, no-store'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    return response

@@ -1,11 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Live Stream Inspection | BIKA{% endblock %}
+{% block title %}Live Stream Inspection | BIKA
+{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/live_stream.css', v='live-health-v1') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/live_camo.css', v='camo-a1') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/live_donut.css', v='polish-1') }}">
+<style>
+.lsi-live-recording-state{margin:7px 0 11px;color:#8d8588;font-size:12px;font-weight:400;line-height:1.5}
+.lsi-live-recording-state.is-active{color:#762136}
+.lsi-live-recording-state.is-error{color:#ae3b40}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -140,6 +146,7 @@
         <button class="lsi-button lsi-button-white" type="button" data-snapshot-button disabled><iconsax-icon name="camera" type="linear" size="17" color="currentColor"></iconsax-icon><span>Snapshot</span></button>
       </div>
       <div class="lsi-inline-message" data-control-message role="status" aria-live="polite">Camera status will appear here.</div>
+      <p data-live-recording-state class="lsi-live-recording-state" role="status" aria-live="polite">Recording: not started</p>
       <div class="lsi-controls-divider"></div>
       <div class="lsi-mini-heading">Mask Colour Legend <span class="lsi-small-tag">YOLO + v4</span></div>
       <div class="lsi-mask-legend" aria-label="AI prediction colour legend">

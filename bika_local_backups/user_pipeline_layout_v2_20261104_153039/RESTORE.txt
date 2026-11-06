@@ -1,0 +1,1 @@
+To roll back, copy analytics.html to app/templates/analytics.html; analytics.css to app/static/css/analytics.css; analytics.js to app/static/js/analytics.js. Remove app/static/js/analytics_user_pipeline_readonly.js.

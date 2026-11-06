@@ -1,0 +1,2088 @@
+/* BIKA Data Analytics – isolated page stylesheet, current BIKA palette. */
+.analytics-page{--an-brand:#741f2e;--an-brand-soft:#f8eff0;--an-ink:#292929;--an-muted:#8d8d8d;--an-outline:#ece9e9;--an-card:#fff;--an-bg:#f9f9f9;--an-green:#398b6e;--an-rose:#c65d68;--an-violet:#8e79af;--an-shadow:0 12px 36px rgba(51,37,41,.047),0 2px 8px rgba(30,30,30,.018);width:100%;min-width:0;color:var(--an-ink);padding:4px 0 35px;font-family:Inter,system-ui,sans-serif}
+html[data-theme=dark] .analytics-page{--an-brand:#dd8692;--an-brand-soft:#39242c;--an-ink:#efebeb;--an-muted:#a8a0a3;--an-outline:#3e383b;--an-card:#262326;--an-bg:#221f22;--an-green:#83c8ad;--an-rose:#ee919c;--an-violet:#c0a6e4;--an-shadow:0 8px 30px rgba(0,0,0,.15)}
+.analytics-page *{box-sizing:border-box}.analytics-page button,.analytics-page select,.analytics-page input,.analytics-page textarea{font:inherit}.analytics-page button{cursor:pointer}.analytics-page h1,.analytics-page h2,.analytics-page p{margin:0}.analytics-sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.analytics-page [hidden],.analytics-modal-backdrop[hidden]{display:none!important}
+.analytics-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin:0 0 18px}.analytics-page-heading{min-width:0}.analytics-overline{display:flex;align-items:center;gap:10px;font-size:10px;letter-spacing:1.3px;font-weight:800;color:var(--an-brand);margin-bottom:8px}.analytics-overline-line{width:23px;height:2px;background:var(--an-brand)}.analytics-page-heading h1{font-size:29px;font-weight:500;line-height:1.08;letter-spacing:-.025em}.analytics-page-heading p{font-size:15px;font-weight:400;color:var(--an-muted);margin-top:4px;line-height:1.35}.analytics-head-actions{display:flex;gap:9px;align-items:center;flex-shrink:0}.analytics-filter{display:flex;align-items:center;gap:10px;background:var(--an-card);border:1px solid var(--an-outline);border-radius:12px;padding:0 12px;min-height:42px;box-shadow:var(--an-shadow);color:var(--an-brand)}.analytics-filter select{appearance:none;-webkit-appearance:none;background:transparent;border:0;outline:0;min-width:118px;font-size:12px;font-weight:500;color:var(--an-ink);cursor:pointer}.analytics-filter select option{background:var(--an-card);color:var(--an-ink)}.analytics-icon-action{width:42px;height:42px;display:grid;place-items:center;background:var(--an-card);color:var(--an-brand);border:1px solid var(--an-outline);border-radius:12px;box-shadow:var(--an-shadow)}.analytics-icon-action:hover{background:var(--an-brand-soft)}.analytics-custom-range{display:flex;gap:11px;flex-wrap:wrap;align-items:end;background:var(--an-card);padding:15px 18px;margin:-7px 0 18px;border:1px solid var(--an-outline);border-radius:15px}.analytics-custom-range label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:650}.analytics-custom-range input{color:var(--an-ink);border:1px solid var(--an-outline);background:var(--an-card);padding:9px;border-radius:9px}.analytics-system-note{font-size:11px;color:var(--an-muted);min-height:18px;margin:-12px 0 12px}.analytics-system-note.is-error{color:var(--an-rose)}
+.analytics-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin-bottom:13px}.analytics-kpi{background:var(--an-card);border:1px solid var(--an-outline);border-radius:15px;padding:18px 16px;box-shadow:var(--an-shadow);min-height:123px;display:flex;flex-direction:row;align-items:center;gap:12px;min-width:0}.analytics-kpi-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:14px}.analytics-kpi-icon{display:grid;place-items:center;width:43px;height:43px;flex:0 0 43px;border-radius:12px;background:var(--an-brand-soft);color:var(--an-brand)}.analytics-kpi-defect .analytics-kpi-icon{background:var(--an-brand-soft);color:var(--an-brand)}.analytics-kpi-standard .analytics-kpi-icon{background:var(--an-brand-soft);color:var(--an-brand)}.analytics-kpi-trend{letter-spacing:.8px;font-size:9px;color:var(--an-muted);font-weight:750;text-align:right}.analytics-kpi-body{min-width:0;flex:1;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px}.analytics-kpi-label{font-size:11px;color:var(--an-muted);font-weight:500;line-height:1.35;min-height:15px}.analytics-info{font-size:12px;color:#b1acaf;cursor:help}.analytics-kpi-value{display:block;font-size:22px;font-weight:600;letter-spacing:-.4px;color:var(--an-ink);line-height:1.2;font-variant-numeric:tabular-nums}.analytics-kpi-footer{font-size:10px;font-weight:400;color:var(--an-muted);display:flex;align-items:center;gap:5px;flex-wrap:wrap;line-height:1.4}.analytics-mini-dot{display:inline-block;width:6px;height:6px;border-radius:50%;flex:none}.analytics-green{background:var(--an-green)}.analytics-rose{background:var(--an-rose)}.analytics-burgundy{background:var(--an-brand)}
+.analytics-stat-strip{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:16px 19px;margin:17px 0;background:var(--an-card);border:1px solid var(--an-outline);border-radius:14px}.analytics-stat-strip>div{display:flex;align-items:center;gap:8px;flex:1;min-width:155px;color:var(--an-muted);font-size:11px}.analytics-stat-strip>div iconsax-icon{color:var(--an-brand)}.analytics-stat-strip strong{font-size:15px;color:var(--an-ink);font-weight:760;margin-left:auto;font-variant-numeric:tabular-nums}.analytics-stat-strip i{height:23px;border-left:1px solid var(--an-outline)}
+.analytics-top-grid{display:grid;grid-template-columns:minmax(0,1.86fr) minmax(255px,.92fr);gap:17px}.analytics-side-column{display:grid;grid-template-rows:minmax(0,1fr) minmax(0,1fr);gap:17px;min-width:0}.analytics-card{background:var(--an-card);border:1px solid var(--an-outline);border-radius:18px;padding:21px 22px;box-shadow:var(--an-shadow);min-width:0}.analytics-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:17px}.analytics-card-header-wrap{flex-wrap:wrap}.analytics-card-title{display:flex;align-items:flex-start;gap:11px;min-width:0}.analytics-card-icon{width:29px;height:29px;flex:0 0 29px;display:grid;place-items:center;border:1px solid #efdee2;border-radius:9px;background:var(--an-brand-soft);color:var(--an-brand)}.analytics-card-title h2{font-size:14.5px;font-weight:600;line-height:1.4;letter-spacing:-.2px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}.analytics-card-title p{font-size:10.5px;color:var(--an-muted);line-height:1.5;margin-top:3px}.analytics-tab-group{border:1px solid var(--an-outline);background:var(--an-bg);border-radius:10px;padding:3px;display:flex;gap:2px;align-items:center}.analytics-tab-group button{border:0;background:transparent;padding:8px 10px;border-radius:7px;font-size:10px;white-space:nowrap;color:var(--an-muted);font-weight:650}.analytics-tab-group button.is-active{background:var(--an-card);color:var(--an-brand);box-shadow:0 2px 7px rgba(0,0,0,.08)}.analytics-chart-guide{font-size:10.5px;color:var(--an-muted);margin:0 0 5px}.analytics-svg-chart{width:100%;height:290px;position:relative}.analytics-svg-chart svg{width:100%;height:100%;overflow:visible;display:block}.analytics-chart-legend{display:flex;align-items:center;justify-content:center;gap:17px;flex-wrap:wrap;min-height:24px;margin:1px 0 5px}.analytics-chart-legend span{display:flex;align-items:center;gap:6px;color:var(--an-muted);font-size:10px}.analytics-chart-legend b{width:16px;height:3px;border-radius:3px;display:inline-block}.analytics-chart-caption{color:var(--an-muted);font-size:10.5px;line-height:1.6;border-top:1px solid var(--an-outline);padding-top:12px;margin-top:11px}.analytics-svg-chart .gridline{stroke:var(--an-outline);stroke-width:1}.analytics-svg-chart .axis-label{fill:var(--an-muted);font-size:10px;font-family:Inter,sans-serif}.analytics-svg-chart .chart-label{fill:var(--an-ink);font-size:11px;font-weight:600}.analytics-svg-chart .series-good{stroke:#7b3043}.analytics-svg-chart .series-green{stroke:#529f84}.analytics-svg-chart .series-target{stroke:#c78c95}.analytics-svg-chart .series-rose{stroke:#c86168}.analytics-svg-chart .series-limit{stroke:#ba9c5b}.analytics-svg-chart .series-dots{fill:var(--an-card);stroke-width:2}.analytics-svg-chart .chart-focus{stroke:var(--an-muted);stroke-dasharray:2 4;opacity:.6}.analytics-chart-tooltip{position:absolute;top:12px;right:8px;padding:9px 12px;border-radius:9px;border:1px solid var(--an-outline);box-shadow:var(--an-shadow);background:var(--an-card);font-size:11px;z-index:2;pointer-events:none;max-width:190px}.analytics-chart-tooltip[hidden]{display:none}
+.analytics-shift-content{min-height:116px}.analytics-shift-row{padding:10px 0;border-bottom:1px solid var(--an-outline)}.analytics-shift-row:last-child{border:0}.analytics-shift-top{display:flex;justify-content:space-between;align-items:center;font-size:11px;gap:8px}.analytics-shift-top strong{color:var(--an-ink);font-weight:700}.analytics-shift-top span{color:var(--an-muted);font-size:10px}.analytics-progress{background:var(--an-outline);height:7px;border-radius:99px;overflow:hidden;margin-top:9px}.analytics-progress-fill{height:100%;border-radius:99px;background:var(--an-green);transition:width .4s}.analytics-empty{display:flex;flex-direction:column;gap:8px;justify-content:center;align-items:center;text-align:center;min-height:145px;padding:18px;color:var(--an-muted);font-size:11px;line-height:1.6}.analytics-empty iconsax-icon{color:var(--an-brand)}.analytics-empty strong{font-size:12px;color:var(--an-ink)}.analytics-review-count{display:flex;align-items:center;justify-content:space-between;background:var(--an-bg);padding:13px 15px;border:1px solid var(--an-outline);border-radius:12px}.analytics-review-count>div{display:flex;flex-direction:column;gap:4px}.analytics-review-count small{font-size:10px;color:var(--an-muted)}.analytics-review-count strong{font-size:25px;font-weight:760;line-height:1.1}.analytics-review-count-icon{color:var(--an-brand)}.analytics-subtle{font-size:10px;color:var(--an-muted);line-height:1.6;margin:12px 0!important}.analytics-inline-link{display:flex;align-items:center;gap:6px;color:var(--an-brand);font-size:11px;text-decoration:none;font-weight:720}.analytics-inline-link:hover{text-decoration:underline}.analytics-restricted{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;color:var(--an-muted);font-size:10px;line-height:1.65;padding:12px 5px}.analytics-restricted iconsax-icon{color:var(--an-brand)}.analytics-restricted strong{color:var(--an-ink);font-size:11px}
+.analytics-bottom-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(255px,.92fr);gap:17px;margin-top:17px}.analytics-method-tag,.analytics-admin-tag{display:inline-flex;align-items:center;background:var(--an-brand-soft);color:var(--an-brand);padding:4px 7px;border-radius:5px;font-size:8px;font-weight:800;letter-spacing:.6px;white-space:nowrap}.analytics-admin-tag{background:#f2e4e8}.analytics-forecast-state{white-space:nowrap;font-size:10px;color:var(--an-muted);padding:6px 10px;border-radius:7px;border:1px solid var(--an-outline)}.analytics-forecast-state.is-ready{color:var(--an-green);border-color:var(--an-green)}.analytics-forecast-content{min-height:211px}.analytics-forecast-status{display:flex;align-items:center;gap:15px;padding:16px;background:var(--an-bg);border:1px dashed var(--an-outline);border-radius:12px;min-height:148px}.analytics-forecast-status-icon{width:44px;height:44px;flex:0 0 44px;background:var(--an-brand-soft);color:var(--an-brand);display:grid;place-items:center;border-radius:12px}.analytics-forecast-status strong{font-size:12px;display:block;margin-bottom:5px}.analytics-forecast-status p{font-size:10.5px;color:var(--an-muted);line-height:1.65}.analytics-forecast-progress{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 0}.analytics-forecast-progress span{font-size:10px;color:var(--an-muted);background:var(--an-bg);padding:6px 9px;border-radius:7px}.analytics-forecast-progress strong{color:var(--an-ink)}.analytics-forecast-caption{color:var(--an-muted);font-size:10px;line-height:1.6;margin:9px 0 0!important}.analytics-defect-content{display:flex;flex-direction:column;gap:12px}.analytics-donut-row{display:flex;gap:16px;align-items:center;margin:4px 0}.analytics-donut{height:102px;width:102px;flex:0 0 102px;border-radius:50%;position:relative;display:grid;place-items:center}.analytics-donut:before{content:"";position:absolute;inset:16px;border-radius:50%;background:var(--an-card)}.analytics-donut-center{position:relative;text-align:center;line-height:1.2}.analytics-donut-center strong{font-size:20px;display:block}.analytics-donut-center small{font-size:9px;color:var(--an-muted)}.analytics-donut-desc{font-size:11px;line-height:1.7;color:var(--an-muted)}.analytics-defect-row{display:flex;align-items:center;gap:9px;font-size:11px}.analytics-defect-color{width:9px;height:9px;border-radius:3px;flex:none}.analytics-defect-row span:nth-child(2){color:var(--an-muted);flex:1}.analytics-defect-row strong{font-weight:700;font-variant-numeric:tabular-nums}.analytics-defect-row small{min-width:42px;text-align:right;color:var(--an-muted)}
+.analytics-bayes-card{margin-top:17px}.analytics-bayes-content{display:flex;align-items:center;gap:26px;flex-wrap:wrap;min-height:105px}.analytics-bayes-metric{flex:0 0 auto}.analytics-bayes-metric small{display:block;font-size:10px;color:var(--an-muted);margin-bottom:8px}.analytics-bayes-metric strong{font-size:28px;font-weight:760;letter-spacing:-.7px}.analytics-bayes-body{flex:1;min-width:240px}.analytics-bayes-track{height:13px;border-radius:99px;background:var(--an-outline);position:relative;margin:14px 2px}.analytics-bayes-range{position:absolute;top:1px;bottom:1px;border-radius:99px;background:rgba(116,31,46,.28)}.analytics-bayes-pin{position:absolute;top:-4px;width:3px;height:21px;border-radius:9px;background:var(--an-brand)}.analytics-bayes-scale{display:flex;justify-content:space-between;color:var(--an-muted);font-size:10px}.analytics-bayes-explain{font-size:10.5px;color:var(--an-muted);line-height:1.6;margin-top:9px!important}
+.analytics-anomalous-card{margin-top:17px}.analytics-review-filter input{height:36px;max-width:240px;width:100%;padding:0 12px;background:var(--an-card);border:1px solid var(--an-outline);border-radius:9px;outline:0;color:var(--an-ink);font-size:11px}.analytics-review-filter input:focus{border-color:var(--an-brand)}.analytics-review-table-wrap{width:100%;overflow-x:auto}.analytics-review-table{width:100%;border-collapse:collapse;min-width:670px;text-align:left}.analytics-review-table th{background:var(--an-bg);font-size:10px;color:var(--an-muted);font-weight:700;padding:12px 13px;white-space:nowrap}.analytics-review-table td{padding:13px;font-size:11px;border-bottom:1px solid var(--an-outline);vertical-align:middle}.analytics-review-table tr:last-child td{border:0}.analytics-review-table td:first-child{min-width:190px}.analytics-review-source{display:flex;align-items:center;gap:9px}.analytics-review-thumb{width:43px;height:39px;border-radius:7px;object-fit:cover;border:1px solid var(--an-outline);flex:none}.analytics-review-thumbnail-empty{background:var(--an-bg);width:43px;height:39px;border-radius:7px;display:grid;place-items:center;color:var(--an-muted)}.analytics-review-primary{font-size:11px;font-weight:720;color:var(--an-ink);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.analytics-review-secondary{color:var(--an-muted);font-size:10px;margin-top:5px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.analytics-reason{display:inline-block;font-size:10px;color:#935e30;background:#faf2e5;border-radius:6px;padding:6px 8px;max-width:240px;line-height:1.4}.analytics-review-badge{font-weight:720;color:var(--an-brand)}.analytics-view-button{background:var(--an-brand-soft);color:var(--an-brand);border:1px solid transparent;border-radius:8px;font-size:10px;font-weight:750;padding:9px 12px;white-space:nowrap}.analytics-view-button:disabled{opacity:.48;cursor:not-allowed}.analytics-view-button:not(:disabled):hover{border-color:var(--an-brand)}.analytics-table-empty{text-align:center!important;color:var(--an-muted);padding:33px!important}.analytics-review-bottom{border-top:1px solid var(--an-outline);margin-top:7px;padding-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--an-muted);font-size:10px;line-height:1.6}.analytics-bottom-note{display:flex;align-items:flex-start;gap:8px;color:var(--an-muted);font-size:10px;line-height:1.5;margin:19px 0}.analytics-bottom-note iconsax-icon{color:var(--an-brand);flex:none}
+.analytics-btn{border:1px solid var(--an-outline);border-radius:10px;padding:11px 16px;font-size:11px;font-weight:700;white-space:nowrap;background:var(--an-card);color:var(--an-ink)}.analytics-btn-primary{background:#741f2e;color:#fff;border-color:#741f2e}.analytics-btn-primary:hover{background:#5c1824}.analytics-btn:disabled{opacity:.5;cursor:not-allowed}
+.analytics-modal-backdrop{position:fixed;inset:0;z-index:9100;background:rgba(25,16,20,.64);backdrop-filter:blur(4px);display:flex;justify-content:center;align-items:center;padding:22px}.analytics-modal{width:min(1110px,100%);max-height:min(92vh,930px);background:var(--an-card,#fff);color:var(--an-ink,#292929);border-radius:18px;overflow:auto;box-shadow:0 22px 80px rgba(0,0,0,.25);display:flex;flex-direction:column}.analytics-modal-head{padding:21px 24px 17px;display:flex;justify-content:space-between;gap:15px;border-bottom:1px solid var(--an-outline,#eee)}.analytics-modal-head>div>span{font-size:9px;letter-spacing:1.2px;font-weight:800;color:var(--an-brand,#741f2e)}.analytics-modal-head h2{font-size:20px;margin:5px 0;font-weight:740}.analytics-modal-head p{font-size:11px;color:var(--an-muted,#888)}.analytics-modal-close{background:transparent;border:0;color:var(--an-muted,#888);cursor:pointer}.analytics-modal-main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.75fr);gap:0;min-height:470px;overflow:auto}.analytics-mask-viewer{padding:20px;min-width:0}.analytics-mask-stage{background:var(--an-bg,#f8f8f8);border-radius:12px;border:1px solid var(--an-outline,#eee);overflow:hidden;position:relative;min-height:310px;display:flex;align-items:center;justify-content:center}.analytics-mask-stage img{display:block;width:100%;height:auto;max-height:540px;object-fit:contain}.analytics-mask-stage .analytics-mask-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}.analytics-mask-svg polygon{pointer-events:all;stroke-width:2;stroke:#fff;fill-opacity:.25;cursor:pointer;vector-effect:non-scaling-stroke}.analytics-mask-svg polygon.is-selected{stroke:#ffd675;stroke-width:3;fill-opacity:.5;filter:drop-shadow(0 0 2px rgba(0,0,0,.2))}.analytics-mask-viewer>p{color:var(--an-muted,#888);font-size:11px;line-height:1.6;margin:11px 0}.analytics-mask-loading{color:var(--an-muted);font-size:12px}.analytics-mask-side{min-width:0;border-left:1px solid var(--an-outline,#eee);padding:18px;overflow:auto;max-height:70vh}.analytics-mask-side-heading{font-size:12px;font-weight:760;display:flex;justify-content:space-between;margin-bottom:10px}.analytics-mask-side-heading span{color:var(--an-muted,#888)}.analytics-object-list{max-height:170px;overflow:auto;display:flex;flex-direction:column;gap:5px}.analytics-object-choice{display:flex;align-items:center;gap:10px;text-align:left;width:100%;padding:9px;background:var(--an-bg,#fafafa);border:1px solid var(--an-outline,#eee);border-radius:8px;font-size:11px;color:var(--an-ink,#222);cursor:pointer}.analytics-object-choice.is-selected{border-color:var(--an-brand,#741f2e);background:var(--an-brand-soft,#f8f0f1)}.analytics-object-choice strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.analytics-object-choice small{display:block;color:var(--an-muted,#888);margin-top:4px}.analytics-object-dot{width:8px;height:8px;border-radius:50%;flex:none}.analytics-object-detail{background:var(--an-bg,#fafafa);border:1px solid var(--an-outline,#eee);border-radius:9px;padding:11px 12px;margin:12px 0;font-size:11px;color:var(--an-muted,#888);line-height:1.8}.analytics-object-detail strong{color:var(--an-ink,#222)}.analytics-feedback-form{display:flex;flex-direction:column;gap:7px}.analytics-feedback-form label{font-size:11px;font-weight:720;margin-top:5px}.analytics-feedback-form select,.analytics-feedback-form textarea{width:100%;border:1px solid var(--an-outline,#ddd);border-radius:9px;padding:9px 10px;background:var(--an-card,#fff);color:var(--an-ink,#222);font-size:11px;outline:0}.analytics-feedback-form select:focus,.analytics-feedback-form textarea:focus{border-color:var(--an-brand,#741f2e)}.analytics-feedback-form [data-save-message]{font-size:11px;color:var(--an-muted,#888);line-height:1.6;min-height:16px}.analytics-feedback-form [data-save-message].is-error{color:#c65358}
+html[data-theme=dark] .analytics-kpi-icon{background:var(--an-brand-soft);color:var(--an-brand)}html[data-theme=dark] .analytics-admin-tag{background:#472c36}html[data-theme=dark] .analytics-reason{background:#433424;color:#e0b98a}
+@media(max-width:1260px){.analytics-stat-strip{gap:10px}.analytics-stat-strip i{display:none}.analytics-top-grid{grid-template-columns:minmax(0,1.45fr) minmax(230px,.85fr)}.analytics-card{padding:19px}.analytics-kpi{padding:15px 13px;gap:9px}.analytics-kpi-icon{width:38px;height:38px;flex-basis:38px}.analytics-bottom-grid{grid-template-columns:minmax(0,1.2fr) minmax(240px,.8fr)}}
+@media(max-width:1120px){.analytics-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:1050px){.analytics-top-grid,.analytics-bottom-grid{grid-template-columns:1fr}.analytics-side-column{grid-template-columns:1fr 1fr;grid-template-rows:auto}.analytics-forecast-content{min-height:180px}.analytics-svg-chart{height:270px}}
+@media(max-width:750px){.analytics-page{padding:0 0 22px}.analytics-head{align-items:flex-start;flex-direction:column;gap:14px;margin-bottom:19px}.analytics-head-actions{width:100%}.analytics-filter{flex:1;justify-content:space-between}.analytics-filter select{flex:1}.analytics-kpis{grid-template-columns:1fr;gap:11px}.analytics-kpi{min-height:100px;padding:15px 17px}.analytics-kpi-icon{width:43px;height:43px;flex-basis:43px}.analytics-kpi-value{font-size:21px;line-height:1.2}.analytics-card{padding:16px;border-radius:15px}.analytics-side-column{grid-template-columns:1fr}.analytics-chart-card .analytics-card-header{gap:13px}.analytics-tab-group{width:100%}.analytics-tab-group button{flex:1}.analytics-svg-chart{height:235px}.analytics-kpi-label{font-size:11px}.analytics-card-title h2{font-size:13px}.analytics-card-title p{font-size:10px}.analytics-modal-backdrop{padding:0}.analytics-modal{border-radius:0;width:100%;max-height:100vh;height:100vh}.analytics-modal-main{grid-template-columns:1fr;overflow:auto}.analytics-mask-side{max-height:none;border-left:0;border-top:1px solid var(--an-outline)}.analytics-mask-stage{min-height:190px}.analytics-review-filter{width:100%}.analytics-review-filter input{max-width:none}}
+@media(prefers-reduced-motion:reduce){.analytics-page *{transition:none!important}}
+
+.analytics-review-filter{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.analytics-review-filter select{height:36px;border:1px solid var(--an-outline);border-radius:9px;background:var(--an-card);color:var(--an-ink);font-size:11px;padding:0 11px}.analytics-review-filter input{flex:1;min-width:165px}@media(max-width:750px){.analytics-review-filter select{flex:1}.analytics-review-filter input{flex:2}}
+/* Review modal lives outside the analytics page, so it needs its own theme tokens. */
+.analytics-modal-backdrop{--an-brand:#741f2e;--an-brand-soft:#f8eff0;--an-ink:#292929;--an-muted:#8d8d8d;--an-outline:#ece9e9;--an-card:#fff;--an-bg:#f9f9f9;--an-shadow:0 12px 36px rgba(51,37,41,.08);--an-green:#398b6e}
+html[data-theme=dark] .analytics-modal-backdrop{--an-brand:#dd8692;--an-brand-soft:#39242c;--an-ink:#efebeb;--an-muted:#a8a0a3;--an-outline:#3e383b;--an-card:#262326;--an-bg:#221f22;--an-green:#83c8ad}
+/* Keep date controls clear of BIKA's existing absolute top-right theme/profile bar. */
+@media (min-width:1261px){.analytics-head-actions{margin-right:152px}}
+@media (min-width:751px) and (max-width:1260px){.analytics-head-actions{margin-right:0}.analytics-head{padding-top:36px}}
+@media (max-width:750px){.analytics-head{padding-top:45px}.analytics-page-heading h1{font-size:24px}}
+
+
+/* ================================================================
+   Analytics compact UI alignment | 2026-10-19
+   Only styling. Analytics data, filtering, graphs and review unchanged.
+   Top KPI sizing follows About System's 74px summary card design.
+   ================================================================ */
+.analytics-page .analytics-head { margin-bottom: 13px; }
+.analytics-page .analytics-kpis {
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.analytics-page .analytics-kpi {
+  min-height: 74px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  gap: 10px;
+}
+.analytics-page .analytics-kpi-icon {
+  width: 39px;
+  height: 39px;
+  flex: 0 0 39px;
+  border-radius: 50%;
+}
+.analytics-page .analytics-kpi-body { gap: 3px; }
+.analytics-page .analytics-kpi-label {
+  min-height: 0;
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+.analytics-page .analytics-kpi-value {
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -.2px;
+}
+.analytics-page .analytics-kpi-footer {
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+/* In this page, use consistent understated outlined info icons. */
+.analytics-page .analytics-info {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #b0acaf;
+  border-radius: 50%;
+  color: #989398;
+  font-family: Arial, sans-serif;
+  font-size: 9.5px;
+  font-weight: 500;
+  font-style: normal;
+  line-height: 1;
+  vertical-align: 1px;
+  cursor: help;
+  box-sizing: border-box;
+  flex: none;
+}
+.analytics-page .analytics-info:hover { color: var(--an-brand); border-color: var(--an-brand); }
+/* Match Dashboard date-pick pill; do not modify global theme / topbar. */
+.analytics-page .analytics-filter {
+  min-height: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 17px;
+  gap: 9px;
+  box-shadow: var(--an-shadow);
+}
+.analytics-page .analytics-filter select {
+  min-width: 105px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+}
+.analytics-page .analytics-icon-action {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  flex: 0 0 38px;
+}
+.analytics-page .analytics-icon-action svg { display: block; }
+/* Normal success metadata is accessible to screen readers, not visually repeated. */
+.analytics-page .analytics-system-note {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.analytics-page .analytics-system-note.is-error {
+  position: static;
+  width: auto;
+  height: auto;
+  clip-path: none;
+  overflow: visible;
+  white-space: normal;
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+@media (max-width: 1260px) {
+  .analytics-page .analytics-kpi { min-height: 74px; padding: 9px 12px; }
+  .analytics-page .analytics-kpi-icon { width: 39px; height: 39px; flex-basis: 39px; }
+}
+@media (max-width: 750px) {
+  .analytics-page .analytics-head { margin-bottom: 13px; }
+  .analytics-page .analytics-kpis { gap: 10px; }
+  .analytics-page .analytics-kpi { min-height: 74px; padding: 9px 13px; }
+  .analytics-page .analytics-kpi-icon { width: 39px; height: 39px; flex-basis: 39px; }
+  .analytics-page .analytics-kpi-value { font-size: 19px; }
+  .analytics-page .analytics-filter { min-width: 0; }
+}
+
+/* ==============================================================
+   BIKA Analytics: reference-layout alignment (2026-10-19)
+   Scope: Analytics only. The date pill follows the Dashboard
+   button/menu pattern and is aligned to the actual shell topbar
+   by analytics.js; no guessed offsets or extra refresh control.
+   ============================================================== */
+.analytics-page .analytics-head{
+  position:relative;align-items:flex-start;margin-bottom:18px;min-height:58px;
+  z-index:40;
+}
+.analytics-page .analytics-filter-wrap{
+  position:absolute;top:0;right:128px;z-index:41;
+}
+.analytics-page .analytics-range-native{
+  position:absolute!important;width:1px!important;height:1px!important;
+  padding:0!important;margin:-1px!important;opacity:0!important;
+  pointer-events:none!important;overflow:hidden!important;clip-path:inset(50%)!important;
+}
+.analytics-page .analytics-date-button{
+  display:inline-flex;align-items:center;justify-content:flex-start;gap:9px;
+  height:38px;padding:0 22px 0 20px;min-width:176px;
+  border:0;border-radius:999px;background:var(--an-card);
+  box-shadow:0 6px 22px rgba(20,20,20,.045),0 1px 4px rgba(20,20,20,.025);
+  color:var(--an-ink);font-size:13.5px;font-weight:500;white-space:nowrap;
+}
+.analytics-page .analytics-date-button svg{flex:0 0 auto;color:var(--an-ink)}
+.analytics-page .analytics-date-button:hover{background:var(--an-brand-soft)}
+.analytics-page .analytics-date-button:focus-visible{outline:2px solid var(--an-brand);outline-offset:3px}
+.analytics-page .analytics-date-menu{
+  position:absolute;top:calc(100% + 8px);right:0;width:288px;
+  overflow:hidden;border-radius:15px;border:1px solid var(--an-outline);
+  background:var(--an-card);color:var(--an-ink);
+  box-shadow:0 18px 46px rgba(0,0,0,.14);z-index:42;
+}
+.analytics-page .analytics-date-menu[hidden]{display:none!important}
+.analytics-page .analytics-date-option{
+  display:flex;align-items:center;width:100%;min-height:41px;
+  padding:0 16px;border:0;background:transparent;
+  color:var(--an-ink);font-size:13px;font-weight:400;text-align:left;
+}
+.analytics-page .analytics-date-option:hover,.analytics-page .analytics-date-option.is-active{
+  background:var(--an-brand-soft);color:var(--an-brand);
+}
+.analytics-page .analytics-date-custom{
+  padding:14px;border-top:1px solid var(--an-outline);
+}
+.analytics-page .analytics-date-custom>span{display:block;font-size:12px;color:var(--an-muted);margin-bottom:10px}
+.analytics-page .analytics-date-custom-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.analytics-page .analytics-date-custom-grid label{font-size:11px;color:var(--an-muted);display:flex;flex-direction:column;gap:5px}
+.analytics-page .analytics-date-custom-grid input{
+  height:34px;width:100%;min-width:0;background:var(--an-card);color:var(--an-ink);
+  border:1px solid var(--an-outline);padding:5px 6px;border-radius:8px;font-size:11px;
+}
+.analytics-page .analytics-date-apply{
+  margin-top:12px;width:100%;height:35px;border:0;border-radius:9px;
+  background:var(--an-brand);color:#fff;font-size:12px;font-weight:500;
+}
+.analytics-page .analytics-kpis{gap:11px;margin-bottom:15px}
+.analytics-page .analytics-kpi{
+  min-height:100px;padding:14px 15px;border-radius:14px;gap:12px;
+}
+.analytics-page .analytics-kpi-icon{width:42px;height:42px;flex:0 0 42px}
+.analytics-page .analytics-kpi-body{gap:5px}
+.analytics-page .analytics-kpi-value{font-size:22px;line-height:1.2;font-weight:600}
+.analytics-page .analytics-kpi-label{font-size:11.5px;font-weight:500}
+.analytics-page .analytics-kpi-footer{font-size:10.3px;line-height:1.35}
+
+/* Reference chart: genuine daily throughput bars + quality line + target/SPC. */
+.analytics-page .analytics-top-grid{grid-template-columns:minmax(0,1.82fr) minmax(285px,.92fr);gap:15px}
+.analytics-page .analytics-side-column{grid-template-rows:minmax(190px,.82fr) minmax(270px,1.18fr);gap:15px}
+.analytics-page .analytics-card{border-radius:17px;padding:19px 20px}
+.analytics-page .analytics-chart-card .analytics-card-header{padding-bottom:13px;margin-bottom:13px;border-bottom:1px solid var(--an-outline)}
+.analytics-page .analytics-chart-guide{margin:0 0 7px;font-size:11px}
+.analytics-page .analytics-svg-chart{height:350px}
+.analytics-page .analytics-svg-chart .analytics-output-bar{fill:#c4cfdb;fill-opacity:.72}
+html[data-theme=dark] .analytics-page .analytics-svg-chart .analytics-output-bar{fill:#758394;fill-opacity:.43}
+.analytics-page .analytics-svg-chart .chart-title-axis{fill:var(--an-muted);font-size:10.5px;font-weight:500;font-family:Inter,sans-serif}
+.analytics-page .analytics-svg-chart .analytics-target-label{fill:var(--an-brand);font-size:10px;font-family:Inter,sans-serif}
+.analytics-page .analytics-chart-legend{min-height:27px;gap:16px}
+.analytics-page .analytics-chart-legend b{height:3px}
+.analytics-page .analytics-chart-caption{margin-top:10px;padding-top:12px;font-size:10px}
+.analytics-page .analytics-review-card{display:flex;flex-direction:column}
+.analytics-page .analytics-review-card .analytics-card-header{margin-bottom:13px}
+.analytics-page .analytics-review-panel{
+  background:var(--an-bg);border:1px solid var(--an-outline);
+  border-radius:15px;padding:11px 12px 12px;display:flex;flex-direction:column;gap:7px;
+}
+.analytics-page .analytics-review-panel-head{
+  padding:3px 3px 8px;text-align:center;font-size:11.5px;font-weight:600;
+  color:var(--an-ink);border-bottom:1px solid var(--an-outline);margin-bottom:2px;
+}
+.analytics-page .analytics-review-status-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  min-height:34px;padding:8px 10px;border-radius:10px;border:1px solid transparent;
+  font-size:11px;font-weight:400;
+}
+.analytics-page .analytics-review-status-row span{display:flex;align-items:center;gap:8px;min-width:0}
+.analytics-page .analytics-review-status-row strong{font-weight:600;font-size:12px;font-variant-numeric:tabular-nums}
+.analytics-page .analytics-review-status-row .analytics-status-dot{width:8px;height:8px;border-radius:100%;flex:none}
+.analytics-page .analytics-status-pending{background:#eaf5f9;border-color:#d8ebf4;color:#2d5067}
+.analytics-page .analytics-status-pending .analytics-status-dot{background:#86cce6}
+.analytics-page .analytics-status-confirmed{background:#eaf6ef;border-color:#d7ecdf;color:#34694d}
+.analytics-page .analytics-status-confirmed .analytics-status-dot{background:#91d3a9}
+.analytics-page .analytics-status-false{background:#f7ebee;border-color:#eddde3;color:#793244}
+.analytics-page .analytics-status-false .analytics-status-dot{background:#9f344c}
+.analytics-page .analytics-status-corrected{background:#fbf2e8;border-color:#f2e5d7;color:#80512c}
+.analytics-page .analytics-status-corrected .analytics-status-dot{background:#eeb574}
+html[data-theme=dark] .analytics-page .analytics-status-pending{background:#243840;border-color:#3c5962;color:#a8d9e8}
+html[data-theme=dark] .analytics-page .analytics-status-confirmed{background:#263d34;border-color:#3b5b48;color:#a7dbb8}
+html[data-theme=dark] .analytics-page .analytics-status-false{background:#422c35;border-color:#68404f;color:#f5b0bc}
+html[data-theme=dark] .analytics-page .analytics-status-corrected{background:#493629;border-color:#705038;color:#eec597}
+.analytics-page .analytics-review-summary{font-size:10px;line-height:1.55;color:var(--an-muted);margin:11px 0 7px}
+.analytics-page .analytics-inline-link{font-weight:500;margin-top:auto}
+.analytics-page .analytics-card-title h2{font-weight:600}
+.analytics-page .analytics-info{vertical-align:middle}
+@media(max-width:1260px){
+  .analytics-page .analytics-kpi{min-height:98px;padding:13px 12px}
+  .analytics-page .analytics-kpi-icon{width:39px;height:39px;flex-basis:39px}
+  .analytics-page .analytics-top-grid{grid-template-columns:minmax(0,1.5fr) minmax(260px,.9fr)}
+}
+@media(max-width:1099px){
+  .analytics-page .analytics-head{min-height:unset}
+  .analytics-page .analytics-filter-wrap{position:relative;right:auto!important;top:auto!important;flex:none;align-self:flex-start}
+}
+@media(max-width:1050px){
+  .analytics-page .analytics-top-grid{grid-template-columns:1fr}
+  .analytics-page .analytics-side-column{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto}
+  .analytics-page .analytics-svg-chart{height:340px}
+}
+@media(max-width:750px){
+  .analytics-page .analytics-head{padding-top:45px;gap:12px;margin-bottom:13px}
+  .analytics-page .analytics-filter-wrap{width:auto;max-width:100%}
+  .analytics-page .analytics-date-button{min-width:176px;font-size:12.5px}
+  .analytics-page .analytics-date-menu{right:auto;left:0;max-width:calc(100vw - 30px)}
+  .analytics-page .analytics-kpi{min-height:98px;padding:13px 15px}
+  .analytics-page .analytics-kpi-icon{width:42px;height:42px;flex-basis:42px}
+  .analytics-page .analytics-kpi-value{font-size:21px}
+  .analytics-page .analytics-side-column{grid-template-columns:1fr}
+  .analytics-page .analytics-svg-chart{height:270px}
+}
+
+/* Larger chart plot fills the left card similarly to the reference dashboard. */
+.analytics-page .analytics-svg-chart{height:400px}
+/* Override the old intermediate-width page-header offset; the real topbar is measured. */
+@media(min-width:1100px) and (max-width:1260px){.analytics-page .analytics-head{padding-top:0}}
+@media(min-width:751px) and (max-width:1099px){
+  .analytics-page .analytics-head{padding-top:0;flex-direction:column;gap:10px}
+}
+@media(max-width:750px){
+  .analytics-page .analytics-svg-chart{height:290px;overflow-x:auto;overflow-y:hidden}
+  .analytics-page .analytics-svg-chart svg{min-width:550px}
+}
+
+/* Period: MM/DD/YYYY pill — same right-aligned position as the Dashboard controls. */
+.analytics-page .analytics-date-button{
+  min-width:218px;
+  justify-content:flex-start;
+  gap:10px;
+  height:38px;
+  padding:0 15px;
+  border-radius:999px;
+}
+.analytics-page .analytics-date-button [data-range-label]{white-space:nowrap;font-weight:500;letter-spacing:0}
+.analytics-page .analytics-date-end-icon{margin-left:auto;opacity:.85;flex:0 0 14px}
+.analytics-page .analytics-date-menu{min-width:288px}
+.analytics-page .analytics-date-single{padding:13px 14px 12px;border-bottom:1px solid var(--an-outline)}
+.analytics-page .analytics-date-single label{display:block;margin-bottom:9px;color:var(--an-muted);font-size:11px;font-weight:500}
+.analytics-page .analytics-date-single-controls{display:grid;grid-template-columns:minmax(0,1fr) 66px;gap:8px}
+.analytics-page .analytics-date-single input{min-width:0;width:100%;height:35px;padding:6px 8px;border:1px solid var(--an-outline);border-radius:9px;background:var(--an-card);color:var(--an-ink);font:inherit;font-size:12px;color-scheme:light}
+html[data-theme="dark"] .analytics-page .analytics-date-single input{color-scheme:dark}
+.analytics-page .analytics-date-single button{height:35px;border:0;border-radius:9px;background:var(--an-brand);color:#fff;font-size:12px;font-weight:500}
+@media(max-width:750px){.analytics-page .analytics-date-button{min-width:218px}}
+
+
+/* ========================================================================
+   Anomalous Pipeline Log · Reports-inspired review table (2026-10-28)
+   Strictly scoped: this section only. No effect on Reports, modal or charts.
+   ======================================================================== */
+.analytics-page .analytics-anomalous-card{
+  padding-bottom:19px;
+}
+.analytics-page .analytics-anomalous-card .analytics-card-header{
+  gap:16px;
+  margin-bottom:15px;
+}
+.analytics-page .analytics-anomalous-card .analytics-card-title h2{
+  font-weight:600;
+}
+.analytics-page .analytics-anomalous-card .analytics-admin-tag{
+  vertical-align:middle;
+}
+.analytics-page .analytics-review-filter{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  flex-wrap:wrap;
+}
+.analytics-page .analytics-review-filter select,
+.analytics-page .analytics-review-filter input{
+  height:37px;
+  min-height:37px;
+  border-radius:11px;
+  border:1px solid var(--an-outline);
+  background:var(--an-card);
+  color:var(--an-ink);
+  font-size:11.5px;
+  font-weight:400;
+}
+.analytics-page .analytics-review-filter input{
+  padding:0 13px;
+}
+.analytics-page .analytics-review-table-wrap{
+  border:1px solid var(--an-outline);
+  border-radius:13px;
+  overflow-x:auto;
+  overflow-y:hidden;
+}
+.analytics-page .analytics-review-table{
+  min-width:810px;
+  border-collapse:separate;
+  border-spacing:0;
+  table-layout:auto;
+}
+.analytics-page .analytics-review-table th{
+  background:var(--an-bg);
+  color:var(--an-muted);
+  font-size:10.5px;
+  font-weight:500;
+  padding:13px 16px;
+  line-height:1.3;
+  border-bottom:1px solid var(--an-outline);
+  white-space:nowrap;
+}
+.analytics-page .analytics-review-table th:nth-child(1){width:29%}
+.analytics-page .analytics-review-table th:nth-child(2){width:12%}
+.analytics-page .analytics-review-table th:nth-child(3){width:27%}
+.analytics-page .analytics-review-table th:nth-child(4){width:15%}
+.analytics-page .analytics-review-table th:nth-child(5){width:17%;text-align:right}
+.analytics-page .analytics-review-table td{
+  height:78px;
+  padding:12px 16px;
+  border-bottom:1px solid var(--an-outline);
+  font-size:11.5px;
+  font-weight:400;
+  vertical-align:middle;
+  background:var(--an-card);
+  transition:background .15s ease;
+}
+.analytics-page .analytics-review-table tbody tr:hover td{
+  background:var(--an-bg);
+}
+.analytics-page .analytics-review-table tbody tr:last-child td{
+  border-bottom:0;
+}
+.analytics-page .analytics-review-table td:first-child{
+  min-width:230px;
+}
+.analytics-page .analytics-review-source{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.analytics-page .analytics-review-thumb,
+.analytics-page .analytics-review-thumbnail-empty{
+  width:52px;
+  height:52px;
+  border-radius:11px;
+  border:1px solid var(--an-outline);
+  flex-shrink:0;
+  object-fit:cover;
+}
+.analytics-page .analytics-review-thumbnail-empty{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--an-muted);
+  background:var(--an-bg);
+}
+.analytics-page .analytics-review-source-info{min-width:0}
+.analytics-page .analytics-review-primary{
+  font-size:11.5px;
+  font-weight:600;
+  letter-spacing:0;
+  max-width:220px;
+  line-height:1.3;
+}
+.analytics-page .analytics-review-secondary{
+  font-size:10.5px;
+  font-weight:400;
+  margin-top:3px;
+  max-width:220px;
+  line-height:1.25;
+}
+.analytics-page .analytics-review-date{
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+.analytics-page .analytics-review-date iconsax-icon{
+  display:inline-flex;
+  align-items:center;
+  color:var(--an-muted);
+}
+.analytics-page .analytics-review-quantity{
+  white-space:nowrap;
+}
+.analytics-page .analytics-review-number{
+  display:block;
+  font-size:13px;
+  font-weight:600;
+  color:var(--an-ink);
+  line-height:1.3;
+}
+.analytics-page .analytics-review-quantity small{
+  display:block;
+  margin-top:3px;
+  font-size:10px;
+  font-weight:400;
+  color:var(--an-muted);
+}
+.analytics-page .analytics-reason-stack{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:5px;
+  min-width:0;
+}
+/* Same 999px status pill silhouette used by the Reports status column. */
+.analytics-page .analytics-reason-tag,
+.analytics-page .analytics-review-status-pill{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  min-height:27px;
+  padding:5px 12px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:600;
+  line-height:1.15;
+  letter-spacing:0;
+  white-space:nowrap;
+}
+.analytics-page .analytics-reason-tag.needs-review{
+  background:#fbebd0;
+  color:#91642b;
+}
+.analytics-page .analytics-reason-tag.routine{
+  background:#f0f0f2;
+  color:#77727a;
+}
+.analytics-page .analytics-review-status-pill.pending{
+  background:#fae8ec;
+  color:#8d3045;
+}
+.analytics-page .analytics-review-status-pill.has-reviewed{
+  background:#e5f1e8;
+  color:#477d56;
+}
+.analytics-page .analytics-reason-dot,
+.analytics-page .analytics-review-status-dot{
+  display:inline-block;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:currentColor;
+  opacity:.8;
+  flex-shrink:0;
+}
+.analytics-page .analytics-reason-detail{
+  display:block;
+  color:var(--an-muted);
+  font-size:10.5px;
+  font-weight:400;
+  line-height:1.35;
+  max-width:235px;
+  overflow-wrap:anywhere;
+}
+.analytics-page .analytics-reason-more{
+  font-size:10px;
+  color:var(--an-brand);
+}
+.analytics-page .analytics-review-action-cell{
+  text-align:right;
+  white-space:nowrap;
+}
+.analytics-page .analytics-view-button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  min-height:36px;
+  border:1px solid var(--an-outline);
+  border-radius:999px;
+  padding:8px 13px;
+  background:var(--an-card);
+  color:var(--an-brand);
+  font-size:11px;
+  font-weight:500;
+  white-space:nowrap;
+  transition:border-color .15s ease,background .15s ease,transform .15s ease;
+}
+.analytics-page .analytics-view-button iconsax-icon{
+  color:currentColor;
+  width:17px;
+  height:17px;
+  flex:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.analytics-page .analytics-view-button:not(:disabled):hover{
+  background:var(--an-brand-soft);
+  border-color:var(--an-brand);
+  transform:translateY(-1px);
+}
+.analytics-page .analytics-view-button:focus-visible{
+  outline:2px solid var(--an-brand);
+  outline-offset:3px;
+}
+.analytics-page .analytics-review-table .analytics-table-empty{
+  height:98px;
+  font-size:12px;
+  font-weight:400;
+}
+.analytics-page .analytics-review-bottom{
+  border:0;
+  margin-top:0;
+  padding:11px 2px 0;
+  font-size:10.5px;
+}
+html[data-theme="dark"] .analytics-page .analytics-reason-tag.needs-review{
+  color:#f0ca8a;background:#4b392a;
+}
+html[data-theme="dark"] .analytics-page .analytics-reason-tag.routine{
+  color:#cbc4cc;background:#363238;
+}
+html[data-theme="dark"] .analytics-page .analytics-review-status-pill.pending{
+  color:#ecb5c0;background:#4d3038;
+}
+html[data-theme="dark"] .analytics-page .analytics-review-status-pill.has-reviewed{
+  color:#a3d2b1;background:#2e4438;
+}
+@media(max-width:900px){
+  .analytics-page .analytics-review-table{min-width:790px}
+  .analytics-page .analytics-review-table td,
+  .analytics-page .analytics-review-table th{padding-left:12px;padding-right:12px}
+  .analytics-page .analytics-review-thumb,
+  .analytics-page .analytics-review-thumbnail-empty{width:46px;height:46px}
+}
+
+/* -------------------------------------------------------------------------
+   Review UI refinement · 2026-10-28
+   Scoped to Data Analytics; no model, API, or Reports styles are modified.
+   ------------------------------------------------------------------------- */
+
+/* Center the icon-only action exactly under the table's Action heading. */
+.analytics-page .analytics-review-table th.analytics-review-action-head,
+.analytics-page .analytics-review-table td.analytics-review-action-cell{
+  text-align:center;
+}
+.analytics-page .analytics-review-action-cell .analytics-view-button{
+  width:38px;
+  height:38px;
+  min-height:38px;
+  padding:0;
+  border:1px solid var(--an-outline);
+  border-radius:50%;
+  background:var(--an-card);
+  color:var(--an-brand);
+  display:inline-grid;
+  place-items:center;
+  vertical-align:middle;
+  font-weight:400;
+}
+.analytics-page .analytics-review-action-cell .analytics-view-button iconsax-icon{
+  display:block;
+  width:20px;
+  height:20px;
+}
+.analytics-page .analytics-review-action-cell .analytics-view-button:not(:disabled):hover{
+  background:var(--an-brand-soft);
+  border-color:var(--an-brand);
+  transform:none;
+  box-shadow:0 2px 8px rgba(116,31,46,.08);
+}
+
+/* A true custom dropdown with a centered, slightly inset line chevron. */
+.analytics-page .analytics-queue-select{
+  position:relative;
+  width:178px;
+  min-width:168px;
+  flex:0 0 auto;
+  z-index:5;
+}
+.analytics-page .analytics-review-filter select.analytics-queue-native{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  border:0!important;
+  opacity:0;
+  pointer-events:none;
+  overflow:hidden;
+}
+.analytics-page .analytics-queue-trigger{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  width:100%;
+  height:38px;
+  padding:0 12px;
+  border:1px solid var(--an-outline);
+  border-radius:11px;
+  background:var(--an-card);
+  color:var(--an-ink);
+  font-size:11.5px;
+  font-weight:400;
+  text-align:left;
+  box-shadow:0 2px 6px rgba(40,20,25,.018);
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+.analytics-page .analytics-queue-trigger>iconsax-icon{
+  flex:0 0 17px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--an-brand);
+}
+.analytics-page .analytics-queue-trigger [data-review-selected]{
+  flex:1;
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.analytics-page .analytics-queue-chevron{
+  flex:0 0 16px;
+  width:16px;
+  height:16px;
+  display:block;
+  color:var(--an-muted);
+  transform:translateX(-2px);
+  transition:transform .15s ease;
+}
+.analytics-page .analytics-queue-select.is-open .analytics-queue-chevron{
+  transform:translateX(-2px) rotate(180deg);
+}
+.analytics-page .analytics-queue-trigger:hover,
+.analytics-page .analytics-queue-select.is-open .analytics-queue-trigger{
+  border-color:#cda3ad;
+  box-shadow:0 0 0 3px rgba(116,31,46,.05);
+}
+.analytics-page .analytics-queue-trigger:focus-visible{
+  outline:2px solid var(--an-brand);
+  outline-offset:2px;
+}
+.analytics-page .analytics-queue-menu{
+  position:absolute;
+  top:calc(100% + 6px);
+  left:0;
+  width:max(100%,212px);
+  padding:6px;
+  background:var(--an-card);
+  border:1px solid var(--an-outline);
+  box-shadow:0 15px 36px rgba(40,25,30,.14),0 2px 9px rgba(40,25,30,.035);
+  border-radius:13px;
+  z-index:30;
+}
+.analytics-page .analytics-queue-menu [data-review-option]{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  width:100%;
+  min-height:39px;
+  padding:9px 10px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  text-align:left;
+  color:var(--an-ink);
+  font-size:11.5px;
+  font-weight:400;
+}
+.analytics-page .analytics-queue-menu [data-review-option]>iconsax-icon:first-child{
+  color:var(--an-muted);
+  flex:0 0 17px;
+}
+.analytics-page .analytics-queue-menu [data-review-option]>span{
+  flex:1;
+}
+.analytics-page .analytics-queue-menu .analytics-queue-check{
+  display:none;
+  color:var(--an-brand);
+}
+.analytics-page .analytics-queue-menu [aria-selected="true"]{
+  background:var(--an-brand-soft);
+  color:var(--an-brand);
+  font-weight:500;
+}
+.analytics-page .analytics-queue-menu [aria-selected="true"] .analytics-queue-check{
+  display:inline-flex;
+}
+.analytics-page .analytics-queue-menu [data-review-option]:hover,
+.analytics-page .analytics-queue-menu [data-review-option]:focus-visible{
+  background:var(--an-brand-soft);
+  outline:0;
+}
+html[data-theme="dark"] .analytics-page .analytics-queue-trigger:hover,
+html[data-theme="dark"] .analytics-page .analytics-queue-select.is-open .analytics-queue-trigger{
+  border-color:var(--an-brand);
+}
+
+/* Review overview: lighter surface, tidy status rows, restrained footer. */
+.analytics-page .analytics-review-card{
+  justify-content:flex-start;
+}
+.analytics-page .analytics-review-card .analytics-card-header{
+  margin-bottom:14px;
+}
+.analytics-page .analytics-review-panel{
+  border:0;
+  background:transparent;
+  padding:0;
+  border-radius:0;
+  gap:7px;
+}
+.analytics-page .analytics-review-panel-head{
+  padding:0 1px 9px;
+  margin-bottom:2px;
+  text-align:left;
+  font-size:10.5px;
+  font-weight:500;
+  color:var(--an-muted);
+  border-bottom:1px solid var(--an-outline);
+}
+.analytics-page .analytics-review-status-row{
+  min-height:37px;
+  border-radius:10px;
+  padding:9px 12px;
+  font-size:11px;
+  font-weight:400;
+}
+.analytics-page .analytics-review-summary{
+  display:flex;
+  align-items:flex-start;
+  gap:7px;
+  border-top:1px solid var(--an-outline);
+  padding:11px 1px 0;
+  margin:13px 0 0;
+  color:var(--an-muted);
+  line-height:1.5;
+  font-size:10.5px;
+  font-weight:400;
+}
+.analytics-page .analytics-review-summary iconsax-icon{
+  flex:none;
+  margin-top:0;
+  color:var(--an-muted);
+}
+@media(max-width:750px){
+  .analytics-page .analytics-review-filter{width:100%}
+  .analytics-page .analytics-queue-select{width:100%;min-width:0;flex:1 1 160px}
+  .analytics-page .analytics-queue-menu{width:100%;min-width:0}
+  .analytics-page .analytics-review-filter input{flex:1 1 180px}
+}
+
+
+/* ================================================================
+   BIKA Analytics: subtle Iconsax two-tone info buttons and tooltips
+   Scoped to Data Analytics; does not change typography or card sizes.
+   ================================================================ */
+.analytics-page .analytics-info {
+  display:inline-flex; align-items:center; justify-content:center;
+  appearance:none; width:19px; height:19px; min-width:19px; min-height:19px;
+  box-sizing:border-box; border:0; padding:0; margin:0 0 0 2px;
+  border-radius:50%; background:transparent;
+  color:#aaa4a8; cursor:help; vertical-align:middle;
+  box-shadow:none; font-weight:400; font-size:inherit; line-height:1;
+  transition:color .16s ease,background-color .16s ease;
+}
+.analytics-page .analytics-info iconsax-icon{display:block;width:17px;height:17px;pointer-events:none}
+.analytics-page .analytics-info:hover,
+.analytics-page .analytics-info:focus-visible{
+  color:var(--an-brand); background:var(--an-brand-soft); border:0;
+}
+.analytics-page .analytics-info:focus-visible{outline:2px solid var(--an-brand);outline-offset:2px}
+.analytics-page .analytics-card-title h2 .analytics-info{flex-shrink:0}
+/* Body-level popover so nested cards do not clip the explanation. */
+.analytics-floating-info-tooltip {
+  --a-tip-bg:#fff; --a-tip-border:#eadfe2; --a-tip-ink:#4c4346; --a-tip-head:#762437;
+  position:fixed; z-index:9200; width:min(282px, calc(100vw - 24px));
+  padding:13px 15px 14px; background:var(--a-tip-bg); color:var(--a-tip-ink);
+  border:1px solid var(--a-tip-border); border-radius:13px;
+  box-shadow:0 13px 32px rgba(37,23,28,.16),0 2px 7px rgba(37,23,28,.06);
+  font:400 12px/1.65 Inter,system-ui,sans-serif;
+  pointer-events:none; box-sizing:border-box;
+}
+.analytics-floating-info-tooltip[hidden]{display:none!important}
+.analytics-floating-info-tooltip::after{
+  content:''; position:absolute; width:10px; height:10px;
+  left:var(--a-tip-arrow-x,50%); background:var(--a-tip-bg);
+  border:1px solid var(--a-tip-border); transform:translateX(-50%) rotate(45deg);
+}
+.analytics-floating-info-tooltip[data-placement="above"]::after{bottom:-6px;border-top:0;border-left:0}
+.analytics-floating-info-tooltip[data-placement="below"]::after{top:-6px;border-bottom:0;border-right:0}
+.analytics-floating-info-heading{display:flex;align-items:center;gap:7px;margin:0 0 5px;
+  color:var(--a-tip-head);font-size:11px;font-weight:600;letter-spacing:0}
+.analytics-floating-info-heading iconsax-icon{flex:none}
+.analytics-floating-info-copy{color:var(--a-tip-ink);overflow-wrap:break-word}
+html[data-theme=dark] .analytics-page .analytics-info{color:#ada4ab}
+html[data-theme=dark] .analytics-page .analytics-info:is(:hover,:focus-visible){color:var(--an-brand);background:var(--an-brand-soft)}
+html[data-theme=dark] .analytics-floating-info-tooltip{
+  --a-tip-bg:#302a2e;--a-tip-border:#5a454e;--a-tip-ink:#ddd4d9;--a-tip-head:#e3a0ad;
+  box-shadow:0 13px 30px rgba(0,0,0,.37);
+}
+@media (prefers-reduced-motion:reduce){.analytics-page .analytics-info{transition:none}}
+
+
+/* BIKA 2026-10-28 | Genuine lowercase information icons + compact shift panel.
+   Keep existing KPI fonts, chart, filters, review and API behavior unchanged. */
+.analytics-page .analytics-info{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:17px;height:17px;min-width:17px;min-height:17px;
+  padding:0;margin:0 0 0 2px;border:1px solid #b6b0b3;
+  border-radius:50%;background:transparent;color:#969096;
+  font-family:Inter,Arial,sans-serif;font-size:11px;font-weight:600;line-height:1;
+  cursor:help;box-shadow:none;vertical-align:middle;
+  transition:color .16s,border-color .16s,background .16s;
+}
+.analytics-page .analytics-info-glyph{display:block;position:relative;top:-.15px;line-height:1;font:600 11px/1 Inter,Arial,sans-serif;pointer-events:none}
+.analytics-page .analytics-info:hover,.analytics-page .analytics-info:focus-visible{
+  border-color:var(--an-brand);background:var(--an-brand-soft);color:var(--an-brand);
+}
+.analytics-page .analytics-static-info-glyph,
+.analytics-tip-info-glyph{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:15px;height:15px;min-width:15px;border:1px solid currentColor;
+  border-radius:50%;font:600 10px/1 Inter,Arial,sans-serif;
+}
+.analytics-tip-info-glyph{color:var(--a-tip-head);margin-right:0}
+/* Stop distributing the tall trend chart's height among the two small side cards. */
+.analytics-page .analytics-side-column{
+  display:flex;flex-direction:column;align-self:start;gap:15px;
+  grid-template-rows:none;min-height:0;
+}
+.analytics-page .analytics-side-column > .analytics-card{
+  flex:0 0 auto;min-height:0;height:auto;
+}
+.analytics-page .analytics-shift-card{padding-bottom:18px}
+.analytics-page .analytics-shift-card .analytics-card-header{margin-bottom:14px}
+.analytics-page .analytics-shift-content{min-height:0}
+.analytics-page .analytics-shift-row{padding:7px 0 0;border-bottom:1px solid var(--an-outline)}
+.analytics-page .analytics-shift-row:last-child{border-bottom:0}
+.analytics-page .analytics-shift-row + .analytics-shift-row{margin-top:12px;padding-top:14px}
+.analytics-page .analytics-shift-top{font-size:12px;align-items:baseline;gap:12px}
+.analytics-page .analytics-shift-top strong{font-weight:600}
+.analytics-page .analytics-shift-rate{color:var(--an-ink);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.analytics-page .analytics-progress{height:8px;margin-top:10px}
+.analytics-page .analytics-shift-bottom{
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;
+  gap:6px 12px;margin-top:9px;color:var(--an-muted);font-size:10.5px;line-height:1.4;
+}
+.analytics-page .analytics-shift-content .analytics-empty{min-height:84px;padding:8px 4px 12px}
+html[data-theme=dark] .analytics-page .analytics-info{border-color:#8c8086;color:#b6aeb2}
+html[data-theme=dark] .analytics-page .analytics-info:hover,
+html[data-theme=dark] .analytics-page .analytics-info:focus-visible{border-color:var(--an-brand);color:var(--an-brand)}
+@media(max-width:1050px){.analytics-page .analytics-side-column{align-self:stretch}}
+
+
+/* Shift × calendar date heatmap. Compact by content: no tall placeholder on sparse datasets. */
+.analytics-page .analytics-shift-card{height:auto!important;min-height:0!important;align-self:start;padding-bottom:17px}
+.analytics-page .analytics-shift-content{min-height:0!important}
+.analytics-page .analytics-shift-card .analytics-card-header{margin-bottom:16px}
+.analytics-page .analytics-heatmap-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px;color:var(--an-muted);font-size:10.5px;line-height:1.4}
+.analytics-page .analytics-heatmap-heading span:last-child{color:var(--an-ink);font-weight:500}
+.analytics-page .analytics-heatmap-grid{width:100%;min-width:0;display:flex;flex-direction:column;gap:7px}
+.analytics-page .analytics-heatmap-header,.analytics-page .analytics-heatmap-data-row{display:grid;grid-template-columns:minmax(72px,1.5fr) repeat(7,minmax(0,1fr));gap:5px;align-items:center;min-width:0}
+.analytics-page .analytics-heatmap-header{margin-bottom:1px}
+.analytics-page .analytics-heatmap-corner{font-size:10px;color:var(--an-muted)}
+.analytics-page .analytics-heatmap-date{min-width:0;display:flex;flex-direction:column;align-items:center;gap:1px;color:var(--an-muted);font-size:9px;line-height:1.2;font-weight:400}
+.analytics-page .analytics-heatmap-date b{font-weight:500;font-size:9px}
+.analytics-page .analytics-heatmap-date small{font-size:8.5px;color:var(--an-muted)}
+.analytics-page .analytics-heatmap-shift{font-size:10px;color:var(--an-ink);line-height:1.25;overflow-wrap:anywhere;font-weight:500;padding-right:4px;min-width:0}
+.analytics-page .analytics-heatmap-cell{display:flex;align-items:center;justify-content:center;min-width:0;min-height:36px;border-radius:8px;padding:3px 1px;border:1px solid transparent;font-size:9px;line-height:1.2;white-space:nowrap;font-weight:500;cursor:default;font-variant-numeric:tabular-nums;transition:filter .16s,transform .16s,box-shadow .16s}
+.analytics-page .analytics-heatmap-cell:hover,.analytics-page .analytics-heatmap-cell:focus-visible{transform:translateY(-1px);box-shadow:0 3px 8px rgba(45,35,38,.11);outline:2px solid var(--an-brand);outline-offset:1px}
+.analytics-page .analytics-heatmap-on-target{background:#e2f2e9;color:#307254;border-color:#cce9da}
+.analytics-page .analytics-heatmap-near-target{background:#f9eacf;color:#956526;border-color:#f4dfb8}
+.analytics-page .analytics-heatmap-below-target{background:#f8e3e9;color:#9e3653;border-color:#f0d3dc}
+.analytics-page .analytics-heatmap-no-data{background:var(--an-bg);color:var(--an-muted);border-color:var(--an-outline)}
+.analytics-page .analytics-heatmap-no-shift{font-size:10.5px;line-height:1.6;padding:12px 10px;background:var(--an-bg);border:1px dashed var(--an-outline);border-radius:10px;color:var(--an-muted)}
+.analytics-page .analytics-heatmap-legend{display:flex;flex-wrap:wrap;align-items:center;gap:7px 12px;margin-top:15px;font-size:9px;line-height:1.3;color:var(--an-muted)}
+.analytics-page .analytics-heatmap-legend span{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.analytics-page .analytics-heatmap-key{height:9px;width:9px;flex:0 0 9px;border-radius:3px;border:1px solid rgba(70,60,63,.06)}
+.analytics-page .analytics-heatmap-foot{margin:12px 0 0;color:var(--an-muted);font-size:9.5px;line-height:1.5}
+html[data-theme=dark] .analytics-page .analytics-heatmap-on-target{background:#203d32;color:#a9dec3;border-color:#345e4c}
+html[data-theme=dark] .analytics-page .analytics-heatmap-near-target{background:#4b3b24;color:#eacc9c;border-color:#6b5837}
+html[data-theme=dark] .analytics-page .analytics-heatmap-below-target{background:#4b2736;color:#e9b8c7;border-color:#633a49}
+@media(max-width:1260px){.analytics-page .analytics-heatmap-header,.analytics-page .analytics-heatmap-data-row{grid-template-columns:minmax(62px,1.4fr) repeat(7,minmax(0,1fr));gap:4px}.analytics-page .analytics-heatmap-cell{font-size:8.5px;min-height:34px}}
+@media(max-width:750px){.analytics-page .analytics-heatmap-header,.analytics-page .analytics-heatmap-data-row{grid-template-columns:minmax(61px,1.45fr) repeat(7,minmax(0,1fr));gap:4px}.analytics-page .analytics-heatmap-cell{min-height:34px;font-size:8.5px;border-radius:6px}.analytics-page .analytics-heatmap-heading{font-size:10px}.analytics-page .analytics-heatmap-legend{gap:7px 10px}}
+
+.analytics-page .analytics-heatmap-cell{font-family:inherit;appearance:none;-webkit-appearance:none;cursor:pointer}
+.analytics-page .analytics-heatmap-cell.is-selected{outline:2px solid var(--an-brand);outline-offset:1px}
+.analytics-page .analytics-heatmap-selected{margin-top:10px;border:1px solid var(--an-outline);background:var(--an-bg);border-radius:9px;padding:8px 10px;font-size:10px;line-height:1.5;color:var(--an-ink)}
+.analytics-page .analytics-heatmap-selected[hidden]{display:none!important}
+
+
+/* Dashboard-matched info icons & compact popover. Visual only.
+   Uses the exact outline SVG geometry of Dashboard's config-info-icon. */
+.analytics-page .analytics-info {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 17px;
+  height: 17px;
+  min-width: 17px;
+  min-height: 17px;
+  flex: 0 0 17px;
+  padding: 0;
+  margin: 0 0 0 4px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #9a9a9a;
+  cursor: help;
+  vertical-align: middle;
+  box-shadow: none;
+  transform: none;
+  transition: color 150ms ease, transform 150ms ease;
+}
+.analytics-page .analytics-dashboard-info-icon {
+  display: block;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  pointer-events: none;
+}
+.analytics-page .analytics-info:hover,
+.analytics-page .analytics-info:focus,
+.analytics-page .analytics-info:focus-visible {
+  color: #741f2e;
+  border: 0;
+  background: transparent;
+  transform: translateY(-1px);
+}
+.analytics-page .analytics-info:focus-visible {
+  outline: 2px solid #741f2e;
+  outline-offset: 2px;
+}
+/* Dashboard's small white tooltip, carried in document.body to avoid clipping. */
+.analytics-floating-info-tooltip {
+  --a-tip-bg: #fff;
+  --a-tip-border: rgba(0,0,0,.08);
+  --a-tip-ink: #4b4b4b;
+  width: max-content;
+  max-width: min(240px, calc(100vw - 24px));
+  padding: 8px 10px;
+  border: 1px solid var(--a-tip-border);
+  border-radius: 8px;
+  background: var(--a-tip-bg);
+  color: var(--a-tip-ink);
+  box-shadow: 0 6px 18px rgba(0,0,0,.10);
+  font-family: Inter, Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+}
+.analytics-floating-info-copy {
+  color: var(--a-tip-ink);
+  font-size: inherit;
+  font-weight: 400;
+  line-height: inherit;
+}
+.analytics-floating-info-heading { display: none; }
+html[data-theme="dark"] .analytics-page .analytics-info { color: rgba(255,255,255,.55); border: 0; }
+html[data-theme="dark"] .analytics-page .analytics-info:hover,
+html[data-theme="dark"] .analytics-page .analytics-info:focus,
+html[data-theme="dark"] .analytics-page .analytics-info:focus-visible {
+  color: #f1b5c1;
+  border: 0;
+  background: transparent;
+}
+html[data-theme="dark"] .analytics-floating-info-tooltip {
+  --a-tip-bg: #302a2e;
+  --a-tip-border: #5a454e;
+  --a-tip-ink: #e5dce1;
+  box-shadow: 0 7px 20px rgba(0,0,0,.35);
+}
+
+
+/* Mask Review modal · polish v1 (2026-10-28).
+   Modal-only. Preserve dashboard, charts, permissions and API behavior. */
+.analytics-modal-backdrop .analytics-modal-close{
+  width:46px;height:46px;flex:0 0 46px;border-radius:999px;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:#f4f4f4;color:#888;cursor:pointer;border:0;
+  transition:background .15s ease,color .15s ease,transform .15s ease;
+}
+.analytics-modal-backdrop .analytics-modal-close:hover{background:#f1e4e6;color:#741f2e;transform:scale(1.03)}
+.analytics-modal-backdrop .analytics-modal-close:focus-visible{outline:2px solid var(--an-brand);outline-offset:2px}
+html[data-theme=dark] .analytics-modal-backdrop .analytics-modal-close{background:#39343a;color:#d5cbd0}
+html[data-theme=dark] .analytics-modal-backdrop .analytics-modal-close:hover{background:#51333e;color:#f3bdc5}
+/* Keep the side independently scrollable so adding crops never increases the
+   right column or the modal's height just to fill space. */
+.analytics-modal-backdrop .analytics-mask-viewer{display:flex;flex-direction:column;min-width:0;min-height:0}
+.analytics-modal-backdrop .analytics-selected-crops{
+  margin-top:18px;padding:0;border:0;
+  border-radius:0;background:transparent;min-width:0;
+}
+.analytics-modal-backdrop .analytics-selected-crops[hidden]{display:none!important}
+.analytics-modal-backdrop .analytics-selected-crops-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  font-size:12px;font-weight:500;color:var(--an-ink);margin-bottom:10px;
+}
+.analytics-modal-backdrop .analytics-selected-crops-head [data-crop-object-id]{
+  font-size:10px;font-weight:400;color:var(--an-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.analytics-modal-backdrop .analytics-selected-crops-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.analytics-modal-backdrop .analytics-selected-crop{min-width:0;display:flex;flex-direction:column;gap:7px}
+.analytics-modal-backdrop .analytics-selected-crop-label{font-size:10.5px;font-weight:500;color:var(--an-muted)}
+.analytics-modal-backdrop .analytics-selected-crop-image{
+  height:clamp(84px,12vh,136px);border-radius:11px;border:1px solid var(--an-outline);
+  background:var(--an-card);overflow:hidden;display:flex;align-items:center;justify-content:center;
+}
+.analytics-modal-backdrop .analytics-selected-crop-image canvas{display:block;width:100%;height:100%;object-fit:contain}
+.analytics-modal-backdrop .analytics-selected-crops-note{font-size:9.5px;color:var(--an-muted);line-height:1.4;display:block;margin-top:9px}
+/* Hide but preserve the original form select and its exact field value. */
+.analytics-modal-backdrop .analytics-decision-native{
+  position:absolute!important;width:1px!important;height:1px!important;padding:0!important;
+  margin:-1px!important;opacity:0!important;pointer-events:none!important;overflow:hidden!important;
+  clip-path:inset(50%)!important;border:0!important;
+}
+.analytics-modal-backdrop .analytics-decision-picker{position:relative;min-width:0}
+.analytics-modal-backdrop .analytics-decision-trigger{
+  width:100%;min-height:42px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  border:1px solid var(--an-outline);border-radius:12px;color:var(--an-ink);background:var(--an-card);
+  text-align:left;cursor:pointer;font-size:12px;font-weight:400;
+  transition:border-color .15s ease,box-shadow .15s ease;
+}
+.analytics-modal-backdrop .analytics-decision-trigger>svg{flex:0 0 18px;color:var(--an-muted);margin-right:2px}
+.analytics-modal-backdrop .analytics-decision-trigger:hover{border-color:#bc9aa1}
+.analytics-modal-backdrop .analytics-decision-trigger[aria-expanded="true"],
+.analytics-modal-backdrop .analytics-decision-trigger:focus-visible{
+  border-color:var(--an-brand);box-shadow:0 0 0 3px rgba(116,31,46,.09);outline:0;
+}
+.analytics-decision-menu{
+  position:fixed;z-index:12050;padding:6px;background:#fff;color:#292929;
+  border:1px solid #e8e1e3;border-radius:14px;box-shadow:0 16px 40px rgba(36,23,30,.20);
+  display:flex;flex-direction:column;gap:3px;
+}
+.analytics-decision-menu[hidden]{display:none!important}
+.analytics-decision-menu [data-decision-option]{
+  min-height:38px;padding:8px 10px;display:flex;gap:11px;align-items:center;
+  border:0;border-radius:9px;text-align:left;color:inherit;background:transparent;
+  cursor:pointer;font-size:11.5px;font-weight:400;width:100%;
+}
+.analytics-decision-menu [data-decision-option]>iconsax-icon{color:#8e4052;flex:0 0 18px}
+.analytics-decision-menu [data-decision-option]>span{flex:1;min-width:0}
+.analytics-decision-menu [data-decision-option]:hover,
+.analytics-decision-menu [data-decision-option]:focus-visible,
+.analytics-decision-menu [data-decision-option][aria-selected="true"]{color:#741f2e;background:#f8eff1;outline:0}
+.analytics-decision-menu .analytics-decision-tick{display:none;flex:0 0 17px}
+.analytics-decision-menu [aria-selected="true"] .analytics-decision-tick{display:block}
+html[data-theme=dark] .analytics-decision-menu{background:#282427;color:#eee;border-color:#4d4045;box-shadow:0 16px 40px rgba(0,0,0,.50)}
+html[data-theme=dark] .analytics-decision-menu [data-decision-option]:hover,
+html[data-theme=dark] .analytics-decision-menu [data-decision-option]:focus-visible,
+html[data-theme=dark] .analytics-decision-menu [data-decision-option][aria-selected="true"]{color:#f4b7c3;background:#472c37}
+/* Give reviewer notes useful writing space without expanding the modal.
+   The save button stays anchored below via the existing flex layout. */
+.analytics-modal-backdrop .analytics-feedback-form textarea[data-review-note]{
+  min-height:124px;
+  padding:12px 13px;
+  line-height:1.55;
+  resize:vertical;
+  font-weight:400;
+}
+/* One scoped pill button rather than changing other BIKA buttons. */
+.analytics-modal-backdrop .analytics-feedback-form [data-save-review]{
+  display:block;width:100%;min-height:44px;margin-top:15px;padding:10px 19px;
+  border-radius:999px!important;font-weight:400!important;font-size:12px;
+  background:#741f2e;color:#fff;border:1px solid #741f2e;
+  box-shadow:0 7px 18px rgba(116,31,46,.19);
+  transition:box-shadow .15s ease,transform .15s ease,background .15s ease;
+}
+.analytics-modal-backdrop .analytics-feedback-form [data-save-review]:not(:disabled):hover{
+  background:#611926;box-shadow:0 9px 22px rgba(116,31,46,.26);transform:translateY(-1px)
+}
+.analytics-modal-backdrop .analytics-feedback-form [data-save-review]:focus-visible{outline:2px solid var(--an-brand);outline-offset:3px}
+.analytics-modal-backdrop .analytics-feedback-form [data-save-review]:disabled{opacity:.5;box-shadow:none}
+@media(max-width:750px){
+  .analytics-modal-backdrop .analytics-modal-close{width:40px;height:40px;flex-basis:40px}
+  .analytics-modal-backdrop .analytics-selected-crop-image{height:100px}
+  .analytics-modal-backdrop .analytics-selected-crops{padding:0}
+  .analytics-modal-backdrop .analytics-feedback-form textarea[data-review-note]{min-height:104px}
+  .analytics-modal-backdrop .analytics-feedback-form [data-save-review]{margin-top:12px}
+}
+@media(prefers-reduced-motion:reduce){.analytics-modal-backdrop .analytics-modal-close,.analytics-modal-backdrop .analytics-feedback-form [data-save-review]{transition:none}}
+/* Mask Review — fill the EXISTING right-column space rather than leaving
+   an unused band below Save Review.  No effect on the left image/crops. */
+.analytics-modal-backdrop .analytics-feedback-form [data-save-message]:empty{
+  display:none!important;
+}
+.analytics-modal-backdrop .analytics-feedback-form [data-save-message]:not(:empty){
+  min-height:0;margin:3px 0 0;line-height:1.4;
+}
+@media (min-width:751px){
+  .analytics-modal-backdrop .analytics-mask-side{
+    display:flex;flex-direction:column;max-height:none;min-height:0;
+  }
+  .analytics-modal-backdrop .analytics-feedback-form{
+    display:flex;flex-direction:column;flex:1 1 auto;min-height:0;gap:8px;
+  }
+  .analytics-modal-backdrop .analytics-feedback-form textarea[data-review-note]{
+    flex:1 1 170px;
+    min-height:150px;
+    max-height:none;
+    resize:vertical;
+  }
+  .analytics-modal-backdrop .analytics-feedback-form [data-save-review]{
+    flex:0 0 auto;
+    margin-top:16px!important;
+    margin-bottom:0!important;
+  }
+}
+/* On narrow screens let the form use its natural height.  Avoid a tall textarea
+   pushing the button below the viewport. */
+@media (max-width:750px){
+  .analytics-modal-backdrop .analytics-feedback-form textarea[data-review-note]{
+    flex:none;min-height:120px;
+  }
+  .analytics-modal-backdrop .analytics-feedback-form [data-save-review]{margin-top:14px!important}
+}
+/* Short desktop viewports: preserve visible Save Review action without
+   requiring an excessively tall note input. */
+@media (min-width:751px) and (max-height:850px){
+  .analytics-modal-backdrop .analytics-feedback-form textarea[data-review-note]{
+    min-height:110px;
+    flex-basis:115px;
+  }
+  .analytics-modal-backdrop .analytics-feedback-form [data-save-review]{
+    margin-top:12px!important;
+  }
+}
+
+/* BIKA Analytics UI Polish v1 — START
+   Presentation only; no data, model, filter, or chart logic changed.
+   Scoped to the Data Analytics page. */
+
+/* Make the empty Quality Trend chart intentionally centered and readable.
+   This applies only when analytics.js renders the empty-state element. */
+.analytics-page .analytics-chart-card .analytics-svg-chart > .analytics-empty {
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  padding: 28px 22px;
+  text-align: center;
+  line-height: 1.6;
+}
+.analytics-page .analytics-chart-card .analytics-svg-chart > .analytics-empty iconsax-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  color: var(--an-brand);
+}
+.analytics-page .analytics-chart-card .analytics-svg-chart > .analytics-empty iconsax-icon svg {
+  width: 44px;
+  height: 44px;
+}
+.analytics-page .analytics-chart-card .analytics-svg-chart > .analytics-empty strong {
+  display: block;
+  color: var(--an-ink);
+  font-size: clamp(17px, 1.5vw, 21px);
+  font-weight: 600;
+  line-height: 1.35;
+}
+.analytics-page .analytics-chart-card .analytics-svg-chart > .analytics-empty span {
+  display: block;
+  max-width: 410px;
+  color: var(--an-muted);
+  font-size: clamp(12px, 1.03vw, 14px);
+  font-weight: 400;
+  line-height: 1.65;
+}
+
+/* Date popover: subtle, rounded preset pills that turn burgundy on
+   hover/selection (rather than five visually heavy solid buttons). */
+.analytics-page .analytics-date-menu .analytics-date-option {
+  box-sizing: border-box;
+  width: calc(100% - 24px);
+  min-height: 39px;
+  margin: 4px 12px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--an-ink);
+  font-size: 13px;
+  font-weight: 400;
+  cursor: pointer;
+  transition: background .18s ease, color .18s ease,
+              box-shadow .18s ease, transform .18s ease;
+}
+.analytics-page .analytics-date-menu .analytics-date-option.is-active {
+  background: var(--an-brand);
+  color: #fff;
+  box-shadow: 0 5px 13px rgba(116, 31, 46, .18);
+}
+/* Hover/focus is pale rose; selected preset stays deep burgundy. */
+.analytics-page .analytics-date-menu .analytics-date-option:is(:hover, :focus-visible):not(.is-active) {
+  background: #F8EDF0;
+  color: #741F2E;
+  border-color: #EED9DE;
+  box-shadow: 0 5px 12px rgba(116, 31, 46, .08);
+}
+.analytics-page .analytics-date-menu .analytics-date-option:hover:not(.is-active) {
+  transform: translateY(-1px);
+}
+.analytics-page .analytics-date-menu .analytics-date-option:focus-visible {
+  outline: 2px solid var(--an-brand);
+  outline-offset: 2px;
+}
+
+/* Main actions: pill buttons with BIKA's burgundy, soft shadow and hover. */
+.analytics-page .analytics-date-menu .analytics-date-single-controls {
+  grid-template-columns: minmax(0, 1fr) 86px;
+}
+.analytics-page .analytics-date-menu .analytics-date-single button,
+.analytics-page .analytics-date-menu .analytics-date-apply {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  border: 1px solid var(--an-brand);
+  border-radius: 999px;
+  background: var(--an-brand);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 400;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(116, 31, 46, .19);
+  transition: background .18s ease, border-color .18s ease,
+              box-shadow .18s ease, transform .18s ease;
+}
+.analytics-page .analytics-date-menu .analytics-date-single button:hover,
+.analytics-page .analytics-date-menu .analytics-date-apply:hover {
+  background: #954253;
+  border-color: #954253;
+  box-shadow: 0 8px 17px rgba(116, 31, 46, .20);
+  transform: translateY(-1px);
+}
+.analytics-page .analytics-date-menu .analytics-date-single button:focus-visible,
+.analytics-page .analytics-date-menu .analytics-date-apply:focus-visible {
+  outline: 2px solid var(--an-brand);
+  outline-offset: 3px;
+}
+.analytics-page .analytics-date-menu .analytics-date-single button:active,
+.analytics-page .analytics-date-menu .analytics-date-apply:active {
+  transform: translateY(0);
+}
+.analytics-page .analytics-date-menu .analytics-date-custom-grid input,
+.analytics-page .analytics-date-menu .analytics-date-single input {
+  border-radius: 12px;
+}
+.analytics-page .analytics-date-button {
+  transition: background .18s ease, box-shadow .18s ease,
+              transform .18s ease;
+}
+.analytics-page .analytics-date-button:hover {
+  box-shadow: 0 9px 23px rgba(50, 26, 32, .12);
+  transform: translateY(-1px);
+}
+@media (max-width: 750px) {
+  .analytics-page .analytics-chart-card .analytics-svg-chart > .analytics-empty {
+    padding: 22px 12px;
+    gap: 10px;
+  }
+  .analytics-page .analytics-chart-card .analytics-svg-chart > .analytics-empty iconsax-icon {
+    width: 48px;
+    height: 48px;
+  }
+  .analytics-page .analytics-chart-card .analytics-svg-chart > .analytics-empty strong {
+    font-size: 17px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .analytics-page .analytics-date-menu .analytics-date-option,
+  .analytics-page .analytics-date-menu .analytics-date-single button,
+  .analytics-page .analytics-date-menu .analytics-date-apply,
+  .analytics-page .analytics-date-button {
+    transition: none;
+    transform: none;
+  }
+}
+/* BIKA Analytics UI Polish v1 — END */
+
+/* BIKA-TREND-REVIEW-MASK-V1 Provisional data visibly differentiated */
+.analytics-chart-container svg path.series-video-provisional, .analytics-quality-chart svg path.series-video-provisional, svg path.series-video-provisional {stroke:#cb9250;stroke-width:2.5}
+.analytics-chart-container svg path.series-live-provisional, .analytics-quality-chart svg path.series-live-provisional, svg path.series-live-provisional {stroke:#8b6dc6;stroke-width:2.5}
+
+
+/* BIKA-ANALYTICS-KPI-COMPACT-V1
+   Display-only: restore consistent, compact 4-card KPI presentation.
+   No effect on formulas, charts, filters, or other BIKA pages. */
+.analytics-page .analytics-kpis{
+  align-items:stretch;
+  gap:12px;
+  margin-bottom:14px;
+}
+.analytics-page .analytics-kpi{
+  height:108px;
+  min-height:108px;
+  padding:14px 17px;
+  gap:12px;
+  align-items:center;
+  border-radius:16px;
+}
+.analytics-page .analytics-kpi-icon{
+  width:43px;
+  height:43px;
+  flex:0 0 43px;
+  border-radius:50%;
+}
+.analytics-page .analytics-kpi-body{
+  min-width:0;
+  flex:1;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  gap:4px;
+}
+.analytics-page .analytics-kpi-label{
+  min-height:0;
+  line-height:1.25;
+  font-size:12px;
+  font-weight:500;
+}
+.analytics-page .analytics-kpi-value{
+  font-size:24px;
+  font-weight:600;
+  line-height:1.14;
+  letter-spacing:-.35px;
+}
+.analytics-page .analytics-kpi-footer{
+  display:flex;
+  flex-wrap:nowrap;
+  align-items:center;
+  min-width:0;
+  max-width:100%;
+  gap:5px;
+  font-size:10.5px;
+  font-weight:400;
+  line-height:1.25;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.analytics-page .analytics-kpi-footer > span:not(.analytics-mini-dot){
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+@media(max-width:1260px){
+  .analytics-page .analytics-kpi{height:104px;min-height:104px;padding:12px 13px;}
+}
+@media(max-width:750px){
+  .analytics-page .analytics-kpi{height:auto;min-height:100px;padding:14px 16px;}
+  .analytics-page .analytics-kpi-footer{white-space:normal;overflow:visible;}
+}
+
+/* BIKA-ANALYTICS-KPI-BALANCE-V2 START */
+/* Presentation only: four Data Analytics top KPI cards. */
+.analytics-page .analytics-kpi {
+  box-sizing: border-box;
+  height: 100px;
+  min-height: 100px;
+  padding: 12px 17px;
+  gap: 14px;
+  align-items: center;
+}
+.analytics-page .analytics-kpi-icon {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.analytics-page .analytics-kpi-icon iconsax-icon {
+  display: inline-flex;
+  transform: scale(1.13);
+  transform-origin: center;
+}
+.analytics-page .analytics-kpi-body {
+  min-width: 0;
+  gap: 4px;
+  justify-content: center;
+  align-items: flex-start;
+}
+.analytics-page .analytics-kpi-label {
+  line-height: 1.2;
+  min-height: 0;
+}
+.analytics-page .analytics-kpi-value {
+  line-height: 1.08;
+}
+.analytics-page .analytics-kpi-footer {
+  line-height: 1.25;
+  min-width: 0;
+}
+@media (max-width: 1260px) {
+  .analytics-page .analytics-kpi {
+    height: 100px;
+    min-height: 100px;
+    padding: 12px 13px;
+    gap: 11px;
+  }
+  .analytics-page .analytics-kpi-icon {
+    width: 50px;
+    height: 50px;
+    flex: 0 0 50px;
+  }
+}
+@media (max-width: 750px) {
+  .analytics-page .analytics-kpi {
+    height: auto;
+    min-height: 94px;
+    padding: 13px 16px;
+    gap: 12px;
+  }
+  .analytics-page .analytics-kpi-icon {
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+  }
+}
+/* BIKA-ANALYTICS-KPI-BALANCE-V2 END */
+
+/* BIKA-ANALYTICS-REVIEW-INFO-V1 START */
+/* Keep the review footer as subtle as the info icon beside card headings. */
+.analytics-page .analytics-review-summary {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  line-height: 1.4;
+}
+.analytics-page .analytics-review-summary .analytics-review-info {
+  margin: 0;
+  width: 17px;
+  height: 17px;
+  flex: 0 0 17px;
+  min-width: 17px;
+  min-height: 17px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #9a9a9a;
+}
+.analytics-page .analytics-review-summary .analytics-review-info:hover,
+.analytics-page .analytics-review-summary .analytics-review-info:focus-visible {
+  color: #741f2e;
+}
+.analytics-page .analytics-review-summary .analytics-review-info svg {
+  display: block;
+  width: 17px;
+  height: 17px;
+}
+/* BIKA-ANALYTICS-REVIEW-INFO-V1 END */
+
+/* BIKA-REVIEW-CORRECT-CLASS-V1_1 · compact conditional correction, same BIKA palette */
+.analytics-modal-backdrop .analytics-correct-class-field[hidden]{display:none!important}
+.analytics-modal-backdrop .analytics-correct-class-field{display:flex;flex-direction:column;gap:6px;margin:2px 0 0}
+.analytics-modal-backdrop .analytics-correct-class-field label{margin:0;font-size:11px;font-weight:600}
+.analytics-modal-backdrop .analytics-correct-required{color:#a73448}
+.analytics-modal-backdrop .analytics-correct-class-field select{
+  width:100%;min-height:43px;border:1px solid var(--an-outline,#e6dddd);
+  border-radius:12px;padding:9px 12px;font-size:12px;font-weight:400;line-height:1.35;
+  color:var(--an-ink,#292929);background:var(--an-card,#fff);
+}
+.analytics-modal-backdrop .analytics-correct-class-field select:focus-visible{
+  outline:0;border-color:#741f2e;box-shadow:0 0 0 3px rgba(116,31,46,.09)
+}
+/* Do not reserve space for the selector in other decisions; keep reviewer note short. */
+.analytics-modal-backdrop .analytics-feedback-form textarea[data-review-note]{
+  flex:0 0 auto!important;min-height:70px!important;height:74px!important;
+  max-height:125px!important;resize:vertical;
+}
+@media(min-width:751px){
+  .analytics-modal-backdrop .analytics-feedback-form{flex:0 0 auto!important}
+  .analytics-modal-backdrop .analytics-feedback-form [data-save-review]{margin-top:8px!important}
+}
+@media(max-width:750px){
+  .analytics-modal-backdrop .analytics-feedback-form textarea[data-review-note]{height:66px!important;min-height:66px!important}
+}
+html[data-theme="dark"] .analytics-modal-backdrop .analytics-correct-class-field select{
+  background:#282427;color:#f2eff0;border-color:#51444a
+}
+/* END BIKA-REVIEW-CORRECT-CLASS-V1_1 */
+
+/* BIKA_ANALYTICS_DEMO_VISUAL_V3_2_20261103
+   Allow the trend to fill the height of its neighbouring Shift + Review cards.
+   SVG is re-rendered for both width and height; no visual stretching. */
+@media (min-width:1051px){
+  .analytics-page .analytics-top-grid {align-items:stretch}
+  .analytics-page .analytics-top-grid>.analytics-chart-card,
+  .analytics-page .analytics-chart-card {
+    display:flex;flex-direction:column;align-self:stretch;
+    min-width:0;min-height:0;height:100%;
+  }
+  .analytics-page .analytics-chart-card [data-quality-chart] {
+    display:block;position:relative;flex:1 1 440px;
+    width:100%;min-width:0;min-height:440px;height:auto;
+    aspect-ratio:auto!important;
+  }
+  .analytics-page .analytics-chart-card [data-chart-legend],
+  .analytics-page .analytics-chart-card [data-trend-caption] {flex:0 0 auto}
+}
+@media (min-width:751px) and (max-width:1050px){
+  .analytics-page .analytics-chart-card [data-quality-chart] {
+    height:clamp(400px,45vw,570px);min-height:400px;aspect-ratio:auto!important;
+  }
+}
+@media (max-width:750px){
+  .analytics-page .analytics-chart-card [data-quality-chart] {
+    height:350px;min-height:350px;max-width:100%;aspect-ratio:auto!important;
+  }
+}
+.analytics-page .analytics-chart-card [data-quality-chart]>svg {
+  display:block;width:100%!important;height:100%!important;
+  max-width:none;max-height:none;
+}
+
+
+/* ==============================================================
+   BIKA Analytics layout balance + demo row fix | 2026-11-04
+   Keep right cards natural-height; let left chart resize to match.
+   ============================================================== */
+@media (min-width: 1051px){
+  .analytics-page .analytics-side-column{
+    grid-template-rows: auto auto;
+    align-content: start;
+  }
+  .analytics-page .analytics-chart-card{
+    display:flex;
+    flex-direction:column;
+  }
+  .analytics-page .analytics-chart-card .analytics-svg-chart{
+    flex: 1 1 auto;
+    min-height: 220px;
+  }
+}
+
+/* BIKA_BULK_REVIEW_V1 – scoped to the existing Human Review modal. */
+.analytics-modal-backdrop .bika-bulk-panel{
+  margin:12px 0 10px;padding:12px;border:1px solid var(--an-outline,#ece9e9);
+  border-radius:12px;background:var(--an-bg,#fafafa);display:flex;flex-direction:column;gap:9px;
+  color:var(--an-ink,#292929);min-width:0;
+}
+.analytics-modal-backdrop .bika-bulk-title{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.analytics-modal-backdrop .bika-bulk-title strong{font-size:12px;font-weight:750}
+.analytics-modal-backdrop .bika-bulk-title small,.analytics-modal-backdrop .bika-bulk-help{font-size:10px;color:var(--an-muted,#888);line-height:1.45}
+.analytics-modal-backdrop .bika-bulk-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:flex-end}
+.analytics-modal-backdrop .bika-bulk-label{display:flex;flex-direction:column;gap:4px;font-size:10.5px;font-weight:650;color:var(--an-ink,#222);min-width:0}
+.analytics-modal-backdrop .bika-bulk-actions .bika-bulk-label{flex:1 1 130px}
+.analytics-modal-backdrop .bika-bulk-panel select,.analytics-modal-backdrop .bika-bulk-panel textarea{
+  width:100%;border:1px solid var(--an-outline,#ddd);border-radius:9px;min-height:34px;
+  background:var(--an-card,#fff);color:var(--an-ink,#222);padding:7px 9px;font-size:11px;outline:0;
+}
+.analytics-modal-backdrop .bika-bulk-panel textarea{resize:vertical;max-height:115px;min-height:44px}
+.analytics-modal-backdrop .bika-bulk-panel select:focus-visible,.analytics-modal-backdrop .bika-bulk-panel textarea:focus-visible{outline:2px solid var(--an-brand,#741f2e);outline-offset:1px}
+.analytics-modal-backdrop .bika-bulk-actions button{border:1px solid var(--an-outline,#ddd);background:var(--an-card,#fff);color:var(--an-ink,#222);border-radius:8px;min-height:34px;padding:0 9px;font-size:10px;font-weight:650;cursor:pointer}
+.analytics-modal-backdrop .bika-bulk-actions button:hover{border-color:var(--an-brand,#741f2e)}
+.analytics-modal-backdrop .bika-bulk-counter{font-size:11px;color:var(--an-muted,#888);font-variant-numeric:tabular-nums}
+.analytics-modal-backdrop .bika-bulk-primary{background:var(--an-brand,#741f2e);color:#fff;border:0;border-radius:9px;font-size:12px;font-weight:730;min-height:36px;cursor:pointer}
+.analytics-modal-backdrop .bika-bulk-primary:disabled{opacity:.5;cursor:not-allowed}
+.analytics-modal-backdrop .bika-bulk-message{min-height:14px;font-size:10.5px;line-height:1.5;color:var(--an-brand,#741f2e);overflow-wrap:anywhere}
+.analytics-modal-backdrop .bika-bulk-object-row{display:flex;gap:6px;align-items:stretch;min-width:0}
+.analytics-modal-backdrop .bika-bulk-object-row[hidden]{display:none!important}
+.analytics-modal-backdrop .bika-bulk-check{display:flex;align-items:center;justify-content:center;min-width:30px;border:1px solid var(--an-outline,#ddd);border-radius:8px;background:var(--an-card,#fff);cursor:pointer}
+.analytics-modal-backdrop .bika-bulk-check input{accent-color:#741f2e;width:15px;height:15px;cursor:pointer}
+.analytics-modal-backdrop .bika-bulk-object-row .analytics-object-choice{min-width:0;flex:1}
+.analytics-modal-backdrop polygon.is-bulk-selected{stroke:#33b88b!important;stroke-width:4!important;fill-opacity:.48!important}
+.analytics-modal-backdrop .bika-bulk-panel [hidden]{display:none!important}
+
+/* BIKA_BULK_REVIEW_UX_V1_1 — compact, guided, theme-aware bulk review interface. */
+.analytics-modal-backdrop .bika-bulk-panel.bika-bulk-ux{
+  padding:14px 14px 12px;margin:12px 0 12px;gap:10px;
+  background:var(--an-bg,#fafafa);border:1px solid var(--an-outline,#ece9e9);
+  border-radius:14px;color:var(--an-ink,#292929);
+}
+.analytics-modal-backdrop .bika-ux-topline{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.analytics-modal-backdrop .bika-ux-top-title{display:flex;align-items:center;gap:7px;min-width:0;color:var(--an-ink,#222)}
+.analytics-modal-backdrop .bika-ux-top-title iconsax-icon{color:var(--an-brand,#741f2e);display:block;flex:none}
+.analytics-modal-backdrop .bika-ux-top-title strong{font-size:14px;font-weight:730}
+.analytics-modal-backdrop .bika-ux-topline small{font-size:10.5px;color:var(--an-muted,#888);white-space:nowrap;font-weight:550}
+.analytics-modal-backdrop .bika-ux-progress-track{height:4px;background:var(--an-outline,#eee);border-radius:99px;overflow:hidden}
+.analytics-modal-backdrop .bika-ux-progress-track span{display:block;width:0;height:100%;background:var(--an-green,#398b6e);border-radius:99px;transition:width .2s}
+.analytics-modal-backdrop .bika-ux-intro{font-size:11px;color:var(--an-muted,#888);line-height:1.5;margin:0}
+.analytics-modal-backdrop .bika-ux-step{display:flex;flex-direction:column;gap:8px;padding-top:10px;border-top:1px solid var(--an-outline,#ddd)}
+.analytics-modal-backdrop .bika-ux-step-heading,.analytics-modal-backdrop .bika-ux-save-heading{display:flex;align-items:center;gap:7px;min-width:0}
+.analytics-modal-backdrop .bika-ux-step-heading strong,.analytics-modal-backdrop .bika-ux-save-heading strong{font-size:12.5px;font-weight:700;color:var(--an-ink,#222)}
+.analytics-modal-backdrop .bika-ux-number{display:inline-grid;place-items:center;width:20px;height:20px;flex:0 0 20px;border-radius:7px;background:var(--an-brand-soft,#f8eff0);color:var(--an-brand,#741f2e);font-weight:760;font-size:11px}
+.analytics-modal-backdrop .bika-ux-selected{margin-left:auto;color:var(--an-brand,#741f2e);background:var(--an-card,#fff);border:1px solid var(--an-outline,#ddd);border-radius:7px;padding:4px 7px;font-size:10px;font-weight:650}
+.analytics-modal-backdrop .bika-ux-filter-row{display:flex;align-items:end;gap:7px;flex-wrap:wrap}
+.analytics-modal-backdrop .bika-ux-field{min-width:0;display:flex;flex-direction:column;gap:5px}
+.analytics-modal-backdrop .bika-ux-filter-field{flex:1 1 160px}
+.analytics-modal-backdrop .bika-ux-field-label{font-size:10.5px;color:var(--an-muted,#888);font-weight:630;line-height:1.3}
+.analytics-modal-backdrop .bika-ux-select-shown,.analytics-modal-backdrop .bika-ux-clear{
+  min-height:36px;border-radius:9px;padding:0 12px;font-size:11px;font-weight:680;
+  border:1px solid var(--an-outline,#ddd);background:var(--an-card,#fff);
+  color:var(--an-ink,#222);white-space:nowrap;cursor:pointer;
+}
+.analytics-modal-backdrop .bika-ux-select-shown{border-color:var(--an-brand,#741f2e);color:var(--an-brand,#741f2e);background:var(--an-brand-soft,#f8eff0)}
+.analytics-modal-backdrop .bika-ux-select-shown:hover:not(:disabled){filter:brightness(.98)}
+.analytics-modal-backdrop .bika-ux-clear{margin-left:0;border:0;min-height:24px;background:transparent;padding:0 2px;color:var(--an-brand,#741f2e);font-size:10px}
+.analytics-modal-backdrop .bika-ux-select-shown:disabled,.analytics-modal-backdrop .bika-ux-clear:disabled{opacity:.44;cursor:not-allowed}
+.analytics-modal-backdrop .bika-ux-guidance{font-size:10.5px;line-height:1.5;color:var(--an-muted,#888);margin:0}
+.analytics-modal-backdrop .bika-ux-guidance strong{color:var(--an-ink,#222);font-weight:670}
+.analytics-modal-backdrop .bika-ux-step-decision{gap:8px}
+.analytics-modal-backdrop .bika-ux-dropdown{position:relative;min-width:0}
+.analytics-modal-backdrop .bika-bulk-panel.bika-bulk-ux select.bika-ux-native-select{
+  position:absolute!important;opacity:0!important;pointer-events:none!important;
+  width:1px!important;height:1px!important;min-height:0!important;
+  padding:0!important;border:0!important;clip-path:inset(50%)!important;
+}
+.analytics-modal-backdrop .bika-ux-dropdown-trigger{
+  height:37px;min-height:37px;width:100%;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  background:var(--an-card,#fff);border:1px solid var(--an-outline,#ddd);border-radius:10px;
+  color:var(--an-ink,#222);padding:0 11px;text-align:left;font-size:12px;font-weight:570;
+  cursor:pointer;box-sizing:border-box;
+}
+.analytics-modal-backdrop .bika-ux-dropdown-trigger iconsax-icon{flex:none;color:var(--an-brand,#741f2e);transition:transform .14s}
+.analytics-modal-backdrop .bika-ux-dropdown.is-open .bika-ux-dropdown-trigger iconsax-icon{transform:rotate(180deg)}
+.analytics-modal-backdrop .bika-ux-dropdown-trigger:hover{border-color:var(--an-brand,#741f2e)}
+.analytics-modal-backdrop .bika-ux-dropdown-trigger:focus-visible,.analytics-modal-backdrop .bika-ux-select-shown:focus-visible,.analytics-modal-backdrop .bika-ux-clear:focus-visible{outline:2px solid var(--an-brand,#741f2e);outline-offset:2px}
+.bika-ux-dropdown-menu{
+  --bx-bg:#fff;--bx-border:#e9e4e6;--bx-text:#2a2728;--bx-hover:#f8eff0;--bx-accent:#741f2e;
+  position:fixed;z-index:10010;display:flex;flex-direction:column;gap:3px;
+  background:var(--bx-bg);border:1px solid var(--bx-border);border-radius:12px;
+  box-shadow:0 18px 40px rgba(35,21,27,.16);padding:5px;overflow:auto;box-sizing:border-box;
+}
+html[data-theme=dark] .bika-ux-dropdown-menu{--bx-bg:#302a2e;--bx-border:#54464d;--bx-text:#f6f0f1;--bx-hover:#45333b;--bx-accent:#f0a5b2}
+.bika-ux-dropdown-menu[hidden]{display:none!important}
+.bika-ux-dropdown-option{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  min-height:34px;width:100%;background:transparent;border:0;border-radius:8px;
+  color:var(--bx-text);padding:7px 9px;font-size:12px;font-weight:520;text-align:left;cursor:pointer;
+}
+.bika-ux-dropdown-option iconsax-icon{display:none;color:var(--bx-accent);flex:none}
+.bika-ux-dropdown-option[aria-selected=true]{color:var(--bx-accent);font-weight:720;background:var(--bx-hover)}
+.bika-ux-dropdown-option[aria-selected=true] iconsax-icon{display:inline-block}
+.bika-ux-dropdown-option:hover,.bika-ux-dropdown-option:focus-visible{background:var(--bx-hover);outline:none}
+.analytics-modal-backdrop .bika-ux-note-details{font-size:11px;color:var(--an-ink,#222)}
+.analytics-modal-backdrop .bika-ux-note-details summary{display:inline-flex;align-items:center;gap:5px;cursor:pointer;color:var(--an-brand,#741f2e);font-weight:670;padding:3px 0;list-style:none}
+.analytics-modal-backdrop .bika-ux-note-details summary::before{content:'+';font-size:14px;font-weight:600;width:12px;text-align:center}
+.analytics-modal-backdrop .bika-ux-note-details[open] summary::before{content:'−'}
+.analytics-modal-backdrop .bika-ux-note-details summary::-webkit-details-marker{display:none}
+.analytics-modal-backdrop .bika-ux-note-details summary span{color:var(--an-muted,#888);font-weight:450}
+.analytics-modal-backdrop .bika-ux-note-details textarea{margin-top:6px;min-height:56px;max-height:110px;resize:vertical;font-size:11.5px;box-sizing:border-box}
+.analytics-modal-backdrop .bika-ux-save-area{display:flex;flex-direction:column;gap:7px;padding-top:10px;border-top:1px solid var(--an-outline,#ddd)}
+.analytics-modal-backdrop .bika-bulk-panel.bika-bulk-ux .bika-bulk-primary{min-height:39px;border-radius:10px;background:var(--an-brand,#741f2e);font-size:12px;font-weight:710;color:white;box-shadow:none}
+.analytics-modal-backdrop .bika-bulk-panel.bika-bulk-ux .bika-bulk-primary:disabled{opacity:.52;cursor:not-allowed}
+.analytics-modal-backdrop .bika-bulk-panel.bika-bulk-ux .bika-bulk-primary:not(:disabled):hover{filter:brightness(1.08)}
+.analytics-modal-backdrop .bika-bulk-panel.bika-bulk-ux .bika-bulk-message{font-size:10.8px;line-height:1.45;min-height:0;margin:0;color:var(--an-brand,#741f2e)}
+.analytics-modal-backdrop .bika-bulk-panel.bika-bulk-ux .bika-bulk-message:empty{display:none}
+.analytics-modal-backdrop .bika-ux-footnote{font-size:10px;color:var(--an-muted,#888);line-height:1.4;margin:0}
+.analytics-modal-backdrop .bika-bulk-object-row{display:flex;gap:6px;align-items:stretch;min-width:0}
+.analytics-modal-backdrop .bika-bulk-check{min-width:30px}
+.analytics-modal-backdrop .bika-bulk-check input:disabled{cursor:not-allowed;opacity:.45}
+.analytics-modal-backdrop .bika-ux-list-empty{padding:17px 9px;text-align:center;color:var(--an-muted,#888);font-size:11px}
+.analytics-modal-backdrop .bika-ux-list-empty[hidden]{display:none!important}
+.analytics-modal-backdrop .analytics-object-list:has(.bika-bulk-object-row){max-height:240px}
+@media(max-width:550px){
+  .analytics-modal-backdrop .bika-bulk-panel.bika-bulk-ux{padding:12px 10px;gap:8px}
+  .analytics-modal-backdrop .bika-ux-filter-field{flex:1 1 100%}
+  .analytics-modal-backdrop .bika-ux-select-shown{flex:1}
+  .analytics-modal-backdrop .bika-ux-clear{flex:0 0 auto}
+}
+
+.analytics-modal-backdrop .bika-ux-single-heading{display:flex;flex-direction:column;gap:4px;margin:2px 0 10px;padding-top:12px;border-top:1px solid var(--an-outline,#ddd)}
+.analytics-modal-backdrop .bika-ux-single-heading strong{font-size:12.5px;color:var(--an-ink,#222);font-weight:710}
+.analytics-modal-backdrop .bika-ux-single-heading small{font-size:10.5px;color:var(--an-muted,#888);line-height:1.45}
+
+/* BIKA_BULK_REVIEW_UX_V1_2
+   Human Review UI: regular 400 / medium 500, no uppercase headings,
+   no grey boxed subsections, pill buttons, explicit SVG dropdown chevrons.
+   Scoped only to Human Review modal and detached Bulk dropdown menus. */
+.analytics-modal-backdrop .analytics-modal,
+.analytics-modal-backdrop .analytics-modal *{
+  font-weight:400!important;
+  text-transform:none!important;
+}
+.analytics-modal-backdrop .analytics-modal :is(h1,h2,h3,h4,strong,b),
+.analytics-modal-backdrop .analytics-modal .analytics-modal-head h2,
+.analytics-modal-backdrop .analytics-modal .bika-ux-step-heading strong,
+.analytics-modal-backdrop .analytics-modal .bika-ux-save-heading strong,
+.analytics-modal-backdrop .analytics-modal .bika-ux-top-title strong,
+.analytics-modal-backdrop .analytics-modal .analytics-object-choice strong,
+.analytics-modal-backdrop .analytics-modal .analytics-object-detail strong,
+.analytics-modal-backdrop .analytics-modal .bika-ux-number{
+  font-weight:500!important;
+}
+/* One review path only: leave legacy fields in DOM for original BIKA JS. */
+.analytics-modal-backdrop .analytics-modal .analytics-feedback-form,
+.analytics-modal-backdrop .analytics-modal .bika-ux-single-heading{
+  display:none!important;
+}
+/* Make the bulk interface a clean section, not a grey card in a card. */
+.analytics-modal-backdrop .analytics-modal .bika-bulk-panel.bika-bulk-ux{
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  margin:0 0 12px!important;
+  padding:4px 0 8px!important;
+  gap:10px!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-step,
+.analytics-modal-backdrop .analytics-modal .bika-ux-save-area{
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  padding:8px 0 2px!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-number{
+  background:transparent!important;
+  color:var(--an-brand,#741f2e)!important;
+  border:0!important;
+  width:16px!important;
+  height:22px!important;
+  flex-basis:16px!important;
+  font-size:12px!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-selected{
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  padding:0!important;
+  font-weight:400!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-top-title strong{font-size:14px!important}
+.analytics-modal-backdrop .analytics-modal .bika-ux-step-heading strong,
+.analytics-modal-backdrop .analytics-modal .bika-ux-save-heading strong{font-size:12.5px!important}
+.analytics-modal-backdrop .analytics-modal .bika-ux-field-label,
+.analytics-modal-backdrop .analytics-modal .bika-ux-guidance,
+.analytics-modal-backdrop .analytics-modal .bika-ux-footnote{font-weight:400!important}
+.analytics-modal-backdrop .analytics-modal .bika-ux-guidance strong{font-weight:500!important}
+/* Light separators are fine; avoid grey tiles around object list and details. */
+.analytics-modal-backdrop .analytics-modal .analytics-object-detail{
+  background:transparent!important;
+  border:0!important;
+  border-bottom:1px solid var(--an-outline,#eee)!important;
+  border-radius:0!important;
+  margin:8px 0!important;
+  padding:11px 0 14px!important;
+}
+.analytics-modal-backdrop .analytics-modal .analytics-object-choice{
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  padding:10px 3px!important;
+  font-weight:400!important;
+}
+.analytics-modal-backdrop .analytics-modal .analytics-object-choice.is-selected{
+  background:transparent!important;
+  border:0!important;
+  color:var(--an-brand,#741f2e)!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-bulk-object-row{
+  background:transparent!important;
+  border-bottom:1px solid var(--an-outline,#ece9e9)!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-bulk-object-row:last-of-type{border-bottom:0!important}
+/* Consistent long pill buttons with regular labels. */
+.analytics-modal-backdrop .analytics-modal .bika-ux-select-shown,
+.analytics-modal-backdrop .analytics-modal .bika-ux-clear,
+.analytics-modal-backdrop .analytics-modal .bika-ux-dropdown-trigger,
+.analytics-modal-backdrop .analytics-modal .bika-bulk-primary,
+.analytics-modal-backdrop .analytics-modal .analytics-btn{
+  border-radius:999px!important;
+  font-weight:400!important;
+  letter-spacing:0!important;
+  text-transform:none!important;
+  box-shadow:none!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-select-shown{
+  min-height:37px!important;
+  background:var(--an-card,#fff)!important;
+  color:var(--an-brand,#741f2e)!important;
+  border:1px solid var(--an-brand,#741f2e)!important;
+  padding:0 17px!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-clear{
+  background:transparent!important;
+  border:0!important;
+  min-height:34px!important;
+  padding:0 10px!important;
+  font-weight:400!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-dropdown-trigger{
+  min-height:40px!important;
+  padding:0 14px!important;
+  background:var(--an-card,#fff)!important;
+  border:1px solid var(--an-outline,#e7e2e4)!important;
+  font-size:12px!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-dropdown-value{
+  font-weight:400!important;
+  flex:1 1 auto;
+  min-width:0;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-dropdown-trigger .bika-ux-chevron{
+  width:17px!important;
+  height:17px!important;
+  flex:0 0 17px!important;
+  color:var(--an-brand,#741f2e)!important;
+  display:block!important;
+  transition:transform .16s ease;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-dropdown.is-open .bika-ux-chevron{transform:rotate(180deg)}
+.analytics-modal-backdrop .analytics-modal .bika-bulk-panel.bika-bulk-ux .bika-bulk-primary{
+  width:100%!important;
+  min-height:43px!important;
+  padding:0 17px!important;
+  border-radius:999px!important;
+  font-size:12.5px!important;
+  font-weight:500!important;
+  color:white!important;
+  background:var(--an-brand,#741f2e)!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-bulk-panel.bika-bulk-ux .bika-bulk-primary:disabled{
+  opacity:.42!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-note-details summary{
+  font-weight:400!important;
+}
+.analytics-modal-backdrop .analytics-modal .bika-ux-note-details textarea{
+  background:var(--an-card,#fff)!important;
+  border:1px solid var(--an-outline,#ddd)!important;
+  border-radius:12px!important;
+  font-weight:400!important;
+}
+/* Custom menus are mounted in body, outside the modal. */
+.bika-ux-dropdown-menu .bika-ux-dropdown-option,
+.bika-ux-dropdown-menu .bika-ux-dropdown-option[aria-selected=true]{
+  font-weight:400!important;
+  text-transform:none!important;
+  border-radius:9px!important;
+}
+.bika-ux-dropdown-menu .bika-ux-dropdown-option[aria-selected=true]{
+  font-weight:500!important;
+}
+
+/* BIKA_BULK_REVIEW_MARKERS_V1_4
+   Show which saved review objects were reviewed. Scoped to Human Review.
+   Only regular/medium font weights, pill controls, no grey panels. */
+.analytics-modal-backdrop .analytics-modal .bika-bulk-panel [hidden],
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-shortcuts[hidden],
+.analytics-modal-backdrop .analytics-modal .bika-ux-step[hidden],
+.analytics-modal-backdrop .analytics-modal .bika-ux-save-area[hidden]{display:none!important}
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-shortcuts{
+  display:flex;flex-direction:column;gap:8px;margin:8px 0 2px;padding:0;
+  border:0;background:transparent;box-shadow:none;
+}
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-shortcuts-label{
+  font-size:12px;font-weight:400;color:var(--an-muted,#8d8d8d)
+}
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-shortcuts-items{
+  display:flex;flex-wrap:wrap;align-items:center;gap:7px;
+}
+.analytics-modal-backdrop .analytics-modal button.bika-reviewed-shortcut{
+  display:inline-flex;align-items:center;justify-content:center;min-height:34px;
+  padding:0 13px;border:1px solid var(--an-outline,#e5dfe1);
+  border-radius:999px;background:var(--an-card,#fff);color:var(--an-brand,#741f2e);
+  font-size:12px;font-weight:400;white-space:nowrap;cursor:pointer;
+  transition:border-color .15s ease,background .15s ease;
+}
+.analytics-modal-backdrop .analytics-modal button.bika-reviewed-shortcut:hover,
+.analytics-modal-backdrop .analytics-modal button.bika-reviewed-shortcut.is-active{
+  border-color:var(--an-brand,#741f2e);background:var(--an-brand-soft,#f8eff0)
+}
+.analytics-modal-backdrop .analytics-modal button.bika-reviewed-shortcut:focus-visible{
+  outline:2px solid var(--an-brand,#741f2e);outline-offset:2px
+}
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-overflow{
+  color:var(--an-muted,#8d8d8d);font-size:11px;font-weight:400
+}
+/* The normal review masks are unchanged unless the user selects Already reviewed. */
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon:not(.bika-reviewed-mask){
+  stroke-opacity:.13!important;fill-opacity:.025!important
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask{
+  stroke:#8c2840!important;fill:#c88997!important;fill-opacity:.32!important;
+  stroke-width:4.5!important;stroke-opacity:1!important;
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask.is-selected{
+  stroke:#741f2e!important;stroke-width:5.5!important;fill-opacity:.43!important;
+}
+.analytics-modal-backdrop .analytics-mask-svg .bika-reviewed-marker ellipse{
+  fill:#741f2e;stroke:white;stroke-width:1.4;
+  vector-effect:non-scaling-stroke
+}
+.analytics-modal-backdrop .analytics-mask-svg .bika-reviewed-marker text{
+  fill:white;font-family:Inter,system-ui,sans-serif;font-weight:500;
+}
+
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-details{
+  font-size:11.5px;font-weight:400;color:var(--an-muted,#8d8d8d);
+  line-height:1.55;margin:1px 0 0;overflow-wrap:anywhere
+}
+
+/* BIKA_BULK_REVIEW_IMAGE_CLICK_V1_5
+   Show reviewed snacks directly in the main image and inspect by clicking the highlight.
+   Keep regular/medium weights, clean layout, and no extra grey boxes. */
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-hint[hidden]{display:none!important}
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-hint{
+  margin:8px 0 0;padding:0;border:0;background:transparent;box-shadow:none;
+}
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-details{
+  font-size:12px;font-weight:400;color:var(--an-muted,#8d8d8d);line-height:1.6;margin:0;
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask{
+  cursor:pointer;
+  stroke:#8c2840!important;fill:#c88997!important;fill-opacity:.34!important;
+  stroke-width:4.8!important;stroke-opacity:1!important;
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask:hover{
+  fill-opacity:.42!important;stroke:#7d2034!important;
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask-active,
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask.is-selected{
+  stroke:#741f2e!important;stroke-width:5.8!important;fill:#b75f73!important;fill-opacity:.48!important;
+}
+.analytics-modal-backdrop .analytics-mask-svg .bika-reviewed-marker{opacity:.96}
+.analytics-modal-backdrop .analytics-mask-svg .bika-reviewed-marker.is-active ellipse{
+  fill:#4d1320;stroke:#fff;stroke-width:1.8;
+}
+.analytics-modal-backdrop .analytics-mask-svg .bika-reviewed-marker.is-active text{
+  fill:#fff;
+}
+
+/* BIKA_BULK_REVIEW_MAIN_IMAGE_HIGHLIGHT_V1_6
+   Only regular (400) and medium (500). Reviewed masks live on main image.
+   No reviewed shortcuts, no duplicate review-list preview. */
+.analytics-modal-backdrop .analytics-modal [data-object-list][hidden]{display:none!important}
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-shortcuts,
+.analytics-modal-backdrop .analytics-modal .bika-reviewed-hint,
+.analytics-modal-backdrop .analytics-modal [data-bulk-reviewed-shortcuts],
+.analytics-modal-backdrop .analytics-modal [data-bulk-reviewed-links]{display:none!important}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon:not(.bika-reviewed-mask){
+  stroke-opacity:.10!important;fill-opacity:.012!important;pointer-events:none!important;
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask{
+  stroke:#8a2943!important;fill:#b64a69!important;
+  fill-opacity:.42!important;stroke-opacity:1!important;
+  stroke-width:4.5!important;pointer-events:all!important;cursor:pointer;
+  vector-effect:non-scaling-stroke;
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask:hover{
+  stroke:#63192d!important;fill-opacity:.54!important;stroke-width:5.2!important;
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask-active,
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask.is-selected{
+  stroke:#521427!important;fill:#a72b50!important;
+  fill-opacity:.62!important;stroke-opacity:1!important;stroke-width:6!important;
+}
+.analytics-modal-backdrop .analytics-mask-stage.bika-reviewed-filter-active .analytics-mask-svg polygon.bika-reviewed-mask:focus-visible{
+  outline:none;stroke:#521427!important;stroke-width:6!important;
+}
+.analytics-modal-backdrop .analytics-modal .analytics-object-detail{
+  font-weight:400!important;background:transparent!important;border:0!important;
+  border-top:1px solid var(--an-outline,#eee)!important;padding:12px 0!important;
+}
+.analytics-modal-backdrop .analytics-modal .analytics-object-detail strong{font-weight:500!important}
+
+/* BIKA_BULK_REVIEW_ONE_CLICK_STYLE_V1_8
+   Direct click-to-toggle masks, no Ctrl/Cmd or drag selection needed.
+   No new panels; existing BIKA regular/medium typography is retained. */
+.analytics-modal-backdrop .analytics-mask-stage,
+.analytics-modal-backdrop .analytics-mask-stage *{
+  user-select:none;
+  -webkit-user-select:none;
+}
+.analytics-modal-backdrop .analytics-mask-stage img{
+  -webkit-user-drag:none;
+  user-drag:none;
+}
+.analytics-modal-backdrop .analytics-mask-stage .analytics-mask-svg polygon[data-object-index]{
+  cursor:pointer;
+  touch-action:manipulation;
+}
+.analytics-modal-backdrop .analytics-mask-stage .analytics-mask-svg polygon[data-object-index]:focus-visible{
+  outline:none;
+  stroke:var(--an-brand,#741f2e)!important;
+  stroke-width:4!important;
+}
+
+/* BIKA_BULK_REVIEW_FILTER_FIRST_STYLE_V1_9
+   A filter only fades nonmatches. Never use the selected color for a filter match.
+   Manual click selection still uses the existing green bulk selection outline. */
+.analytics-modal-backdrop .analytics-mask-stage .analytics-mask-svg polygon.bika-filter-muted {
+  stroke-opacity: .10 !important;
+  fill-opacity: .025 !important;
+  pointer-events: none !important;
+}
+.analytics-modal-backdrop .analytics-mask-stage .analytics-mask-svg polygon.bika-filter-match:not(.is-bulk-selected) {
+  stroke-opacity: 1 !important;
+  fill-opacity: .25 !important;
+}
+.analytics-modal-backdrop .analytics-mask-stage .analytics-mask-svg polygon.bika-filter-match.is-bulk-selected {
+  stroke-opacity: 1 !important;
+  pointer-events: all !important;
+}
+.analytics-modal-backdrop .bika-bulk-ux .bika-ux-filter-field { flex: 1 1 100%; }
+.analytics-modal-backdrop .bika-bulk-ux .bika-ux-guidance {
+  font-size: 11px;
+  line-height: 1.55;
+  font-weight: 400;
+  color: var(--an-muted, #8d8d8d);
+}
+
